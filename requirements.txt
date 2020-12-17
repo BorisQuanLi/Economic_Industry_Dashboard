@@ -1,0 +1,7 @@
+intrinio_sdk
+flask
+psycopg2-binary
+# steamlit
+# sqlite3
+pandas
+matplotlib
