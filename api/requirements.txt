@@ -1,0 +1,4 @@
+flask
+pytest
+psycopg2-binary
+simplejson
