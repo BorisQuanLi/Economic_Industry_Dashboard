@@ -38,3 +38,10 @@ CREATE TABLE IF NOT EXISTS prices (
   closing_price FLOAT
 );
 
+CREATE TABLE IF NOT EXISTS price_earnings_ratio(
+  id serial PRIMARY KEY,
+  company_id INTEGER,
+  date DATE,
+  price_earnings_ratio FLOAT
+);
+

@@ -37,6 +37,12 @@ def find(Class, id, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+def find_by_ticker (Class, ticker_symbol, cursor):
+    search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s"""
+    cursor.execute(search_str, (ticker_symbol,))
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
+
 def save(obj, conn, cursor):
     s_str = ', '.join(len(values(obj)) * ['%s'])
     venue_str = f"""INSERT INTO {obj.__table__} ({keys(obj)}) VALUES ({s_str});"""

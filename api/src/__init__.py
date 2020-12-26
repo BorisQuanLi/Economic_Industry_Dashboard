@@ -47,19 +47,17 @@ def create_app(database='investment_analysis', testing = False, debug = True):
     def company(id):
         conn = db.get_db()
         cursor = conn.cursor()
-        venue = db.find(models.Company, id, cursor)
+        company = db.find(models.Company, id, cursor)
 
-        return json.dumps(venue.__dict__, default = str)
+        return json.dumps(company.__dict__, default = str)
 
-    """
-    @app.route('/companies/<ticker>')
-    def company(ticker):
+    @app.route('/companies/ticker/<ticker>')
+    def ticker(ticker):
         conn = db.get_db()
         cursor = conn.cursor()
-        venue = db.find(models.Company, ticker, cursor)
+        company = db.find_by_ticker(models.Company, ticker, cursor)
+        return json.dumps(company.__dict__, default = str)
 
-        return json.dumps(venue.__dict__, default = str)
-    """
 
     return app
 

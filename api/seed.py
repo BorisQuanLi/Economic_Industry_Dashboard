@@ -8,7 +8,12 @@ drop_all_tables(conn, cursor)
 apple = save(src.models.company.Company(
                 name= 'Apple Inc', ticker= 'AAPL'),
                 conn, cursor)
-breakpoint()
+
+apple_sub_sector = save(src.models.sub_sector.SubSector(
+                sub_industry_GICS = 'Information Technology',
+                sector_GICS = 'Technology Hardware, Storage & Peripherals'),
+                conn, cursor)
+
 
 """
 def build_city_state(city_name = '', state_name = ''):
