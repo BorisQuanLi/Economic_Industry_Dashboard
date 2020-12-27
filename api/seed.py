@@ -14,6 +14,15 @@ apple_sub_sector = save(src.models.sub_sector.SubSector(
                 sector_GICS = 'Technology Hardware, Storage & Peripherals'),
                 conn, cursor)
 
+apple_quarterly_report = save(src.models.quarterly_report.QuarterlyReport(
+                date "2020-12-01",
+                company_id 5,
+                revenue 1000000,
+                cost 800000,
+                net_income 150000,
+                earnings_per_share 1.23,
+                closing_price FLOAT),
+                conn, cursor)
 
 """
 def build_city_state(city_name = '', state_name = ''):

@@ -58,7 +58,13 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         company = db.find_by_ticker(models.Company, ticker, cursor)
         return json.dumps(company.__dict__, default = str)
 
+    @app.route('/companies/latest_quarterly_result_company/<ticker>')
+    def latest_quarterly_result_company(ticker):
+        conn = db.get_db()
+        cursor = conn.cursor()
+        company_financials = db.find_by_ticker(models.quarterly_report, ticker, cursor)
+        return json.dumps(company_financials.__dict__, default = str)
 
-    return app
+    #   @app.route('/companies/latest_quarterly_result_sub_industry/<ticker>')
 
 

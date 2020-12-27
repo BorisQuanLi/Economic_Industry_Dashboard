@@ -43,6 +43,16 @@ def find_by_ticker (Class, ticker_symbol, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+def find_company_financials_by_ticker(Class, ticker, cursor):
+    sql_str = f"""SELECT * FROM quarterly_reports
+                JOIN companies 
+                ON companies.id = quarterly_reports.company_id
+                WHERE companies.ticker = %s;
+                """
+    cursor.execute(sql_str, (ticker,))
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
+
 def save(obj, conn, cursor):
     s_str = ', '.join(len(values(obj)) * ['%s'])
     venue_str = f"""INSERT INTO {obj.__table__} ({keys(obj)}) VALUES ({s_str});"""
@@ -94,4 +104,5 @@ def find_or_build_by_name(Class, name, cursor):
         obj = Class()
         obj.name = name
     return obj
+
 
