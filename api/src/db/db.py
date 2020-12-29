@@ -1,6 +1,7 @@
 from flask import current_app
 from flask import g
 import psycopg2
+
 conn = psycopg2.connect(database = 'investment_analysis', user = 'postgres', password = 'postgres')
 cursor = conn.cursor()
 
@@ -43,13 +44,30 @@ def find_by_ticker (Class, ticker_symbol, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
-def find_company_financials_by_ticker(Class, ticker, cursor):
+def find_company_id_by_ticker(ticker_symbol, cursor):
+    sql_str = f"""SELECT id FROM companies
+                    WHERE ticker = %s;"""
+    cursor.execute(sql_str, (ticker_symbol,))
+    return cursor.fetchone()
+
+
+def find_company_financials_by_ticker(Class, ticker_symbol, cursor):
     sql_str = f"""SELECT * FROM quarterly_reports
                 JOIN companies 
                 ON companies.id = quarterly_reports.company_id
                 WHERE companies.ticker = %s;
                 """
-    cursor.execute(sql_str, (ticker,))
+    cursor.execute(sql_str, (ticker_symbol,))
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
+
+def find_latest_company_price_pe_by_ticker(Class, ticker_symbol, cursor):
+    sql_str = f"""SELECT * FROM prices_pe
+                JOIN companies 
+                ON companies.id = prices_pe.company_id
+                WHERE companies.ticker = %s;
+                """
+    cursor.execute(sql_str, (ticker_symbol,))
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
@@ -80,7 +98,7 @@ def drop_tables(table_names, cursor, conn):
         drop_records(cursor, conn, table_name)
 
 def drop_all_tables(conn, cursor):
-    table_names = ['companies', 'prices', 'sub_sectors', 'quarterly_reports']
+    table_names = ['companies', 'sub_industries', 'quarterly_reports', 'prices_pe']
     drop_tables(table_names, cursor, conn)
 
 def find_by_name(Class, name, cursor):

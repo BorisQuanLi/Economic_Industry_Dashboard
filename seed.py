@@ -1,7 +1,7 @@
 import psycopg2
-from src import *
-import src
-from src.db.db import conn, cursor, find_or_create_by_name, find_by_name, save, drop_all_tables
+from api.src import *
+import api.src as src
+from api.src.db.db import *
 
 drop_all_tables(conn, cursor)
 
@@ -9,21 +9,48 @@ apple = save(src.models.company.Company(
                 name= 'Apple Inc', ticker= 'AAPL'),
                 conn, cursor)
 
-apple_sub_sector = save(src.models.sub_sector.SubSector(
+ibm = save(src.models.company.Company(
+                name = 'IBM Corporation', ticker = 'IBM'),
+                conn, cursor)
+
+apple_sub_industry = save(src.models.sub_industry.SubIndustry(
                 sub_industry_GICS = 'Information Technology',
                 sector_GICS = 'Technology Hardware, Storage & Peripherals'),
                 conn, cursor)
 
-apple_quarterly_report = save(src.models.quarterly_report.QuarterlyReport(
-                date "2020-12-01",
-                company_id 5,
-                revenue 1000000,
-                cost 800000,
-                net_income 150000,
-                earnings_per_share 1.23,
-                closing_price FLOAT),
+apple_q4_report = save(src.models.quarterly_report.QuarterlyReport(
+                date = '2020-12-01',
+                company_id = find_company_id_by_ticker('AAPL', cursor),
+                revenue = 1000000,
+                cost = 800000,
+                net_income = 150000,
+                earnings_per_share = 1.23),
                 conn, cursor)
 
+ibm_q4_report = save(src.models.quarterly_report.QuarterlyReport(
+                date = '2020-12-01',
+                company_id = find_company_id_by_ticker('IBM', cursor),
+                revenue = 900000,
+                cost = 8200000,
+                net_income = 140000,
+                earnings_per_share = 1.11),
+                conn, cursor)
+
+apple_q3_report = save(src.models.quarterly_report.QuarterlyReport(
+                date = '2020-09-01',
+                company_id = find_company_id_by_ticker('AAPL', cursor),
+                revenue = 1100000,
+                cost = 850000,
+                net_income = 160000,
+                earnings_per_share = 1.33),
+                conn, cursor)
+
+apple_1226_price = save(src.models.price_pe.PricePE(
+                date = '2020-12-26',
+                company_id = find_company_id_by_ticker('AAPL', cursor),
+                closing_price = 88.63),
+                conn, cursor)
+                # price-earnings_ratio?
 """
 def build_city_state(city_name = '', state_name = ''):
     state = find_or_create_by_name(src.State, state_name, conn, cursor)

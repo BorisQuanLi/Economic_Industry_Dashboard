@@ -18,7 +18,7 @@ def create_app(database='investment_analysis', testing = False, debug = True):
 
     @app.route('/')
     def root_url():
-        return 'Welcome to the stocks performance api, through the prism of the S&P 500 components.'
+        return 'Welcome to the stocks performance api, through the prism of the S&P 500.'
 
     @app.route('/companies')
     def companies():
@@ -48,10 +48,9 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         conn = db.get_db()
         cursor = conn.cursor()
         company = db.find(models.Company, id, cursor)
-
         return json.dumps(company.__dict__, default = str)
 
-    @app.route('/companies/ticker/<ticker>')
+    @app.route('/tickers/<ticker>')
     def ticker(ticker):
         conn = db.get_db()
         cursor = conn.cursor()
@@ -62,9 +61,18 @@ def create_app(database='investment_analysis', testing = False, debug = True):
     def latest_quarterly_result_company(ticker):
         conn = db.get_db()
         cursor = conn.cursor()
-        company_financials = db.find_by_ticker(models.quarterly_report, ticker, cursor)
+        company_financials = db.find_company_financials_by_ticker(
+            models.QuarterlyReport, ticker, cursor)
         return json.dumps(company_financials.__dict__, default = str)
 
-    #   @app.route('/companies/latest_quarterly_result_sub_industry/<ticker>')
+    @app.route('/companies/price_pe/<ticker>')
+    def price_pe_company(ticker):
+        conn = db.get_db()
+        cursor = conn.cursor()
+        company_price_pe = db.find_latest_company_price_pe_by_ticker(
+            models.PricePE, ticker, cursor)
+        company_price_pe = company_price_pe.to_json(cursor)
 
+        return json.dumps(company_price_pe, default = str)
 
+    return app

@@ -1,8 +1,8 @@
 from api.src.db import db
 import api.src.models as models
 
-class SubSector:
-    __table__ = "sub_sectors"
+class SubIndustry:
+    __table__ = "sub_industries"
     columns = ['id', 'sub_industry_GICS', 'sector_GICS']
 
     def __init__(self, **kwargs):
