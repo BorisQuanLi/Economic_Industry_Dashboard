@@ -72,7 +72,8 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         company_price_pe = db.find_latest_company_price_pe_by_ticker(
             models.PricePE, ticker, cursor)
         company_price_pe = company_price_pe.to_json(cursor)
-
+        company_price_pe['price_earnings_ratio'] = round((company_price_pe['closing_price']
+                                    / company_price_pe['price_earnings_ratio']['earnings_per_share']), 2)
         return json.dumps(company_price_pe, default = str)
 
     return app

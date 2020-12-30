@@ -20,7 +20,8 @@ apple_sub_industry = save(src.models.sub_industry.SubIndustry(
 
 apple_q4_report = save(src.models.quarterly_report.QuarterlyReport(
                 date = '2020-12-01',
-                company_id = find_company_id_by_ticker('AAPL', cursor),
+                company_id = find_company_by_ticker(
+                                src.models.Company, 'AAPL', cursor).__dict__['id'],
                 revenue = 1000000,
                 cost = 800000,
                 net_income = 150000,
@@ -29,7 +30,8 @@ apple_q4_report = save(src.models.quarterly_report.QuarterlyReport(
 
 ibm_q4_report = save(src.models.quarterly_report.QuarterlyReport(
                 date = '2020-12-01',
-                company_id = find_company_id_by_ticker('IBM', cursor),
+                company_id = find_company_by_ticker(
+                                src.models.Company,'IBM', cursor).__dict__['id'],
                 revenue = 900000,
                 cost = 8200000,
                 net_income = 140000,
@@ -38,7 +40,8 @@ ibm_q4_report = save(src.models.quarterly_report.QuarterlyReport(
 
 apple_q3_report = save(src.models.quarterly_report.QuarterlyReport(
                 date = '2020-09-01',
-                company_id = find_company_id_by_ticker('AAPL', cursor),
+                company_id = find_company_by_ticker(
+                                src.models.Company, 'AAPL', cursor).__dict__['id'],
                 revenue = 1100000,
                 cost = 850000,
                 net_income = 160000,
@@ -47,7 +50,8 @@ apple_q3_report = save(src.models.quarterly_report.QuarterlyReport(
 
 apple_1226_price = save(src.models.price_pe.PricePE(
                 date = '2020-12-26',
-                company_id = find_company_id_by_ticker('AAPL', cursor),
+                company_id = find_company_by_ticker(
+                                src.models.Company, 'AAPL', cursor).__dict__['id'],
                 closing_price = 88.63),
                 conn, cursor)
                 # price-earnings_ratio?

@@ -44,11 +44,12 @@ def find_by_ticker (Class, ticker_symbol, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
-def find_company_id_by_ticker(ticker_symbol, cursor):
-    sql_str = f"""SELECT id FROM companies
+def find_company_by_ticker(Class, ticker_symbol, cursor):
+    sql_str = f"""SELECT * FROM companies
                     WHERE ticker = %s;"""
     cursor.execute(sql_str, (ticker_symbol,))
-    return cursor.fetchone()
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
 
 
 def find_company_financials_by_ticker(Class, ticker_symbol, cursor):
