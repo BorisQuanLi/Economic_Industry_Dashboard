@@ -29,12 +29,21 @@ class Company:
     def price_pe(self, cursor):
         pass
 
-    def quarterly_report(self, cursor):
+    def quarterly_reports(self, cursor):
         sql_query = f"""SELECT * FROM quarterly_reports
                     WHERE quarterly_reports.company_id = %s;"""
         cursor.execute(sql_query, (self.id,))
         records = cursor.fetchall()
         return db.build_from_records(models.QuarterlyReport, records) 
+    
+    def search_quarterly_report_by_ticker(self, ticker_params, cursor):
+        pass
+        ticker = ticker_params.values()[0]
+        company = find_by_stock_ticker(ticker)
+        # check if company is a Company object?
+        # company_id = company.
+        return   quarterly_report()
+
     def to_json(self, cursor):
         pass
 

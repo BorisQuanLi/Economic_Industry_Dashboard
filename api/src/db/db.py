@@ -74,20 +74,20 @@ def find_latest_company_price_pe_by_ticker(Class, ticker_symbol, cursor):
 
 def save(obj, conn, cursor):
     s_str = ', '.join(len(values(obj)) * ['%s'])
-    venue_str = f"""INSERT INTO {obj.__table__} ({keys(obj)}) VALUES ({s_str});"""
-    cursor.execute(venue_str, list(values(obj)))
+    company_str = f"""INSERT INTO {obj.__table__} ({keys(obj)}) VALUES ({s_str});"""
+    cursor.execute(company_str, list(values(obj)))
     conn.commit()
     cursor.execute(f'SELECT * FROM {obj.__table__} ORDER BY id DESC LIMIT 1')
     record = cursor.fetchone()
     return build_from_record(type(obj), record)
 
 def values(obj):
-    venue_attrs = obj.__dict__
-    return [venue_attrs[attr] for attr in obj.columns if attr in venue_attrs.keys()]
+    company_attrs = obj.__dict__
+    return [company_attrs[attr] for attr in obj.columns if attr in company_attrs.keys()]
 
 def keys(obj):
-    venue_attrs = obj.__dict__
-    selected = [attr for attr in obj.columns if attr in venue_attrs.keys()]
+    company_attrs = obj.__dict__
+    selected = [attr for attr in obj.columns if attr in company_attrs.keys()]
     return ', '.join(selected)
 
 def drop_records(cursor, conn, table_name):

@@ -3,43 +3,30 @@ import requests
 import plotly.graph_objects as go
 import pandas as pd
 import matplotlib.pyplot as plt
-API_URL = "http://127.0.0.1:5000/companies/search"
+from datetime import datetime
+
+API_URL = "http://127.0.0.1:5000/companies/tickers/search"
 
 
-def find_company_by_ticker(ticker):
+def find_company_ticker(ticker):
+    '''returns the company ticker from the web interface'''
     response = requests.get(API_URL, params = {'ticker': ticker})
     return response.json()
 
-
-def venue_names(venues, requires_rating = False):
-    if requires_rating:
-        venues = [venue for venue in venues if venue['rating'] != -99]
-    return [venue['name'] for venue in venues]
-
-def venue_ratings(venues, requires_rating = False):
-    if requires_rating:
-        venues = [venue for venue in venues if venue['rating'] != -99]
-    return [venue['rating'] for venue in venues]
-
-
-# ticker = st.sidebar.slider(min_value = 1, max_value = 2, step = 1, label = 'price')
-
 ticker = st.selectbox("Select a company's ticker symbol:", ["AAPL", "IBM"])
 st.write("You selected ticker", ticker)
-st.header('Company')
-company = find_company_by_ticker(ticker)
+st.subheader('Company Information')
+company_info = find_company_ticker(ticker)
+st.text(f"Name: {company_info['name']}")
+st.text(f"Ticker: {company_info['ticker']}")
 
-def venue_locations(venues):
-    return [venue['location'] for venue in venues if venue.get('location') ]
+revenue_history = [report['revenue'] for report in company_info['quarterly_reports']]
+date_history = [datetime.strptime(report['date'], "%Y-%m-%d") for report in company_info['quarterly_reports']]
+#fig = plt.plot(date_history, revenue_history)
+#st.pyplot
+#st.plotly_chart
 
-
-scatter = go.Scatter(x = venue_names(venues, True), 
-        y = venue_ratings(venues, True), 
-        hovertext = venue_names(venues, True), mode = 'markers')
-
-locations = venue_locations(venues)
-
-
-fig = go.Figure(scatter)
+fig = go.Figure(data=go.Scatter(x=date_history,
+                             y=revenue_history))
 st.plotly_chart(fig)
-st.map(pd.DataFrame(locations))
+#plt.savefig(fig)

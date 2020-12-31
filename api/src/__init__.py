@@ -50,12 +50,33 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         company = db.find(models.Company, id, cursor)
         return json.dumps(company.__dict__, default = str)
 
-    @app.route('/tickers/<ticker>')
+    @app.route('/companies/tickers/<ticker>') 
     def ticker(ticker):
         conn = db.get_db()
         cursor = conn.cursor()
         company = db.find_by_ticker(models.Company, ticker, cursor)
+        quarterly_reports = company.quarterly_reports(cursor) #company.quarterly_reports
+        company_dict = company.__dict__
+        quarterly_reports_dicts = [quarterly_report.__dict__ for quarterly_report in quarterly_reports]
+        company_dict['quarterly_reports'] = quarterly_reports_dicts
         return json.dumps(company.__dict__, default = str)
+
+    @app.route('/companies/tickers/search')
+    def ticker_search():
+        conn = db.get_db()
+        cursor = conn.cursor()
+        params = dict(request.args)
+        ticker = params['ticker']
+        # return ticker(ticker), can this be implemented?
+        company = db.find_by_ticker(models.Company, ticker, cursor)
+        quarterly_reports = company.quarterly_reports(cursor) #company.quarterly_reports
+        company_dict = company.__dict__
+        quarterly_reports_dicts = [quarterly_report.__dict__ for quarterly_report in quarterly_reports]
+        company_dict['quarterly_reports'] = quarterly_reports_dicts
+        return json.dumps(company.__dict__, default = str)
+        
+
+
 
     @app.route('/companies/latest_quarterly_result_company/<ticker>')
     def latest_quarterly_result_company(ticker):
