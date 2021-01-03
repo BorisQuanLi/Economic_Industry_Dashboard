@@ -26,7 +26,7 @@ class Company:
                         WHERE id = %s;"""
         cursor.execute(sql_query, (company_id,))
         record = cursor.fetchone()
-        return build_from_record(models.Company, record)
+        return db.build_from_record(models.Company, record)
 
     def sub_industry(self, cursor):
         sql_query = f"""SELECT * FROM sub_industries 

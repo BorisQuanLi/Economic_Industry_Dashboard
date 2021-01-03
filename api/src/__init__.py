@@ -6,6 +6,7 @@ from flask import request
 
 import api.src.models as models
 import api.src.db as db
+import api.src.adapters as adapters
 
 def create_app(database='investment_analysis', testing = False, debug = True):
     """Create and configure an instance of the Flask application."""

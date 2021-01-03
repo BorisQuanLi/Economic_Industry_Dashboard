@@ -27,7 +27,7 @@ builder = adapters.CompanyBuilder()
 builder.run(company_info, db.conn, db.cursor)
 
 
-# 01/03 adapters.QuarterlyReport
+# 01/03 adapters.quarter_report_obj
 # companies_6 = ['WMT', 'COST', 'PFE', 'JNJ', 'AAPL', 'HPQ']
 # 2 companies returned from Intrinio
 # in notebook "company_quarterly_financials_via_intrinio_api"
@@ -60,11 +60,9 @@ $python3 -i console.py
 ...  'date': datetime.date(2017, 12, 30),
 ...  'ticker': 'AAPL'}
 
->>> apple_report = adapters.QuarterlyReport()
+>>> apple_report = adapters.quarter_report_obj()
 
 >>> apple_report.run(apple_details, db.conn, db.cursor)
-
-"""
 
 # store Apple's most recent 4 quarterly reports that are 
 # available from Intrinio API.
@@ -91,3 +89,17 @@ apple_3_financials = [{'Total Revenue': 58313000000,
 quarterly_reports_builder = adapters.QuarterlyReportBuilder()
 for qtr in apple_3_financials:
     quarterly_reports_builder.run(qtr, db.conn, db.cursor)
+"""
+
+# build PricePE (row in the database) based on a company's
+# quarterly report (or a history of quarterly reports)
+
+# create a list of all quarterly_reports by a company (ticker)
+import api.src.models
+apple_qtr_report = api.src.models.QuarterlyReport() 
+apple_quarterly_reports = apple_qtr_report.find_quarterly_reports_by_ticker('AAPL', api.src.db.cursor)
+
+# ready to be passed through to adapters.PricePEbuilder
+apple_price_pe_builder = adapters.PricePEbuilder()
+apple_price_de_dict_list = apple_price_pe_builder.price_pe_dict_list(apple_quarterly_reports, db.cursor)
+breakpoint()

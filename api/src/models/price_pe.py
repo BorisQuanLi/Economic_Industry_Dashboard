@@ -12,6 +12,23 @@ class PricePE:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+    def find_quarterly_report_by_date(self, report_date, cursor):
+        sql_query = f"""SELECT * FROM quarterly_reports
+                        WHERE date = %s;"""
+        cursor.execute(sql_query, (report_date,))
+        record = cursor.fetchone()
+        return build_from_record(models.QuarterlyReport, record)
+
+    def to_pe_json_by_date(self, date, closing_price, cursor):
+        pe_json = self.__dict__
+        pe_json['closing_price'] = closing_price
+        pe_json['date'] = date
+        earnings_per_share = self.find_quarterly_report_by_date(date, cursor).earnings_per_share
+        pe_ratio = round(closing_price / earnings_per_share, 2)
+        pe_json['price_earnings_ratio'] = pe_ratio
+        return pe_json
+
+
     def latest_quarterly_report(self, cursor):
         sql_query = f"""SELECT * FROM quarterly_reports
                     WHERE company_id = %s

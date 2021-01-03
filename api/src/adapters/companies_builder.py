@@ -98,39 +98,42 @@ class QuarterlyReportBuilder:
 
 class PricePEbuilder:
     attributes = ['date', 'company_id', 'closing_price', 'price_earnings_ratio']
+    
     def select_attributes(self, price_pe_dict):
         """
         prices_record may include a company's closing price on the last
         day of each quarter, obtained from Intrinio
         """
-        ticker = price_record[0]
-        company_id = models.Company.find_by_stock_ticker(ticker).sub_industry
-        date = price_record[1][0]
-        closing_price = price_record[1][1]
+        date = price_pe_dict['date'] 
+        company_id = price_pe_dict['company_id'] 
+        closing_price = price_pe_dict['closing_price']
+        pe_ratio = price_pe_dict['price_earnings_ratio'] 
 
-
-            # need to work out price_earnings_ratio
-            # pe_ratio = 
         selected = dict(zip(self.attributes,
-                        [date, company_id, closing_price, ])) # pe_ratio
+                        [date, company_id, closing_price, pe_ratio])) 
+        return selected
+        
+    def price_pe_dict_list(self, quarterly_reports_list, cursor):
+        price_pe_dict_list = []
+        for quarterly_report_obj in quarterly_reports_list: 
+            company_id = quarterly_report_obj.company_id
+            ticker = models.Company.find_by_company_id(company_id, cursor).ticker
+            date = quarterly_report_obj.date
+            closing_price = (adapters.api_calls.historical_stock_price_via_intrinio_api.
+                                stock_historical_price_via_intrinio_api(ticker, date))
+            pe_json = models.PricePE.to_pe_json_by_date(date, closing_price, cursor)
+            pe_ratio = pe_json['price_earnings_ratio']
 
-    def price_pe_dict_by_report_date(self, quarterly_report_obj, conn, cursor):
-        company_id = quarter_report_obj.company_id
-        ticker = models.Company.find_by_company_id(company_id).ticker
-        date = quarter_report_obj.date
-        closing_price = historical_stock_price_via_intrinio_api(
-                            ticker, date)
-        pe_json = models.PricePE.to_pe_json_by_date(date)
-        pe_ratio = pe_json['price_earnings_ratio']
+            price_pe_dict = {}
+            price_pe_dict['date'] = date
+            price_pe_dict['company_id'] = company_id
+            price_pe_dict['closing_price'] = closing_price
+            price_pe_dict['price_earnings_ratio'] = pe_ratio
+            price_pe_dict_list.append(price_pe_dict)
+        return price_pe_dict_list
 
-        price_pe_dict = {}
-        price_pe_dict['date'] = date
-        price_pe_dict['company_id'] = company_id
-        price_pe_dict['closing_price'] = closing_price
-        price_pe_dict['price_earnings_ratio'] = pe_ratio
-
-
-    def run(self, price_pe_dict, conn, cursor):
-        selected = self.select_attributes(price_pe_record)
+    def run(self, quarterly_reports_list, conn, cursor):
+        price_pe_dict_list = self.price_pe_dict_list(quarterly_reports_list, cursor)
+        selected = self.select_attributes(price_pe_dict)
         price_pe = db.save(models.PricePE, selected, conn, cursor)
         return price_pe

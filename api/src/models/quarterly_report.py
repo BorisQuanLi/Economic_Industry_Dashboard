@@ -12,7 +12,11 @@ class QuarterlyReport:
         for k,v in kwargs.items():
             setattr(self, k, v)
 
-    def find_quarterly_report_by_date(self, date, cursor):
-        sql_query = f"""SELECT * FROM {self.__table__}
-                        WHERE date = %s;"""
-        pass
+    def find_quarterly_reports_by_ticker(self, ticker, cursor):
+        sql_query = f"""SELECT * FROM quarterly_reports
+                        JOIN companies
+                        ON companies.id = quarterly_reports.company_id
+                        WHERE companies.ticker = %s;"""
+        cursor.execute(sql_query, (ticker,))
+        records = cursor.fetchall()
+        return db.build_from_records(QuarterlyReport, records)

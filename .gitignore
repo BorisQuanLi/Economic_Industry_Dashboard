@@ -1,2 +1,1 @@
-# file location below may have changed
-./src/api_client_config.py
+./api/src/adapters/api_calls/api_client_config.py
