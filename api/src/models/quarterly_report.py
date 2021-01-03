@@ -12,8 +12,7 @@ class QuarterlyReport:
         for k,v in kwargs.items():
             setattr(self, k, v)
 
-    def find_revenue_by_company_id(self):
-        pass
-
-    def find_net_income_by_company_i(self, company_id, cursor):
+    def find_quarterly_report_by_date(self, date, cursor):
+        sql_query = f"""SELECT * FROM {self.__table__}
+                        WHERE date = %s;"""
         pass

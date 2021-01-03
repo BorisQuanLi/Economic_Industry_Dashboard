@@ -1,9 +1,10 @@
 from api.src.db import db
 import api.src.models as models
 
+
 class Company:
     __table__ = "companies"
-    columns = ['id', 'name', 'ticker', 'sub_industry_id', 'number_of_employees', 'HQs_state', 'country', 'year_founded']
+    columns = ['id', 'name', 'ticker', 'sub_industry_id', 'number_of_employees', 'HQ_state', 'country', 'year_founded']
 
     def __init__(self, **kwargs):
         for key in kwargs.keys():
@@ -14,10 +15,18 @@ class Company:
 
     @classmethod
     def find_by_stock_ticker(self, stock_ticker, cursor):
-        ticker_query = """SELECT * FROM companies WHERE stock_ticker = %s;"""
+        ticker_query = """SELECT * FROM companies WHERE ticker = %s;"""
         cursor.execute(ticker_query, (stock_ticker,))
         company_record = cursor.fetchone()
         return db.build_from_record(models.Company, company_record)
+
+    @classmethod
+    def find_by_company_id(self, company_id, cursor):
+        sql_query = f"""SELECT * FROM {self.__table__}
+                        WHERE id = %s;"""
+        cursor.execute(sql_query, (company_id,))
+        record = cursor.fetchone()
+        return build_from_record(models.Company, record)
 
     def sub_industry(self, cursor):
         sql_query = f"""SELECT * FROM sub_industries 
@@ -43,9 +52,6 @@ class Company:
         # check if company is a Company object?
         # company_id = company.
         return   quarterly_report()
-
-    def to_json(self, cursor):
-        pass
 
 
     

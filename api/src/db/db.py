@@ -75,11 +75,15 @@ def find_latest_company_price_pe_by_ticker(Class, ticker_symbol, cursor):
 def save(obj, conn, cursor):
     s_str = ', '.join(len(values(obj)) * ['%s'])
     company_str = f"""INSERT INTO {obj.__table__} ({keys(obj)}) VALUES ({s_str});"""
-    cursor.execute(company_str, list(values(obj)))
-    conn.commit()
-    cursor.execute(f'SELECT * FROM {obj.__table__} ORDER BY id DESC LIMIT 1')
-    record = cursor.fetchone()
-    return build_from_record(type(obj), record)
+    try:
+        cursor.execute(company_str, list(values(obj)))
+        conn.commit()
+        cursor.execute(f'SELECT * FROM {obj.__table__} ORDER BY id DESC LIMIT 1')
+        record = cursor.fetchone()
+        return build_from_record(type(obj), record)
+    except psycopg2.errors.UniqueViolation as e:
+        print(e)
+        pass
 
 def values(obj):
     company_attrs = obj.__dict__

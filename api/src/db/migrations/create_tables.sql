@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS companies (
   sub_industry_id SMALLINT,
   year_founded SMALLINT,
   number_of_employees INTEGER,
-  HQs_state VARCHAR(255),
+  HQ_state VARCHAR(255),
   country VARCHAR(255)
 );
 

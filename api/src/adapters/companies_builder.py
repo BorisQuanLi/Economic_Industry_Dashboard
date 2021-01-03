@@ -3,17 +3,15 @@ import api.src.db as db
 import api.src.adapters as adapters
 import psycopg2
 
-import api.src.models
-
 class Builder:
-    def run(self, venue_details, conn, cursor):
-        venue = VenueBuilder().run(venue_details, conn, cursor)
+    def run(self, report_details, conn, cursor):
+        venue = VenueBuilder().run(report_details, conn, cursor)
         if venue.exists:
             return {'venue': venue, 'location': venue.location(cursor), 
                     'venue_categories': venue.venue_categories(cursor)}
         else:
-            location = LocationBuilder().run(venue_details, venue, conn, cursor)
-            venue_categories = CategoryBuilder().run(venue_details, venue, conn, cursor)
+            location = LocationBuilder().run(report_details, venue, conn, cursor)
+            venue_categories = CategoryBuilder().run(report_details, venue, conn, cursor)
             return {'venue': venue, 'location': location, 'venue_categories': venue_categories}
 
 class SubIndustryBuilder:
@@ -22,6 +20,7 @@ class SubIndustryBuilder:
     def select_attributes(self, sub_industry_details):
         """
         sub_industry_details: a dictionary
+        # data file: data/sp500/S&P500-Sub_Industries.csv
         """
         sub_industry = sub_industry_details['sub_industry_GICS']
         sector = sub_industry_details['sector_GICS']
@@ -32,101 +31,106 @@ class SubIndustryBuilder:
         sub_industry = db.save(models.SubIndustry(**selected),conn, cursor)
         return sub_industry
 
-cool_stuff_sub_industry = SubIndustryBuilder()
-cool_stuff_sub_industry.run({'sub_industry_GICS': 'cool stuff', 'sector_GICS': 'IT'},
-                            db.conn, db.cursor)
-
 
 class CompanyBuilder:
-    attributes = ['id', 'name', 'ticker', 'sub_industry_id', 'number_of_employees', 
-                    'HQs_state', 'country', 'year_founded']
-    
+    attributes = ['name', 'ticker', 'sub_industry_id',
+              'number_of_employees', 'HQ_state', 'country', 'year_founded']
+
     def select_attributes(self, company_details):
-        menu_url = venue_details.get('delivery', '')
-        if menu_url:
-            menu_url = menu_url.get('url', '').split('?')[0]
-        foursquare_id, name, price, rating = venue_details['id'], venue_details['name'], venue_details.get('price', {}).get('tier', None), venue_details.get('rating', None)
-        likes = venue_details.get('likes', {}).get('count', None)
-        return dict(zip(self.attributes, [foursquare_id, name, price, rating, likes, menu_url]))
-
-    def run(self, venue_details, conn, cursor):
-        selected = self.select_attributes(venue_details)
-        foursquare_id = selected['foursquare_id']
-        venue = models.Venue.find_by_foursquare_id(foursquare_id, cursor)
-        if venue:
-            venue.exists = True
-            return venue
-        else:
-            venue = db.save(models.Venue(**selected), conn, cursor)
-            venue.exists = False
-            return venue
-
-class LocationBuilder:
-    attributes = ['lng', 'lat', 'address', 'postalCode',
-            'city', 'state']
-    def select_attributes(self, venue_details):
-        location = venue_details['location']
-        reduced_dict = {k:v for k,v in location.items() if k in self.attributes}
-        return reduced_dict
-
-    def run(self, venue_details, venue, conn, cursor):
-        location_attributes = self.select_attributes(venue_details)
-        location = self.build_location_city_state_zip(location_attributes, conn, cursor)
-        location.venue_id = venue.id
-        location = db.save(location, conn, cursor)
-        return location
-
-    def find_or_create_by_city_state_zip(self, city_name = 'N/A', state_name = 'N/A', code = None, conn = None, cursor = None):
-        if not city_name or not state_name: raise KeyError('must provide conn or cursor')
-        state = db.find_or_create_by_name(models.State, state_name, conn, cursor)
-        city = db.find_by_name(models.City, city_name, cursor)
-        zipcode = models.Zipcode.find_by_code(code, cursor)
-        if not city:
-            city = models.City(name = city_name, state_id = state.id)
-            city = db.save(city, conn, cursor)
-        if not zipcode:
-            zipcode = models.Zipcode(code = code, city_id = city.id)
-            zipcode = db.save(zipcode, conn, cursor)
-        return city, state, zipcode
-
-    def build_location_city_state_zip(self, location_attr, conn, cursor):
-        city_name = location_attr.pop('city', 'N/A')
-        state_name = location_attr.pop('state', 'N/A')
-        code = location_attr.pop('postalCode', None)
-        city, state, zipcode = self.find_or_create_by_city_state_zip(city_name, state_name, code, conn, cursor)
-        location = models.Location(latitude = location_attr.get('lat', None),
-                longitude = location_attr.get('lng', None),
-                address = location_attr.get('address', ''),
-                zipcode_id = zipcode.id
-                )
-        return location
-
-class CategoryBuilder:
-    def select_attributes(self, venue_details):
-        categories = [category['name'] for category in venue_details['categories']]
-        return categories
-
-    def find_or_create_categories(self, category_names, conn, cursor):
-        if not isinstance(category_names, list): raise TypeError('category_names must be list')
-        categories = []
-        for name in category_names:
-            category = db.find_or_create_by_name(models.Category, 
-                name, conn, cursor)
-            categories.append(category)
-        return categories
-
-    def create_venue_categories(self, venue, categories, conn, cursor):
-        categories = [models.VenueCategory(venue_id = venue.id, category_id = category.id)
-                for category in categories]
-        return [db.save(category, conn, cursor) for category in categories]
-
-    def run(self, venue_details, venue, conn, cursor):
-        category_names = self.select_attributes(venue_details)
-        categories = self.find_or_create_categories(category_names, conn, cursor)
-        venue_categories = self.create_venue_categories(venue, categories, conn, cursor)
-        return venue_categories
+        sub_industry_name = company_details['sub_industry_name']
+        sub_industry_id = models.SubIndustry.find_by_sub_industry(sub_industry_name, db.cursor).id
+        company_info_vector = [company_details['name'],
+                               company_details['ticker'],
+                               sub_industry_id,
+                               company_details['number_of_employees'],
+                               company_details['HQ_state'],
+                               company_details['country'], 
+                               company_details['year_founded']]
+        return dict(zip(self.attributes, company_info_vector))
+ 
+    def run(self, company_details, conn, cursor):
+        selected = self.select_attributes(company_details)
+        company_info_row = db.save(models.Company(**selected), conn, cursor)
+        return company_info_row
 
 
+class QuarterlyReportBuilder:
+    attributes = ['date', 'company_id', 'revenue', 'cost', 'net_income', 'earnings_per_share']
+    def select_attributes(self, report_details):
+        """
+        param report_details for each company_year_quarter, to be
+        obtained through calling the get_company_quarterly_financials.
+
+        First doing the import in the top section of this script:
+        import get_company_quarterly_financials
+        from /Project_development/project_scoping_prototyping/prototyping/intrinio_api_prototyping.ipynb
+
+        returns a dictionary with the following keys:
+        'Total Revenue', 
+        'Total Cost of Revenue',
+        'Consolidated Net Income / (Loss)'
+        'Basic Earnings per Share'
+        'date'
+        'ticker'
+
+        'company_id' to be inside this method definition.
+        """
+        ticker = report_details['ticker']
+        try:
+            models.Company.find_by_stock_ticker(ticker, db.cursor).id 
+        except:
+            db.cursor.execute('rollback;')
+        company_id = models.Company.find_by_stock_ticker(ticker, db.cursor).id 
+
+        quarterly_financials_vector = [report_details['date'],
+                                       company_id,
+                                       report_details['Total Revenue'],
+                                       report_details['Total Cost of Revenue'],
+                                       report_details['Consolidated Net Income / (Loss)'],
+                                       report_details['Basic Earnings per Share']
+                                       ]
+        return dict(zip(self.attributes, quarterly_financials_vector))
+
+    def run(self, report_details, conn, cursor):
+        selected = self.select_attributes(report_details)
+        quarterly_report = db.save(models.QuarterlyReport(**selected), conn, cursor)
+        return quarterly_report
+
+class PricePEbuilder:
+    attributes = ['date', 'company_id', 'closing_price', 'price_earnings_ratio']
+    def select_attributes(self, price_pe_dict):
+        """
+        prices_record may include a company's closing price on the last
+        day of each quarter, obtained from Intrinio
+        """
+        ticker = price_record[0]
+        company_id = models.Company.find_by_stock_ticker(ticker).sub_industry
+        date = price_record[1][0]
+        closing_price = price_record[1][1]
 
 
+            # need to work out price_earnings_ratio
+            # pe_ratio = 
+        selected = dict(zip(self.attributes,
+                        [date, company_id, closing_price, ])) # pe_ratio
 
+    def price_pe_dict_by_report_date(self, quarterly_report_obj, conn, cursor):
+        company_id = quarter_report_obj.company_id
+        ticker = models.Company.find_by_company_id(company_id).ticker
+        date = quarter_report_obj.date
+        closing_price = historical_stock_price_via_intrinio_api(
+                            ticker, date)
+        pe_json = models.PricePE.to_pe_json_by_date(date)
+        pe_ratio = pe_json['price_earnings_ratio']
+
+        price_pe_dict = {}
+        price_pe_dict['date'] = date
+        price_pe_dict['company_id'] = company_id
+        price_pe_dict['closing_price'] = closing_price
+        price_pe_dict['price_earnings_ratio'] = pe_ratio
+
+
+    def run(self, price_pe_dict, conn, cursor):
+        selected = self.select_attributes(price_pe_record)
+        price_pe = db.save(models.PricePE, selected, conn, cursor)
+        return price_pe
