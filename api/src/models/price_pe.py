@@ -17,7 +17,7 @@ class PricePE:
                         WHERE date = %s;"""
         cursor.execute(sql_query, (report_date,))
         record = cursor.fetchone()
-        return build_from_record(models.QuarterlyReport, record)
+        return db.build_from_record(models.QuarterlyReport, record)
 
     def to_pe_json_by_date(self, date, closing_price, cursor):
         pe_json = self.__dict__

@@ -4,7 +4,7 @@ import api.src.models as models
 
 class Company:
     __table__ = "companies"
-    columns = ['id', 'name', 'ticker', 'sub_industry_id', 'number_of_employees', 'HQ_state', 'country', 'year_founded']
+    columns = ['id', 'name', 'ticker', 'sub_industry_id', 'year_founded', 'number_of_employees', 'HQ_state', 'country']
 
     def __init__(self, **kwargs):
         for key in kwargs.keys():
@@ -45,6 +45,31 @@ class Company:
         records = cursor.fetchall()
         return db.build_from_records(models.QuarterlyReport, records) 
     
+    def to_quarterly_reports_prices_pe_json_by_ticker(self, cursor):
+        quarterly_reports_prices_pe_json = self.__dict__
+        quarterly_reports_sql_query = f"""SELECT * from quarterly_reports
+                                        JOIN companies
+                                        ON companies.id = quarterly_reports.company_id
+                                        WHERE companies.ticker = %s;
+                                    """
+        cursor.execute(quarterly_reports_sql_query, (self.ticker,))
+        records = cursor.fetchall()
+        quarterly_reports_obj = db.build_from_records(models.QuarterlyReport ,records)
+        quarterly_reports_prices_pe_json['History of quarterly financials'] = [
+                            report_obj.__dict__ for report_obj in quarterly_reports_obj]
+
+        price_pe_sql_query = f"""SELECT * from prices_pe 
+                                JOIN companies
+                                ON companies.id = prices_pe.company_id
+                                WHERE companies.ticker= %s;
+                                """
+        cursor.execute(price_pe_sql_query, (self.ticker,))
+        records = cursor.fetchall()
+        prices_pe_obj = db.build_from_records(models.PricePE, records)
+        quarterly_reports_prices_pe_json['History of quarterly Closing Price and Price to Earnings ratios'] = [
+                            price_pe_obj.__dict__ for price_pe_obj in prices_pe_obj]
+        return quarterly_reports_prices_pe_json
+
     def search_quarterly_report_by_ticker(self, ticker_params, cursor):
         pass
         ticker = ticker_params.values()[0]

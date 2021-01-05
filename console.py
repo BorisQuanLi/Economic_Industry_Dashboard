@@ -2,6 +2,38 @@ import api.src.models as models
 import api.src.db as db
 import api.src.adapters as adapters
 
+# ETL functions
+
+def extract_companies_info(tickers_list):
+    return (adapters.api_calls.
+                        company_info_via_intrinio_n_sp500_csv.
+                            companies_info_via_intrinio_api_n_sp500_csv(tickers_list))   
+
+def extract_quarterly_reports(list_of_tickers, end_date = '2021-01-01',
+                                number_of_quarters = 4):
+    return(adapters.api_calls.quarterly_reports.
+                get_companies_multiple_quarters_financials(list_of_tickers,
+                                                            end_date = end_date,
+def extract_prices_pe():
+    pass                                                         number_of_quarters = number_of_quarters))
+
+# Build functions
+
+def build_companies(companies_info_list, 
+                    conn= db.conn, 
+                    cursor= db.cursor):
+    companies_builder = adapters.CompanyBuilder()
+    for company_info in companies_info_list:
+        companies_builder.run(company_info, conn, cursor)
+
+def build_quarterly_reports(companies_quarterly_reports_list, 
+                            conn= db.conn, 
+                            cursor= db.cursor):
+    quarterly_reports_builder = adapters.QuarterlyReportBuilder()
+    for company_quarterly_reports in companies_quarterly_reports_list:
+        for quarterly_report in company_quarterly_reports:
+            quarterly_reports_builder.run(quarterly_report, conn, cursor)
+
 """
 # sub_industries
 sub_industries_3 = [{'sub_industry_GICS': 'Hypermarkets & Super Centers', 'sector_GICS': 'Consumer Staples'},
@@ -12,85 +44,50 @@ sub_industry_builder = adapters.SubIndustryBuilder()
 for sub_industry_info in sub_industries_3:
     sub_industry_builder.run(sub_industry_info, db.conn, db.cursor)
 
+---
+build_companies
 
-# test adapters.CompanyBuilder
-# company_info obtained from /Project_development/project_scoping_prototyping/prototyping/company_info_via_intrinio_n_sp500_csv
-company_info = {'name': 'APPLE INC',
-                'ticker': 'AAPL',
-                'number_of_employees': 132000,
-                'HQ_state': 'California',
-                'country': 'United States of America',
-                'year_founded': '1977',
-                'sub_industry_name': 'Technology Hardware, Storage & Peripherals'}
+pfe_jnj_info = [{'name': 'PFIZER INC',
+  'ticker': 'PFE',
+  'number_of_employees': 92400,
+  'HQ_state': 'New York',
+  'country': 'United States of America',
+  'year_founded': '1849',
+  'sub_industry_name': 'Pharmaceuticals'},
+ {'name': 'JOHNSON & JOHNSON',
+  'ticker': 'JNJ',
+  'number_of_employees': 135100,
+  'HQ_state': 'New Jersey',
+  'country': 'United States of America',
+  'year_founded': '1886',
+  'sub_industry_name': 'Pharmaceuticals'}]
 
-builder = adapters.CompanyBuilder()
-builder.run(company_info, db.conn, db.cursor)
+build_companies(pfe_jnj_info)
 
+---
 
-# 01/03 adapters.quarter_report_obj
-# companies_6 = ['WMT', 'COST', 'PFE', 'JNJ', 'AAPL', 'HPQ']
-# 2 companies returned from Intrinio
-# in notebook "company_quarterly_financials_via_intrinio_api"
+build_quarterly_reports
 
-wmt_aapl_2020q3 = [{'Total Revenue': 127991000000, 
-                    'Total Cost of Revenue': 95900000000, 
-                    'Consolidated Net Income / (Loss)': 3321000000, 
-                    'Basic Earnings per Share': 1, 
-                    'date': "2019-10-31", 
-                    'ticker': 'WMT'},
-                    {'Total Revenue': 59685000000, 
-                    'Total Cost of Revenue': 37005000000, 
-                    'Consolidated Net Income / (Loss)': 11253000000, 
-                    'Basic Earnings per Share': 2, 
-                    'date': "2020-6-27", 
-                    'ticker': 'AAPL'}]
-wmt_aapl_builder = adapters.QuarterlyReportBuilder()
-for q3_financials in wmt_aapl_2020q3:
-    wmt_aapl_builder.run(q3_financials, db.conn, db.cursor)
+01/05
+
+two_2019_quarters_4_companies = ['PFE', 'JNJ', 'WMT', 'AAPL']
+two_four_qtr_reports = extract_quarterly_reports(two_2019_quarters_4_companies,
+                                                end_date = '2020-08-15',
+                                                number_of_quarters = 2)
+build_quarterly_reports(two_four_qtr_reports)
 
 
-1/1/2021
-$python3 -i console.py
+# Template for the "quarterly_reports_list" argument:
+walmart_financials_list = [{'Total Revenue': 542026000000.0,
+  'Total Cost of Revenue': 408363000000.0,
+  'Consolidated Net Income / (Loss)': 18128000000.0,
+  'Basic Earnings per Share': 6.31,
+  'date': '2020-07-31',
+  'ticker': 'WMT'},
 
->>> import datetime
->>> apple_details = {'Total Revenue': 88293000000,
-...  'Total Cost of Revenue': 54381000000,
-...  'Consolidated Net Income / (Loss)': 20065000000,
-...  'Basic Earnings per Share': 3,
-...  'date': datetime.date(2017, 12, 30),
-...  'ticker': 'AAPL'}
 
->>> apple_report = adapters.quarter_report_obj()
-
->>> apple_report.run(apple_details, db.conn, db.cursor)
-
-# store Apple's most recent 4 quarterly reports that are 
-# available from Intrinio API.
-
-apple_3_financials = [{'Total Revenue': 58313000000,
-                        'Total Cost of Revenue': 35943000000,
-                        'Consolidated Net Income / (Loss)': 11249000000,
-                        'Basic Earnings per Share': 2,
-                        'date': '2020-03-28',
-                        'ticker': 'AAPL'},
-                        {'Total Revenue': 91819000000,
-                        'Total Cost of Revenue': 56602000000,
-                        'Consolidated Net Income / (Loss)': 22236000000,
-                        'Basic Earnings per Share': 5,
-                        'date': '2019-12-28',
-                        'ticker': 'AAPL'},
-                        {'Total Revenue': 64040000000,
-                        'Total Cost of Revenue': 39727000000,
-                        'Consolidated Net Income / (Loss)': 13686000000,
-                        'Basic Earnings per Share': 2,
-                        'date': '2019-09-28',
-                        'ticker': 'AAPL'}]
-
-quarterly_reports_builder = adapters.QuarterlyReportBuilder()
-for qtr in apple_3_financials:
-    quarterly_reports_builder.run(qtr, db.conn, db.cursor)
-"""
-
+---
+01/03/2020
 # build PricePE (row in the database) based on a company's
 # quarterly report (or a history of quarterly reports)
 
@@ -102,4 +99,23 @@ apple_quarterly_reports = apple_qtr_report.find_quarterly_reports_by_ticker('AAP
 # ready to be passed through to adapters.PricePEbuilder
 apple_price_pe_builder = adapters.PricePEbuilder()
 apple_price_de_dict_list = apple_price_pe_builder.price_pe_dict_list(apple_quarterly_reports, db.cursor)
-breakpoint()
+apple_attributes_list = apple_price_pe_builder.select_attributes(apple_price_de_dict_list)
+
+price_pe_list = []
+for apple_attributes in apple_attributes_list:
+    price_pe = db.save(models.PricePE(**apple_attributes), db.conn, db.cursor)
+    price_pe_list.append(price_pe)
+print(price_pe_list)
+
+breakpoint() # inspect apple_price_de_dict_list
+
+# 01/04/2020
+# Walmart quarterly_reports obtained in notebook "obtaining Quarterly Reports data, revenue, cost, net income, earnings per share, via Intrinio get_company_historical_data method, 01-04-2020"
+
+# can import the api client in this file:
+# import api.src.adapters.api_calls.historical_stock_price_via_intrinio_api
+# or the quarterly_report notebook above
+
+
+
+"""

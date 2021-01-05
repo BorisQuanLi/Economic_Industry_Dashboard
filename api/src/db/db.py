@@ -39,7 +39,7 @@ def find(Class, id, cursor):
     return build_from_record(Class, record)
 
 def find_by_ticker (Class, ticker_symbol, cursor):
-    search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s"""
+    search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s;"""
     cursor.execute(search_str, (ticker_symbol,))
     record = cursor.fetchone()
     return build_from_record(Class, record)
@@ -52,15 +52,17 @@ def find_company_by_ticker(Class, ticker_symbol, cursor):
     return build_from_record(Class, record)
 
 
-def find_company_financials_by_ticker(Class, ticker_symbol, cursor):
+def find_quarterly_reports_by_ticker(Class, ticker_symbol, cursor):
     sql_str = f"""SELECT * FROM quarterly_reports
                 JOIN companies 
                 ON companies.id = quarterly_reports.company_id
-                WHERE companies.ticker = %s;
+                WHERE companies.ticker = %s
+                ORDER BY quarterly_reports.date
+                DESC;
                 """
     cursor.execute(sql_str, (ticker_symbol,))
-    record = cursor.fetchone()
-    return build_from_record(Class, record)
+    records = cursor.fetchall()
+    return build_from_records(Class, records)
 
 def find_latest_company_price_pe_by_ticker(Class, ticker_symbol, cursor):
     sql_str = f"""SELECT * FROM prices_pe
