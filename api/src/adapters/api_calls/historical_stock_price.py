@@ -9,7 +9,7 @@ from .helpers import activate_intrinio_api, most_recent_busines_day_eastern
 # from read_dow_jones_tickers import *
 
 
-def stock_historical_price_via_intrinio_api(ticker, date, intrinio_api = activate_intrinio_api()):
+def historical_price(ticker, date, intrinio_api = activate_intrinio_api()):
     """
     params: ticker -> string, date -> string 'yyyy-mm-dd'
     

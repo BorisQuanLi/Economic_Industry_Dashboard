@@ -14,8 +14,7 @@ def extract_quarterly_reports(list_of_tickers, end_date = '2021-01-01',
     return(adapters.api_calls.quarterly_reports.
                 get_companies_multiple_quarters_financials(list_of_tickers,
                                                             end_date = end_date,
-def extract_prices_pe():
-    pass                                                         number_of_quarters = number_of_quarters))
+                                                            number_of_quarters = number_of_quarters))
 
 # Build functions
 
@@ -33,6 +32,24 @@ def build_quarterly_reports(companies_quarterly_reports_list,
     for company_quarterly_reports in companies_quarterly_reports_list:
         for quarterly_report in company_quarterly_reports:
             quarterly_reports_builder.run(quarterly_report, conn, cursor)
+
+# PricePE build_extract function 
+def build_prices_pe(ticker: str):
+    """
+    Generate a list of one company's quarterly reports, each a QuarterlyReport object
+
+    Based on the date of each quarterly report, obtains the closing price, then
+    calucates the price / earnings ratio, before writing the row of data
+    into the prices_pe table. 
+    """
+    quarterly_reports_objs_list = (models.QuarterlyReport.
+                                        find_quarterly_reports_by_ticker(ticker, db.cursor))
+    price_pe_builder = adapters.PricePEbuilder()
+    price_pe_builder.run(quarterly_reports_objs_list, db.conn, db.cursor)
+
+for ticker in ['PFE', 'JNJ']:
+    build_prices_pe(ticker)
+
 
 """
 # sub_industries
@@ -88,7 +105,7 @@ walmart_financials_list = [{'Total Revenue': 542026000000.0,
 
 ---
 01/03/2020
-# build PricePE (row in the database) based on a company's
+# build PricePE row in the database based on a company's
 # quarterly report (or a history of quarterly reports)
 
 # create a list of all quarterly_reports by a company (ticker)
@@ -97,9 +114,9 @@ apple_qtr_report = api.src.models.QuarterlyReport()
 apple_quarterly_reports = apple_qtr_report.find_quarterly_reports_by_ticker('AAPL', api.src.db.cursor)
 
 # ready to be passed through to adapters.PricePEbuilder
-apple_price_pe_builder = adapters.PricePEbuilder()
-apple_price_de_dict_list = apple_price_pe_builder.price_pe_dict_list(apple_quarterly_reports, db.cursor)
-apple_attributes_list = apple_price_pe_builder.select_attributes(apple_price_de_dict_list)
+price_pe_builder = adapters.PricePEbuilder()
+apple_price_de_dict_list = price_pe_builder.price_pe_dict_list(apple_quarterly_reports, db.cursor)
+apple_attributes_list = price_pe_builder.select_attributes(apple_price_de_dict_list)
 
 price_pe_list = []
 for apple_attributes in apple_attributes_list:

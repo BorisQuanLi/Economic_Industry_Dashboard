@@ -121,14 +121,15 @@ class PricePEbuilder:
         
     def price_pe_dict_list(self, quarterly_reports_list, cursor):
         price_pe_dict_list = []
-        for quarterly_report_obj in quarterly_reports_list: 
-            company_id = quarterly_report_obj.company_id
+        for report_obj in quarterly_reports_list: 
+            company_id = report_obj.company_id
             ticker = models.Company.find_by_company_id(company_id, cursor).ticker
-            date = quarterly_report_obj.date
-            closing_price = (adapters.api_calls.historical_stock_price_via_intrinio_api.
-                                stock_historical_price_via_intrinio_api(ticker, date))[0]
+            date = report_obj.date
+            closing_price = (adapters.api_calls.historical_stock_price.
+                                                            historical_price(ticker, date))[0]
             price_pe = models.PricePE()
-            pe_json = price_pe.to_pe_json_by_date(date, closing_price, cursor)
+            pe_json = price_pe.to_pe_json_by_date(
+                                            date, closing_price, cursor)
             pe_ratio = pe_json['price_earnings_ratio']
 
             price_pe_dict = {}
@@ -139,9 +140,9 @@ class PricePEbuilder:
             price_pe_dict_list.append(price_pe_dict)
         return price_pe_dict_list
 
-    def run(self, quarterly_reports_list, conn, cursor):
-        price_pe_dict_list = self.price_pe_dict_list(quarterly_reports_list, cursor)
-        attributes_list = self.select_attributes(price_pe_dict)
+    def run(self, quarterly_reports_objs_list, conn, cursor):
+        price_pe_dict_list = self.price_pe_dict_list(quarterly_reports_objs_list, cursor)
+        attributes_list = self.select_attributes(price_pe_dict_list)
         price_pe_list = []
         for selected in attributes_list:
             price_pe = db.save(models.PricePE(**selected), conn, cursor)

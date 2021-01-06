@@ -12,6 +12,7 @@ class QuarterlyReport:
         for k,v in kwargs.items():
             setattr(self, k, v)
 
+    @classmethod
     def find_quarterly_reports_by_ticker(self, ticker, cursor):
         sql_query = f"""SELECT * FROM quarterly_reports
                         JOIN companies
