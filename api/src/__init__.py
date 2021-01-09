@@ -99,6 +99,28 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         company_price_pe = company_price_pe.to_latest_pe_json(cursor)
         return json.dumps(company_price_pe, default = str)
 
+    @app.route('/sectors/sector/<sector_name>')
+    def companies_within_sector(sector_name): #may need to work out sub_industries_within_sector
+        conn = db.get_db()
+        cursor = conn.cursor()
+        companies = db.show_companies_by_sector(models.Company, sector_name, cursor)
+        for company in companies:
+            company.to_quarterly_reports_prices_pe_json_by_ticker(cursor)
+        companies_dicts = [company.__dict__ for company in companies]
+        return json.dumps(companies_dicts, default = str)
+
+    @app.route('/sectors/sector/search/')
+    def companies_by_sector():
+        conn = db.get_db()
+        cursor = conn.cursor()
+        params = dict(request.args)
+        sector_name = params['sector']
+        companies = db.show_companies_by_sector(models.Company, sector_name, cursor)
+        for company in companies:
+            company.to_quarterly_reports_prices_pe_json_by_ticker(cursor)
+        companies_dicts = [company.__dict__ for company in companies]
+        return json.dumps(companies_dicts, default = str)
+    
     return app
 
     """

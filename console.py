@@ -4,7 +4,7 @@ import api.src.adapters as adapters
 
 # ETL functions
 
-def extract_companies_info(tickers_list):
+def extract_companies_info(tickers_list): 
     return (adapters.api_calls.
                         company_info_via_intrinio_n_sp500_csv.
                             companies_info_via_intrinio_api_n_sp500_csv(tickers_list))   
@@ -25,7 +25,7 @@ def build_companies(companies_info_list,
     for company_info in companies_info_list:
         companies_builder.run(company_info, conn, cursor)
 
-def build_quarterly_reports(companies_quarterly_reports_list, 
+def build_quarterly_reports(companies_quarterly_reports_list: list, 
                             conn= db.conn, 
                             cursor= db.cursor):
     quarterly_reports_builder = adapters.QuarterlyReportBuilder()
@@ -47,8 +47,6 @@ def build_prices_pe(ticker: str):
     price_pe_builder = adapters.PricePEbuilder()
     price_pe_builder.run(quarterly_reports_objs_list, db.conn, db.cursor)
 
-for ticker in ['PFE', 'JNJ']:
-    build_prices_pe(ticker)
 
 
 """
@@ -85,23 +83,13 @@ build_companies(pfe_jnj_info)
 
 build_quarterly_reports
 
-01/05
-
-two_2019_quarters_4_companies = ['PFE', 'JNJ', 'WMT', 'AAPL']
-two_four_qtr_reports = extract_quarterly_reports(two_2019_quarters_4_companies,
-                                                end_date = '2020-08-15',
+01/09
+four_companies = ['PFE', 'JNJ', 'WMT', 'AAPL']
+four_qtrs_reports_202012 = extract_quarterly_reports(four_companies,
+                                                end_date = '2020-12-15',
                                                 number_of_quarters = 2)
-build_quarterly_reports(two_four_qtr_reports)
-
-
-# Template for the "quarterly_reports_list" argument:
-walmart_financials_list = [{'Total Revenue': 542026000000.0,
-  'Total Cost of Revenue': 408363000000.0,
-  'Consolidated Net Income / (Loss)': 18128000000.0,
-  'Basic Earnings per Share': 6.31,
-  'date': '2020-07-31',
-  'ticker': 'WMT'},
-
+breakpoint()
+build_quarterly_reports(four_qtrs_reports_202012)
 
 ---
 01/03/2020
@@ -133,6 +121,8 @@ breakpoint() # inspect apple_price_de_dict_list
 # import api.src.adapters.api_calls.historical_stock_price_via_intrinio_api
 # or the quarterly_report notebook above
 
-
+01/06/2021
+for ticker in ['PFE', 'JNJ']:
+    build_prices_pe(ticker)
 
 """

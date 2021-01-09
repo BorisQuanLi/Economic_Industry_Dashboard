@@ -38,6 +38,16 @@ def find(Class, id, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+def show_companies_by_sector(Class, sector_name, cursor):
+    sql_str = f"""SELECT * FROM companies 
+                JOIN sub_industries 
+                ON sub_industries.id = companies.sub_industry_id
+                WHERE sub_industries.sector_gics = %s;
+                """
+    cursor.execute(sql_str, (sector_name,))
+    records = cursor.fetchall()
+    return build_from_records(Class, records)
+
 def find_by_ticker (Class, ticker_symbol, cursor):
     search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s;"""
     cursor.execute(search_str, (ticker_symbol,))
@@ -123,11 +133,6 @@ def find_or_create_by_name(Class, name, conn, cursor):
         obj = save(new_obj, conn, cursor)
     return obj
 
-def find_or_build_by_name(Class, name, cursor):
-    obj = Class.find_by_name(name, cursor)
-    if not obj:
-        obj = Class()
-        obj.name = name
-    return obj
+
 
 
