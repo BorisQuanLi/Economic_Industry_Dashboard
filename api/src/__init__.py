@@ -43,12 +43,17 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         return json.dumps(ic_pe_json, default = str)
 
     @app.route('/companies/company_overview/search') # see code above
-    def ticker_search():
+    def find_company_by_name_or_ticker():
         conn = db.get_db()
         cursor = conn.cursor()
         params = dict(request.args)
-        ticker = params['ticker']
-        company = db.find_by_ticker(models.Company, ticker, cursor)
+        for key in params.keys():
+            if key == 'ticker':
+                ticker = params['ticker']
+                company = db.find_by_ticker(models.Company, ticker, cursor)
+            else:
+                name = params['name']
+                company = db.find_by_name(models.Company, name, cursor)
         ic_pe_json = company.to_quarterly_reports_prices_pe_json_by_ticker(db.cursor)
         return json.dumps(ic_pe_json, default = str)
 

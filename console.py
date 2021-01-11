@@ -47,6 +47,8 @@ def build_prices_pe(ticker: str):
     price_pe_builder = adapters.PricePEbuilder()
     price_pe_builder.run(quarterly_reports_objs_list, db.conn, db.cursor)
 
+for ticker in ['PFE', 'JNJ', 'AAPL', 'WMT']:
+    build_prices_pe(ticker)
 
 
 """
@@ -122,7 +124,7 @@ breakpoint() # inspect apple_price_de_dict_list
 # or the quarterly_report notebook above
 
 01/06/2021
-for ticker in ['PFE', 'JNJ']:
+for ticker in ['PFE', 'JNJ', 'AAPL', 'WMT']:
     build_prices_pe(ticker)
 
 """
