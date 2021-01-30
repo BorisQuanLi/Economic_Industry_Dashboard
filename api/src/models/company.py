@@ -29,14 +29,20 @@ class Company:
         return db.build_from_record(models.Company, record)
 
     def sub_industry(self, cursor):
+        """
+        Returns the names of the sub_industry and sector that a company belongs to.
+        """
         sql_query = f"""SELECT * FROM sub_industries 
                     WHEER sub_industries.id = %s;
                     """
         cursor.execute(sql_query, (self.sub_industry_id,))
         return db.build_from_record(models.SubIndustry, cursor.fetchone())
-    
-    def price_pe(self, cursor):
-        pass
+
+    def quarterly_prices_pe(self, cursor):
+        sql_query = f"SELECT * FROM prices_pe WHERE prices_pe.company_id = %s;"
+        cursor.execute(sql_query, (self.id,))
+        record = cursor.fetchall()
+        return db.build_from_records(models.PricePE, record)
 
     def quarterly_reports(self, cursor):
         sql_query = f"""SELECT * FROM quarterly_reports
@@ -45,31 +51,46 @@ class Company:
         records = cursor.fetchall()
         return db.build_from_records(models.QuarterlyReport, records) 
     
-    def to_quarterly_reports_prices_pe_json_by_ticker(self, cursor):
+    def to_quarterly_financials_json(self, cursor):
         quarterly_reports_prices_pe_json = self.__dict__
-        quarterly_reports_sql_query = f"""SELECT * from quarterly_reports
-                                        JOIN companies
-                                        ON companies.id = quarterly_reports.company_id
-                                        WHERE companies.ticker = %s;
-                                    """
-        cursor.execute(quarterly_reports_sql_query, (self.ticker,))
-        records = cursor.fetchall()
-        quarterly_reports_obj = db.build_from_records(models.QuarterlyReport ,records)
-        quarterly_reports_prices_pe_json['History of quarterly financials'] = [
+        quarterly_reports_obj = self.quarterly_reports(cursor)
+        quarterly_reports_prices_pe_json['Quarterly financials'] = [
                             report_obj.__dict__ for report_obj in quarterly_reports_obj]
 
-        price_pe_sql_query = f"""SELECT * from prices_pe 
-                                JOIN companies
-                                ON companies.id = prices_pe.company_id
-                                WHERE companies.ticker= %s;
-                                """
-        cursor.execute(price_pe_sql_query, (self.ticker,))
-        records = cursor.fetchall()
-        prices_pe_obj = db.build_from_records(models.PricePE, records)
-        quarterly_reports_prices_pe_json['History of quarterly Closing Price and Price to Earnings ratios'] = [
-                            price_pe_obj.__dict__ for price_pe_obj in prices_pe_obj]
+        prices_pe_obj = self.quarterly_prices_pe(cursor)
+        quarterly_reports_prices_pe_json['Quarterly Closing Price and P/E ratio'] = [
+                                                    price_pe_obj.__dict__ for price_pe_obj in prices_pe_obj]
         return quarterly_reports_prices_pe_json
 
+    def group_average(self, list_of_companies_financials):
+        """
+        returns the average value of various financials of a group of companies, including:
+        revenue, cost, earnings; stock price, price/earnings ratio
+        """
+        dates_vector = [company['Quarterly financials']['date'] for company in list_of_companies_financials][0]
+        revenues_list = [company['Quarterly financials']['revenue'] for company in list_of_companies_financials]
+        revenues_sum_list = list(map(sum, zip(*revenues_list)))
+        print(revenues_sum_list)
+        breakpoint()
+
+    @classmethod
+    def group_avg_financials_history(self, companies_fiancials_list, cursor):
+        """
+        param: companies_fiancials_list -> a list of Company instances
+
+        returns in json a list of the averages of the various company financials. 
+        """
+        historical_financials = []
+        for company in companies_fiancials_list:
+            historical_financials.append(company.to_quarterly_financials_json(cursor))
+
+        self.group_avg_financials_history(historical_financials)
+        # call sub_industry_average (or a generic group_average) function
+        # call a function (to be worked out) that calculates the average of a financial of companies in the same sector
+            # from one table: price, pe; from another: revenue, cost, earnings,
+        
+
+    
     def search_quarterly_report_by_ticker(self, ticker_params, cursor):
         pass
         ticker = ticker_params.values()[0]
@@ -77,6 +98,5 @@ class Company:
         # check if company is a Company object?
         # company_id = company.
         return   quarterly_report()
-
 
     

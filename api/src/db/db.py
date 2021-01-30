@@ -48,6 +48,20 @@ def show_companies_by_sector(Class, sector_name, cursor):
     records = cursor.fetchall()
     return build_from_records(Class, records)
 
+def find_companies_by_sub_industry(Class, sub_industry_id, cursor):
+    """
+    param Class: models.Company
+    returns Company objects of all the companies in the same sub_industry
+    """
+    sql_str = f"""SELECT companies.* FROM companies 
+                  JOIN sub_industries
+                  ON companies.sub_industry_id = sub_industries.id
+                  WHERE sub_industries.id = %s;
+                """
+    cursor.execute(sql_str, (sub_industry_id,))
+    records = cursor.fetchall()
+    return build_from_records(Class, records)
+
 def find_by_ticker (Class, ticker_symbol, cursor):
     search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s;"""
     cursor.execute(search_str, (ticker_symbol,))

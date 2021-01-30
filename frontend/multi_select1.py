@@ -6,8 +6,13 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from functools import reduce
 
-SECTOR_URL = "http://127.0.0.1:5000/sectors/sector/search"
 COMPANY_URL = "http://127.0.0.1:5000/companies/company_overview/search"
+SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
+SECTOR_URL = "http://127.0.0.1:5000/sectors/sector/search"
+
+def find_companies_by_sub_industry(sub_industry_name):
+    response = requests.get(SUB_INDUSTRY_URL, params={'sub_industry': sub_industry_name})
+    response.json()
 
 def find_company_by_ticker(ticker):
     '''returns the company ticker from the web interface'''
@@ -32,9 +37,13 @@ def avg_element_wise_list(list_of_tuples: list):
     else:
         return list_of_tuples
 
-    
+sub_industries_selected = st.multiselect('Sub_industries:',
+                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'],
+                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'])
+# find_companies_by_sub_industry(sub_industries_selected)
+
 selected_sectors = st.multiselect(
-                        'Industry sectors',
+                        'Quarterly Price/Earnings ratios by industry sectors:',
                     ['Health Care', 'Information Technology', 'Consumer Staples'],
                     ['Health Care', 'Information Technology', 'Consumer Staples'])
 
@@ -67,7 +76,7 @@ for sector in selected_sectors:
                             name = f"{sector}"))
 
 fig.update_layout(
-    title=f"""Average price/earnings ratio by sector""",
+    title=f"""Average Price/Earnings ratio by sector""",
     xaxis_title="Month-Year",
     yaxis_title="Average P/E ratio",
     legend_title="Average quarterly P/E ratio",

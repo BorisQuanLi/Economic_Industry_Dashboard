@@ -39,7 +39,7 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         conn = db.get_db()
         cursor = conn.cursor()
         company = db.find_by_ticker(models.Company, ticker, cursor)
-        ic_pe_json = company.to_quarterly_reports_prices_pe_json_by_ticker(db.cursor)
+        ic_pe_json = company.to_quarterly_financials_json(db.cursor)
         return json.dumps(ic_pe_json, default = str)
 
     @app.route('/companies/company_overview/search') # see code above
@@ -54,7 +54,7 @@ def create_app(database='investment_analysis', testing = False, debug = True):
             else:
                 name = params['name']
                 company = db.find_by_name(models.Company, name, cursor)
-        ic_pe_json = company.to_quarterly_reports_prices_pe_json_by_ticker(db.cursor)
+        ic_pe_json = company.to_quarterly_financials_json(db.cursor)
         return json.dumps(ic_pe_json, default = str)
 
     @app.route('/companies/latest_quarter_company_overview/<ticker>')
@@ -104,6 +104,42 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         company_price_pe = company_price_pe.to_latest_pe_json(cursor)
         return json.dumps(company_price_pe, default = str)
 
+    @app.route('/sub_industries/')
+    def find_all_sub_industries():
+        conn = db.get_db()
+        cursor = conn.cursor()
+        objs_list = db.find_all(models.SubIndustry, cursor)
+        dicts_list = [obj.__dict__ for obj in objs_list]
+        return json.dumps(dicts_list)
+    
+    @app.route('/sub_industries/<id>')
+    def sub_industry(id):
+        """
+        Return a json list of a sub_industry's average financial in revenues, earnings, p/e ratios.
+        """
+        conn = db.get_db()
+        cursor = conn.cursor()
+        sub_industry_obj = db.find(models.SubIndustry, id, cursor)
+        #sub_industry_id = sub_industry_obj.id
+        sub_industry_obj.average_financials_by_sub_industry(cursor)
+        
+        breakpoint()
+        # a list of Company objects in the same sector
+        companies_by_sub_industry = (db.find_companies_by_sub_industry(
+                                                                    models.Company, sub_industry_id, cursor))
+        print(companies_by_sub_industry)
+        breakpoint()
+        models.Company.group_avg_financials_history(companies_by_sub_industry, cursor)
+        return json.dumps(sub_industry_obj.__dict__)
+
+    @app.route('/sub_industries/search')
+    def search_sub_industires():
+        sub_industries_name = dict(request.args)['sub_industry']
+        
+        return sub_industry(id)
+
+
+
     @app.route('/sectors/sector/<sector_name>')
     def companies_within_sector(sector_name): #may need to work out sub_industries_within_sector
         conn = db.get_db()
@@ -122,7 +158,7 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         sector_name = params['sector']
         companies = db.show_companies_by_sector(models.Company, sector_name, cursor)
         for company in companies:
-            company.to_quarterly_reports_prices_pe_json_by_ticker(cursor)
+            company.to_quarterly_financials_json(cursor)
         companies_dicts = [company.__dict__ for company in companies]
         return json.dumps(companies_dicts, default = str)
     
