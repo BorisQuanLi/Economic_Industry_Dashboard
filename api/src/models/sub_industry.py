@@ -2,6 +2,7 @@ from api.src.db import db
 import api.src.models as models
 from functools import reduce
 from datetime import datetime
+from collections import defaultdict
 
 class SubIndustry:
     __table__ = "sub_industries"
@@ -63,8 +64,33 @@ class SubIndustry:
 
         reporting_dates_history = [quarter['date'].strftime("%Y-%m-%d") for quarter 
                                                         in list_of_companies_financials[0]['Quarterly financials']]
+        number_of_companies = len(list_of_companies_financials)
         final_dict = {}
-        for reports_category in ['Quarterly financials', 'Quarterly Closing Price and P/E ratio']:
+
+        companies_records = defaultdict(list)
+        for company in list_of_companies_financials:
+            for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
+                companies_records[reports_category].append(company[reports_category])
+        
+        for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
+            if reports_category == 'Quarterly Closing Price and P/E ratio':
+                financials_of_interest = ['closing_price', 'price_earnings_ratio']
+            else:
+                financials_of_interest = ['revenue', 'cost', 'net_income']
+            company_financials_list = companies_records[reports_category]
+            quarterly_sum_totals = reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)
+            quarterly_averages = map(lambda x: {k: v/number_of_companies for k, v in x.items()}, 
+                                                                                        quarterly_sum_totals)
+            final_dict["Avg. " + f"{reports_category}"] = dict(zip(reporting_dates_history, quarterly_averages))
+
+        print("*" * 20)
+        print("final_dict from new function:")
+        print(final_dict)
+        return final_dict
+        breakpoint()
+        
+        
+        for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
             if reports_category == 'Quarterly Closing Price and P/E ratio':
                 company_financials_list = [company['Quarterly Closing Price and P/E ratio'] 
                                                         for company in list_of_companies_financials]
@@ -73,8 +99,25 @@ class SubIndustry:
                 company_financials_list = [company['Quarterly financials'] 
                                                         for company in list_of_companies_financials]
                 financials_of_interest = ['revenue', 'cost', 'net_income']
-            final_dict[reports_category] = dict(zip(reporting_dates_history,
-                                                    reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)))
+            quarterly_sum_totals = reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)
+        print("-" * 20)
+        print("quarterly_sum_totals from old function, without defaultdict(list):")
+        print(quarterly_sum_totals)
+        breakpoint()
+
+        for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
+            if reports_category == 'Quarterly Closing Price and P/E ratio':
+                company_financials_list = [company['Quarterly Closing Price and P/E ratio'] 
+                                                        for company in list_of_companies_financials]
+                financials_of_interest = ['closing_price', 'price_earnings_ratio']
+            else:
+                company_financials_list = [company['Quarterly financials'] 
+                                                        for company in list_of_companies_financials]
+                financials_of_interest = ['revenue', 'cost', 'net_income']
+            quarterly_sum_totals = reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)
+            quarterly_averages = map(lambda x: {k: v/number_of_companies 
+                                                        for k, v in x.items()}, quarterly_sum_totals)
+            final_dict["Avg. " + f"{reports_category}"] = dict(zip(reporting_dates_history, quarterly_averages))
 
         return final_dict  
 
