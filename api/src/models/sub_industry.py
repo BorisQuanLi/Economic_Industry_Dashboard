@@ -1,6 +1,7 @@
 from api.src.db import db
 import api.src.models as models
 from functools import reduce
+from datetime import datetime
 
 class SubIndustry:
     __table__ = "sub_industries"
@@ -60,7 +61,7 @@ class SubIndustry:
                                                                                                 list_of_companies_financials) 
             return reduced_dict_list
 
-        reporting_dates_history = [quarter['date'] for quarter 
+        reporting_dates_history = [quarter['date'].strftime("%Y-%m-%d") for quarter 
                                                         in list_of_companies_financials[0]['Quarterly financials']]
         final_dict = {}
         for reports_category in ['Quarterly financials', 'Quarterly Closing Price and P/E ratio']:
@@ -89,7 +90,5 @@ class SubIndustry:
         list_of_companies_financials = [obj.to_quarterly_financials_json(cursor) 
                                                                 for obj in companies_objs_list]
         final_dict = self.group_average(list_of_companies_financials)
-        print(final_dict)
-        breakpoint()
         return final_dict
     

@@ -122,7 +122,8 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         sub_industry_obj = db.find(models.SubIndustry, id, cursor)
         #sub_industry_id = sub_industry_obj.id
         sub_industry_obj.average_financials_by_sub_industry(cursor)
-        
+        return json.dumps(sub_industry_obj.
+                                    average_financials_by_sub_industry(cursor))
         breakpoint()
         # a list of Company objects in the same sector
         companies_by_sub_industry = (db.find_companies_by_sub_industry(
