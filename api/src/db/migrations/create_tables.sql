@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS sub_industries(
 CREATE TABLE IF NOT EXISTS prices_pe(
 	id serial PRIMARY KEY,
   company_id INTEGER,
-	closing_price FLOAT,
-	price_earnings_ratio FLOAT
+	closing_price FLOAT4,
+	price_earnings_ratio FLOAT4
 	);
 
 CREATE TABLE IF NOT EXISTS quarterly_reports (
@@ -35,6 +35,6 @@ CREATE TABLE IF NOT EXISTS quarterly_reports (
   revenue BIGINT,
   cost BIGINT,
   net_income BIGINT,
-  earnings_per_share FLOAT
+  earnings_per_share FLOAT4
 );
 

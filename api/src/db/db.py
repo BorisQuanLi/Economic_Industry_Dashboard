@@ -81,6 +81,40 @@ def find_company_by_ticker(Class, ticker_symbol, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+def avg_quarterly_financials_by_sub_industry(Class, sub_industry_id, cursor):
+    """
+    Param Class: pass in the QuarterlyReport
+    """
+    sql_str = """SELECT ROUND(AVG(revenue)) AS average_revenue, 
+                        ROUND(AVG(cost)) AS average_cost, 
+                        ROUND(AVG(net_income)) AS average_net_income
+                    FROM sub_industries JOIN companies 
+                    ON sub_industries.id = companies.sub_industry_id
+                    JOIN quarterly_reports
+                    ON quarterly_reports.company_id = companies.id
+                    WHERE sub_industries.id = 31
+                    GROUP BY sub_industries.id;
+              """
+    cursor.execute(sql_str, (sub_industry_id,))
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
+
+def avg_quarterly_prices_pe_by_sub_industry(Class, sub_industry_id, cursor):
+    """
+    Param Class: pass in the QuarterlyReport
+    """
+    sql_str = """SELECT ROUND(AVG(closing_price)::numeric, 2) average_closing_price, 
+                        ROUND(AVG(price_earnings_ratio)::numeric, 2) average_price_earnings_ratio 
+                    FROM sub_industries JOIN companies 
+                    ON sub_industries.id = companies.sub_industry_id
+                    JOIN prices_pe
+                    ON prices_pe.company_id = companies.id
+                    WHERE sub_industries.id = 31
+                    GROUP BY sub_industries.id;
+              """
+    cursor.execute(sql_str, (sub_industry_id,))
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
 
 def find_quarterly_reports_by_ticker(Class, ticker_symbol, cursor):
     sql_str = f"""SELECT * FROM quarterly_reports
