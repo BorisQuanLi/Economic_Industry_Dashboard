@@ -112,32 +112,43 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         dicts_list = [obj.__dict__ for obj in objs_list]
         return json.dumps(dicts_list)
     
-    @app.route('/sub_industries/<id>')
-    def sub_industry(id):
+    # 03/03/2021
+    @app.route('/sub_industries/<sub_industry_name>')
+    def sub_industry_by_name(sub_industry_name):
         """
-        Return a json list of a sub_industry's average financial in revenues, earnings, p/e ratios.
+        Returns a sub_industry's average value of various performance measurements each
+        quarter, over four consecutive quarters.
+        The measurements include revenue, cost, earnings, stock price, price/earnings ratios.
         """
         conn = db.get_db()
         cursor = conn.cursor()
-        sub_industry_obj = db.find(models.SubIndustry, id, cursor)
-        #sub_industry_id = sub_industry_obj.id
-        sub_industry_obj.average_financials_by_sub_industry(cursor)
-        return json.dumps(sub_industry_obj.
-                                    average_financials_by_sub_industry(cursor))
-        breakpoint()
-        # a list of Company objects in the same sector
-        companies_by_sub_industry = (db.find_companies_by_sub_industry(
-                                                                    models.Company, sub_industry_id, cursor))
-        print(companies_by_sub_industry)
-        breakpoint()
-        models.Company.group_avg_financials_history(companies_by_sub_industry, cursor)
-        return json.dumps(sub_industry_obj.__dict__)
+        
+        quarterly_numbers_history = []
+        report_dates_list = db.report_dates(cursor)
+        for report_date in report_dates_list:
+            single_quarter_record_obj = db.sub_industry_avg_quarterly_numbers(models.SubIndustryPerformance, 
+                                                                            sub_industry_name, 
+                                                                            report_date, 
+                                                                            cursor)
+            quarterly_numbers_history.append(single_quarter_record_obj.__dict__)
+        return json.dumps(quarterly_numbers_history)
 
     @app.route('/sub_industries/search')
     def search_sub_industires():
-        sub_industries_name = dict(request.args)['sub_industry']
-        
-        return sub_industry(id)
+        conn = db.get_db()
+        cursor = conn.cursor()
+        params = dict(request.args)
+        sub_industry_name = params['sub_industry']
+
+        quarterly_numbers_history = []
+        report_dates_list = db.report_dates(cursor)
+        for report_date in report_dates_list:
+            single_quarter_record_obj = db.sub_industry_avg_quarterly_numbers(models.SubIndustryPerformance, 
+                                                                            sub_industry_name, 
+                                                                            report_date, 
+                                                                            cursor)
+            quarterly_numbers_history.append(single_quarter_record_obj.__dict__)
+        return json.dumps(quarterly_numbers_history)
 
 
 

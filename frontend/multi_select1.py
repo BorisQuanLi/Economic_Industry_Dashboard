@@ -55,11 +55,10 @@ for sector in selected_sectors:
     for company in companies_by_sector:
         ticker = company['ticker']
         company_info = find_company_by_ticker(ticker)
-        
         pe_history = [quarter['price_earnings_ratio'] for quarter in company_info[
-                                                'History of quarterly Closing Price and Price to Earnings ratios']]
+                                                'Quarterly Closing Price and P/E ratio']]
         date_history = [datetime.strptime(quarter['date'], "%Y-%m-%d") for quarter in company_info[
-                                                'History of quarterly Closing Price and Price to Earnings ratios']]
+                                                'Quarterly Closing Price and P/E ratio']]
         pe_list.append(dict(zip(date_history, pe_history)))
 
     companies_pe_history_list = [company_quarterly_pe

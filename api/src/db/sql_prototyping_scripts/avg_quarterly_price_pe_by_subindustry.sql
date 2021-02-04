@@ -1,4 +1,11 @@
 /* prototyping the sql query script to be included in the Python psycopg methods.*/
+
+psql -U postgres investment_analysis -c
+
+/*
+This query calculates the average value of an entire volume, without distinguishing 
+the different dates.
+*/
 SELECT sub_industries.sub_industry_gics,
        ROUND(AVG(closing_price)::numeric, 2) average_closing_price, 
        ROUND(AVG(price_earnings_ratio)::numeric, 2) average_price_earnings_ratio 

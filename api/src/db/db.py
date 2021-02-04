@@ -1,6 +1,7 @@
 from flask import current_app
 from flask import g
 import psycopg2
+from datetime import datetime, timedelta
 
 conn = psycopg2.connect(database = 'investment_analysis', user = 'postgres', password = 'postgres')
 cursor = conn.cursor()
@@ -81,9 +82,64 @@ def find_company_by_ticker(Class, ticker_symbol, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+# 02/02, based on Office Hour discussion with Jeff, to be called by the function that produces multiple quarters' numbers.
+def report_dates(cursor):
+    sql_str = """
+                SELECT date FROM prices_pe 
+                WHERE company_id = (
+                    SELECT DISTINCT company_id FROM prices_pe LIMIT 1);
+                """
+    cursor.execute(sql_str)
+    report_dates_list = [report_date[0] for report_date in cursor.fetchall()]
+    return report_dates_list
+
+def sub_industry_avg_quarterly_numbers(Class, sub_industry_name, report_date, cursor):
+    """
+    params: 
+        sub_industry_name, matches the entry in the sub_industries table
+        report_date, string in the "yyyy-mm-dd" format. passed in from either the quarterly_reports or the prices_pe tables, indicating
+            the date of the SEC filing that includes the various financials and stock price.
+
+    returns the average value of one quarter's financial numbers from both the quarterly_reports and prices_pe
+    table (revenue, cost, net_income in the former; closing_price and price_earnings_ratio in the latter).
+
+    Only the raw "row data" from the SQL query, can't be sent to the build_from_records function because
+    the data comes from two different classes (SQL tables)?
+    """
+    
+    sql_str = """SELECT ROUND(AVG(prices_pe.closing_price:: numeric), 2) avg_closing_price,
+                        ROUND(AVG(prices_pe.price_earnings_ratio:: numeric), 2) avg_pe_ratio,
+                        ROUND(AVG(quarterly_reports.revenue:: numeric), 2) avg_revenue,
+                        ROUND(AVG(quarterly_reports.cost:: numeric), 2) avg_cost,
+                        ROUND(AVG(quarterly_reports.net_income:: numeric), 2) avg_net_income
+                FROM sub_industries 
+                JOIN companies 
+                ON sub_industries.id = companies.sub_industry_id
+                JOIN prices_pe
+                ON prices_pe.company_id = companies.id
+                JOIN quarterly_reports
+                ON quarterly_reports.company_id = companies.id
+                WHERE sub_industries.sub_industry_gics = %s 
+                        AND prices_pe.date > %s
+                        AND prices_pe.date < %s
+                GROUP BY sub_industries.id;
+                """
+    
+    lower_date_range = report_date - timedelta(days= 45)
+    upper_date_range = report_date + timedelta(days= 45)
+
+    cursor.execute(sql_str, 
+                            (sub_industry_name, 
+                                lower_date_range, 
+                                upper_date_range,))
+    single_quarter_numbers = [float(e) for e in cursor.fetchone()]
+    single_quarter_record = [report_date.strftime("%Y-%m-%d"), sub_industry_name] + single_quarter_numbers
+    return build_from_record(Class, single_quarter_record)
+
+
 def avg_quarterly_financials_by_sub_industry(Class, sub_industry_id, cursor):
     """
-    Param Class: pass in the QuarterlyReport
+    Param Class: QuarterlyReport
     """
     sql_str = """SELECT ROUND(AVG(revenue)) AS average_revenue, 
                         ROUND(AVG(cost)) AS average_cost, 
@@ -101,7 +157,7 @@ def avg_quarterly_financials_by_sub_industry(Class, sub_industry_id, cursor):
 
 def avg_quarterly_prices_pe_by_sub_industry(Class, sub_industry_id, cursor):
     """
-    Param Class: pass in the QuarterlyReport
+    Param Class: PricePE
     """
     sql_str = """SELECT ROUND(AVG(closing_price)::numeric, 2) average_closing_price, 
                         ROUND(AVG(price_earnings_ratio)::numeric, 2) average_price_earnings_ratio 
