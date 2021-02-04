@@ -1,8 +1,7 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-import pandas as pd
-import matplotlib.pyplot as plt
+import json
 from datetime import datetime
 from functools import reduce
 
@@ -12,11 +11,10 @@ SECTOR_URL = "http://127.0.0.1:5000/sectors/sector/search"
 
 def sub_industry_avg_performance_history(sub_industry_name):
     """
-    returns a sub_industry's average performance numbers in each quarter, over the most recent 4 quarters
-    in which SEC filings contaiing these numbers have been made by the companies in the sub_industry.  
+    Through a backend SQL query, returns a sub_industry's average performance numbers in each of the most recently available
+    4 quarters, as provided in the companies' SEC filings, including:
 
-    The result contains revenue, cost, net_earnings, stock price, price/earnings ratio, which 
-    can be selected by the web client/end user.
+    revenue, cost, net_earnings, stock price, price/earnings ratio
     """
     response = requests.get(SUB_INDUSTRY_URL, params= {'sub_industry': sub_industry_name})
     return response.json()
@@ -24,7 +22,8 @@ def sub_industry_avg_performance_history(sub_industry_name):
 def avg_performance_by_sub_industries(sub_industries):
     avg_performances = dict()
     for sub_industry_name in sub_industries:
-        sub_industry_avg_performance_hist = sub_industry_avg_performance_history(sub_industry_name)
+        sub_industry_avg_performance_hist = sub_industry_avg_performance_history(sub_industry_name)[
+                                                                                                'quarterly numbers']
         sub_industry_name = sub_industry_avg_performance_hist[0]['sub_industry_name']
         avg_performances[sub_industry_name] = sub_industry_avg_performance_hist
     return avg_performances
@@ -79,32 +78,16 @@ def plot_sub_industries_avg_performance_history(sub_industries:list, performance
 
     st.plotly_chart(fig)
 
-def find_companies_by_sub_industry(sub_industry_name):
-    response = requests.get(SUB_INDUSTRY_URL, params={'sub_industry': sub_industry_name})
-    return response.json()
+####################
+# functions to anaylyz companies within a sub-industry
+def companies_by_sub_industry(sub_industry_name):
+    response = requests.get(SUB_INDUSTRY_URL, params= {'sub_industry': sub_industry_name})
+    companies_in_sub_industry = response.json()['companies']
+    return companies_in_sub_industry
+    
 
-def find_company_by_ticker(ticker):
-    '''returns the company ticker from the web interface'''
-    response = requests.get(COMPANY_URL, params = {'ticker': ticker})
-    return response.json()
+    
 
-def find_companies_by_sector(sector):
-    selected_sector = requests.get(SECTOR_URL, params = {'sector': sector})
-    return selected_sector.json()
-
-def avg_element_wise_list(list_of_tuples: list):
-    """
-    Turns a list of tuples into a list of element-wise average numbers.
-    """
-    sum_element_wise_list = (reduce(lambda x, y: [tup[0] + tup[1] for tup in zip(x,y)], list_of_tuples) 
-                                if type(list_of_tuples[0]) == tuple 
-                                else list_of_tuples)
-    if type(list_of_tuples[0]) == tuple:
-        number_companies = len(list_of_tuples)
-        return list(map(lambda sum_element_wise: sum_element_wise/ number_companies,
-                            sum_element_wise_list))
-    else:
-        return list_of_tuples
 
 #####
 # Various plots
@@ -118,57 +101,28 @@ sub_industries_selected = st.multiselect('Sub_industries:',
 
 # plot_sub_industries_avg_performance_history(sub_industries_selected, 'avg_closing_price')
 
-
 performance_measurement_selected = st.multiselect('Performance measurements:',
                             ['avg_pe_ratio', 'avg_closing_price', 'avg_revenue', 'avg_cost', 'avg_net_income'],
-                            ['avg_pe_ratio'])[0]
-
+                            ['avg_pe_ratio'])
+# extract the value of the single element in the list, a string 
+performance_measurement_selected = performance_measurement_selected[0]
 plot_sub_industries_avg_performance_history(sub_industries_selected, 
                                             performance_measurement_selected)
-breakpoint()
+
+###############
+
+# 10 am, 02/04, develop more steps of the frontend menu choices: starting with company-level.
+sub_industry_selected = st.multiselect('Analyze companies within a sub_industry (please select only one):',
+                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'],
+                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'])
+
+companies_in_sector = companies_by_sub_industry(sub_industry_selected)
+for company_obj in companies_in_sector:
+    st.write(company_obj)
+
+
 
 # earlier scripts - need reviewing and pruning. 
-
-# plot each sector's average price/quarter-earnings ratio over 4 quarters
-fig = go.Figure()
-for sector in selected_sectors:
-    companies_by_sector = find_companies_by_sector(sector)
-    pe_list = []
-    for company in companies_by_sector:
-        ticker = company['ticker']
-        company_info = find_company_by_ticker(ticker)
-        pe_history = [quarter['price_earnings_ratio'] for quarter in company_info[
-                                                'Quarterly Closing Price and P/E ratio']]
-        date_history = [datetime.strptime(quarter['date'], "%Y-%m-%d") for quarter in company_info[
-                                                'Quarterly Closing Price and P/E ratio']]
-        pe_list.append(dict(zip(date_history, pe_history)))
-
-    companies_pe_history_list = [company_quarterly_pe
-                                        for company_pe_history_dict in pe_list 
-                                                for company_quarterly_pe in company_pe_history_dict.values()]
-    quarterly_average_pe_history = avg_element_wise_list(companies_pe_history_list)
-    quarter_ending_dates_history = [key for key in pe_list[0].keys()] 
-    
-
-    # y, x axis, respectively, above
-    # average quarterly p/e ratio trace for each sector    
-    fig.add_trace(go.Scatter(x= quarter_ending_dates_history,
-                            y= quarterly_average_pe_history,
-                            name = f"{sector}"))
-
-fig.update_layout(
-    title=f"""Average Price/Earnings ratio by sector""",
-    xaxis_title="Month-Year",
-    yaxis_title="Average P/E ratio",
-    legend_title="Average quarterly P/E ratio",
-    font=dict(
-        family="Courier New, monospace",
-        size=18,
-        color="RebeccaPurple"
-    )
-)
-
-st.plotly_chart(fig)
 
 selected_sectors = st.multiselect(
                     'Which sector are you interested in? (Select only one, please.)',
@@ -253,6 +207,35 @@ fig = go.Figure(data=go.Scatter(x=date_history,
                              y=revenue_history))
 st.plotly_chart(fig)
 #plt.savefig(fig)
+
+#####################
+# functions developed in January
+def find_companies_by_sub_industry(sub_industry_name):
+    response = requests.get(SUB_INDUSTRY_URL, params={'sub_industry': sub_industry_name})
+    return response.json()
+
+def find_company_by_ticker(ticker):
+    '''returns the company ticker from the web interface'''
+    response = requests.get(COMPANY_URL, params = {'ticker': ticker})
+    return response.json()
+
+def find_companies_by_sector(sector):
+    selected_sector = requests.get(SECTOR_URL, params = {'sector': sector})
+    return selected_sector.json()
+
+def avg_element_wise_list(list_of_tuples: list):
+    """
+    Turns a list of tuples into a list of element-wise average numbers.
+    """
+    sum_element_wise_list = (reduce(lambda x, y: [tup[0] + tup[1] for tup in zip(x,y)], list_of_tuples) 
+                                if type(list_of_tuples[0]) == tuple 
+                                else list_of_tuples)
+    if type(list_of_tuples[0]) == tuple:
+        number_companies = len(list_of_tuples)
+        return list(map(lambda sum_element_wise: sum_element_wise/ number_companies,
+                            sum_element_wise_list))
+    else:
+        return list_of_tuples
 
 
 

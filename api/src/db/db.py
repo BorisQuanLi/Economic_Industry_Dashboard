@@ -42,24 +42,26 @@ def find(Class, id, cursor):
 def show_companies_by_sector(Class, sector_name, cursor):
     sql_str = f"""SELECT * FROM companies 
                 JOIN sub_industries 
-                ON sub_industries.id = companies.sub_industry_id
+                ON sub_industries.id = companies.sub_industry_name
                 WHERE sub_industries.sector_gics = %s;
                 """
     cursor.execute(sql_str, (sector_name,))
     records = cursor.fetchall()
     return build_from_records(Class, records)
 
-def find_companies_by_sub_industry(Class, sub_industry_id, cursor):
+def find_companies_by_sub_industry_name(Class, sub_industry_name, cursor):
     """
-    param Class: models.Company
+    params  Class: models.Company
+            sub_industry_name: value of the sub_industry_gics column in the sub_industries table
+
     returns Company objects of all the companies in the same sub_industry
     """
     sql_str = f"""SELECT companies.* FROM companies 
                   JOIN sub_industries
-                  ON companies.sub_industry_id = sub_industries.id
-                  WHERE sub_industries.id = %s;
+                  ON companies.sub_industry_id= sub_industries.id
+                  WHERE sub_industries.sub_industry_gics = %s;
                 """
-    cursor.execute(sql_str, (sub_industry_id,))
+    cursor.execute(sql_str, (sub_industry_name,))
     records = cursor.fetchall()
     return build_from_records(Class, records)
 
@@ -93,7 +95,7 @@ def report_dates(cursor):
     report_dates_list = [report_date[0] for report_date in cursor.fetchall()]
     return report_dates_list
 
-def sub_industry_avg_quarterly_numbers(Class, sub_industry_name, report_date, cursor):
+def sub_industry_quarterly_avg_numbers(Class, sub_industry_name, report_date, cursor):
     """
     params: 
         sub_industry_name, matches the entry in the sub_industries table
@@ -137,7 +139,7 @@ def sub_industry_avg_quarterly_numbers(Class, sub_industry_name, report_date, cu
     return build_from_record(Class, single_quarter_record)
 
 
-def avg_quarterly_financials_by_sub_industry(Class, sub_industry_id, cursor):
+def avg_quarterly_financials_by_sub_industry(Class, sub_industry_name, cursor):
     """
     Param Class: QuarterlyReport
     """
@@ -145,30 +147,30 @@ def avg_quarterly_financials_by_sub_industry(Class, sub_industry_id, cursor):
                         ROUND(AVG(cost)) AS average_cost, 
                         ROUND(AVG(net_income)) AS average_net_income
                     FROM sub_industries JOIN companies 
-                    ON sub_industries.id = companies.sub_industry_id
+                    ON sub_industries.id = companies.sub_industry_name
                     JOIN quarterly_reports
                     ON quarterly_reports.company_id = companies.id
                     WHERE sub_industries.id = 31
                     GROUP BY sub_industries.id;
               """
-    cursor.execute(sql_str, (sub_industry_id,))
+    cursor.execute(sql_str, (sub_industry_name,))
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
-def avg_quarterly_prices_pe_by_sub_industry(Class, sub_industry_id, cursor):
+def avg_quarterly_prices_pe_by_sub_industry(Class, sub_industry_name, cursor):
     """
     Param Class: PricePE
     """
     sql_str = """SELECT ROUND(AVG(closing_price)::numeric, 2) average_closing_price, 
                         ROUND(AVG(price_earnings_ratio)::numeric, 2) average_price_earnings_ratio 
                     FROM sub_industries JOIN companies 
-                    ON sub_industries.id = companies.sub_industry_id
+                    ON sub_industries.id = companies.sub_industry_name
                     JOIN prices_pe
                     ON prices_pe.company_id = companies.id
                     WHERE sub_industries.id = 31
                     GROUP BY sub_industries.id;
               """
-    cursor.execute(sql_str, (sub_industry_id,))
+    cursor.execute(sql_str, (sub_industry_name,))
     record = cursor.fetchone()
     return build_from_record(Class, record)
 

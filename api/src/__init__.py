@@ -124,9 +124,9 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         cursor = conn.cursor()
         
         quarterly_numbers_history = []
-        report_dates_list = db.report_dates(cursor)
-        for report_date in report_dates_list:
-            single_quarter_record_obj = db.sub_industry_avg_quarterly_numbers(models.SubIndustryPerformance, 
+        reports_dates_list = db.report_dates(cursor)
+        for report_date in reports_dates_list:
+            single_quarter_record_obj = db.sub_industry_quarterly_avg_numbers(models.SubIndustryPerformance, 
                                                                             sub_industry_name, 
                                                                             report_date, 
                                                                             cursor)
@@ -139,16 +139,22 @@ def create_app(database='investment_analysis', testing = False, debug = True):
         cursor = conn.cursor()
         params = dict(request.args)
         sub_industry_name = params['sub_industry']
-
+        # generate a list of companies in the same sub_industry
+        companies_info = [company.__dict__ for company 
+                                    in db.find_companies_by_sub_industry_name(models.Company, sub_industry_name, cursor)]
+        # generate of list of quarterly performance numbers, by calling the relevant db method
         quarterly_numbers_history = []
-        report_dates_list = db.report_dates(cursor)
-        for report_date in report_dates_list:
-            single_quarter_record_obj = db.sub_industry_avg_quarterly_numbers(models.SubIndustryPerformance, 
+        reports_dates_list = db.report_dates(cursor)
+        for report_date in reports_dates_list:
+            single_quarter_record_obj = db.sub_industry_quarterly_avg_numbers(models.SubIndustryPerformance, 
                                                                             sub_industry_name, 
                                                                             report_date, 
                                                                             cursor)
             quarterly_numbers_history.append(single_quarter_record_obj.__dict__)
-        return json.dumps(quarterly_numbers_history)
+        sub_industry_info = {}
+        sub_industry_info['companies'] = companies_info
+        sub_industry_info['quarterly numbers'] = quarterly_numbers_history
+        return json.dumps(sub_industry_info)
 
 
 
