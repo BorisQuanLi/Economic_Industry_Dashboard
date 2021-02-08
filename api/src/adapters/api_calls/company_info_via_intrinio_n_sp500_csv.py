@@ -6,7 +6,8 @@
 
 import intrinio_sdk as intrinio
 from intrinio_sdk.rest import ApiException
-from helpers import activate_intrinio_api
+from api.src.adapters.api_calls.helpers import activate_intrinio_api
+import csv
 
 # from read_dow_jones_tickers import *
 
@@ -34,7 +35,7 @@ def company_info_via_intrinio_api_n_sp500_csv(ticker:str,
         return company_info_dict
 
     def company_info_via_sp500_csv(ticker, company_dict,
-                                   filepath= './data/sp500/S&P500-Info.csv'):
+                                   filepath= 'api/data/sp500/S&P500-Info.csv'):
         """
         param ticker: string
         """
