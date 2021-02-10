@@ -73,7 +73,8 @@ class Company:
         returns the average value of various financials of a group of companies, including:
         revenue, cost, earnings; stock price, price/earnings ratio
         """
-        dates_vector = [company['Quarterly financials']['date'] for company in list_of_companies_financials][0]
+        dates_vector = [company['Quarterly financials']['date'] 
+                    for company in list_of_companies_financials][0]
         revenues_list = [company['Quarterly financials']['revenue'] for company in list_of_companies_financials]
         revenues_sum_list = list(map(sum, zip(*revenues_list)))
         print(revenues_sum_list)
