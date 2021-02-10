@@ -7,14 +7,20 @@ class Company:
     columns = ['id', 'name', 'ticker', 'sub_industry_id', 'year_founded', 'number_of_employees', 'HQ_state', 'country']
 
     def __init__(self, **kwargs):
+        # possible error: TypeError: exceptions must derive from BaseException
+        """
         for key in kwargs.keys():
             if key not in self.columns:
                 raise f'{key} not in {self.columns}'
+        """
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     @classmethod
-    def find_by_stock_ticker(self, stock_ticker, cursor):
+    def find_by_stock_ticker(self, stock_ticker:str, cursor):
+        """
+        returns a Company object, with values in all the fields, based on its ticker.
+        """
         ticker_query = """SELECT * FROM companies WHERE ticker = %s;"""
         cursor.execute(ticker_query, (stock_ticker,))
         company_record = cursor.fetchone()
@@ -33,7 +39,7 @@ class Company:
         Returns the names of the sub_industry and sector that a company belongs to.
         """
         sql_query = f"""SELECT * FROM sub_industries 
-                    WHEER sub_industries.id = %s;
+                    WHERE sub_industries.id = %s;
                     """
         cursor.execute(sql_query, (self.sub_industry_id,))
         return db.build_from_record(models.SubIndustry, cursor.fetchone())
