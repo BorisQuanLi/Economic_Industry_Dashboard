@@ -36,10 +36,16 @@ with open('../api/data/sp500/S&P500-Info.csv') as csv_file:
         if row['Security'] == 'United Airlines Holdings':
             united_airlines_row = row
 
-sp500_row_fields_company_columns_dict = {'Symbol': 'ticker', 
-                                         'Security': 'name', 
-                                         'GICS Sub-Industry': 'sub_industry_id', 
-                                         'Founded': 'year_founded'}
+
+united_airlines_dict = united_airlines_row
+# simplify the data import
+sp500_row_fields_company_columns_dict = {'Security': 'name',
+                                        'Symbol': 'ticker',
+                                        'sub_industry_id': 'sub_industry_id',
+                                        'Founded': 'year_founded'}
+united_airlines_dict= {sp500_row_fields_company_columns_dict[key]:value 
+                            for key,value in united_airlines_dict.items() 
+                                if key in sp500_row_fields_company_columns_dict}
 
 
 print(sectors_dict)

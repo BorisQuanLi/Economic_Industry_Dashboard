@@ -16,17 +16,16 @@ class SubIndustry:
             setattr(self, k, v)
 
     @classmethod
-    def find_by_sub_industry(self, sub_industry_id, cursor):
+    def find_by_sub_industry_name(self, sub_industry_name, cursor):
         sql_str = f"""SELECT * FROM {self.__table__}
                     WHERE sub_industry_GICS = %s"""
-        print(self.__table__)
-        cursor.execute(sql_str, (sub_industry_id,))
+        cursor.execute(sql_str, (sub_industry_name,))
         record = cursor.fetchone()
         return db.build_from_record(SubIndustry, record)
 
     @classmethod
     def find_by_sector(self, sector_name, cursor):
-        sql_str = f"""SELECT * FROM {self} 
+        sql_str = f"""SELECT * FROM {self.__table__} 
                     WHERE sector_GICS = %s;"""
         cursor.execute(sql_str, (sector_name,))
         record = cursor.fetchone()

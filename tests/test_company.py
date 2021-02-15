@@ -14,21 +14,10 @@ def build_records(test_conn, test_cursor):
                                                                     test_conn, test_cursor)
     airlines_sub_industry_id = airlines_sub_industry_obj.id
 
-    united_airlines_dict = {'': '457', 'Symbol': 'UAL', 'Security': 'United Airlines Holdings', 
-                            'SEC filings': 'reports', 'GICS Sector': 'Industrials', 
-                            'GICS Sub-Industry': 'Airlines', 'Headquarters Location': 'Chicago, Illinois', 
-                            'Date first added': '2015-09-03', 'CIK': '100517', 'Founded': '1967'}
+    united_airlines_dict = {'name': 'United Airlines Holdings', 'ticker': 'UAL', 'year_founded': '1967'}
     united_airlines_dict['sub_industry_id'] = airlines_sub_industry_id
-    # simplify the data import
-    sp500_row_fields_company_columns_dict = {'Security': 'name',
-                                            'Symbol': 'ticker',
-                                            'sub_industry_id': 'sub_industry_id',
-                                            'Founded': 'year_founded'}
-    united_airlines_dict= {sp500_row_fields_company_columns_dict[key]:value 
-                                for key,value in united_airlines_dict.items() 
-                                    if key in sp500_row_fields_company_columns_dict}
-    united_airlines_company_obj = Company(**united_airlines_dict)
-    united_airlines_company_obj = save(united_airlines_company_obj, test_conn, test_cursor)
+    united_airlines_company_obj = save(Company(**united_airlines_dict), 
+                                                                test_conn, test_cursor)
 
 @pytest.fixture()
 def db_cursor():
