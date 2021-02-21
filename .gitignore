@@ -1,1 +1,5 @@
+.DS_Store
+.ipynb_checkpoints
+backend/.env
+
 ./api/src/adapters/api_calls/api_client_config.py

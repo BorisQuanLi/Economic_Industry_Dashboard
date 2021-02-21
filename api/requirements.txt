@@ -1,6 +1,0 @@
-flask
-pytest
-psycopg2-binary
-simplejson
-intrinio_sdk
-finnhub-python
