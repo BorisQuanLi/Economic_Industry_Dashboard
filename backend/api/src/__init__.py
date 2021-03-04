@@ -5,14 +5,18 @@ from flask import request
 import api.src.models as models
 import api.src.db as db
 import api.src.adapters as adapters
+from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, DEBUG, TESTING
 
-def create_app(database='investment_analysis', testing = False, debug = True):
+def create_app():
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
     app.config.from_mapping(
-        DATABASE=database,
-        DEBUG = debug,
-        TESTING = testing
+        DB_USER = DB_USER,
+        DB_NAME = DB_NAME,
+        DB_PASSWORD = db.DB_PASSWORD,
+        DB_HOST = DB_HOST,
+        DEBUG = DEBUG,
+        TESTING = TESTING
     )
 
     @app.route('/')

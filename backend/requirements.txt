@@ -4,5 +4,7 @@ psycopg2-binary
 simplejson
 python-dotenv
 requests
+pytz
+pandas
 intrinio_sdk
 finnhub-python

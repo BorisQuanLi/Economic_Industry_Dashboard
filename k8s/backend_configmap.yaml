@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # name: database-config
+  name: flask-config
+  namespace: default
+data:
+  # postgres_db_url: http://127.0.0.1:8501 # 4 pm, 03/04: should be streamlit_url instead of postgres_db_url?
+  flask_url: http://0.0.0.0:5000

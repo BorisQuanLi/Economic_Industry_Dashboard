@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: backend
+  template:
+    metadata:
+      labels:
+        component: backend
+    spec:
+      containers:
+        - name: investment-analysis-backend
+          image: ssbfc2001/investment-analysis-backend:v4
+          ports:
+          - containerPort: 5000 # streamlit
+          env:
+            - name: STREAMLIT_URL
+              value: http://0.0.0.0:5000

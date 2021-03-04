@@ -2,7 +2,9 @@ from flask import current_app
 from flask import g
 import psycopg2
 from datetime import datetime, timedelta
+from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
 
+"""
 conn = psycopg2.connect(database = 'investment_analysis', user = 'postgres', password = 'postgres')
 cursor = conn.cursor()
 
@@ -10,6 +12,16 @@ def get_db():
     if "db" not in g:
         g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
             dbname = current_app.config['DATABASE'])
+    return g.db
+"""
+
+# conn = psycopg2.connect(host = DB_HOST, database = DB_NAME, 
+#        user = DB_USER, password = DB_PASSWORD)  # can be hard-coded as a temporary fix, if .env is causing problems.
+
+def get_db():
+    if "db" not in g:
+        g.db = psycopg2.connect(host = DB_HOST, database = DB_NAME, 
+                        user = DB_USER, password = DB_PASSWORD) # can be hard-coded as a temporary fix, if .env is causing problems.
     return g.db
 
 def close_db(e=None):
