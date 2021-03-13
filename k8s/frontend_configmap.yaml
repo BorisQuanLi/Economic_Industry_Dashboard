@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: streamlit-config
+  namespace: default
+data:
+  streamlit_url: http://127.0.0.1:8501 # 4 pm, 03/04: should be streamlit_url instead of postgres_db_url?

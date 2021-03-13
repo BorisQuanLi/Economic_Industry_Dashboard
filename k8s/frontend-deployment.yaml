@@ -16,8 +16,4 @@ spec:
         - name: investment-analysis-frontend
           image: ssbfc2001/investment_analysis_frontend:v2
           ports:
-          - containerPort: 8501 # streamlit
-          env:
-            - name: STREAMLIT_URL
-              value: http://127.0.0.1:8501
-            # may need to workout the backend/postgres url here.  STREAMLIT_URL may not be needed.
+          - containerPort: 8501

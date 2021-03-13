@@ -13,8 +13,7 @@ spec:
         component: backend
     spec:
       containers:
-        - name: investment-analysis-backend
+        - name: restaurants-api
           image: ssbfc2001/investment-analysis-backend:v1
           ports:
-          - containerPort: 5000 # flask
-          
+          - containerPort: 5000

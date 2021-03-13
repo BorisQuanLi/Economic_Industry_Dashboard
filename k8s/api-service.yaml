@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: investment-analysis-api
+spec:
+  type: ClusterIP
+  selector:
+    component: backend
+  ports:
+    - port: 5000
+      targetPort: 5000

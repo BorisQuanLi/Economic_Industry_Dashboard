@@ -1,13 +1,13 @@
 import csv
 import api.src.models as models
 import api.src.db as db
-import api.src.adapters as adapters
+from apir.src.adpaters.client import CompaniesClient, CompanyBuilder
 import psycopg2
 
 class RequestAndBuildSP500Companies:
     def __init__(self):
-        self.client = adapters.CompaniesClient() # from adapter/client.py
-        self.company_builder = adapters.CompanyBuilder()
+        self.client = CompaniesClient() # from adapter.client.py
+        self.company_builder = CompanyBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
     
@@ -39,8 +39,8 @@ class RequestAndBuildSP500Companies:
 
 class RequestAndBuildCompany:
     def __init__(self):
-        self.client = adapters.CompanyClient() # from adapter/client.py
-        self.company_builder = adapters.CompanyBuilder()
+        self.client = CompanyClient() # from adapter/client.py
+        self.company_builder = CompanyBuilder()
         self.conn = psycopg2.connect(database = 'investment_analysis', 
                                         user = 'postgres', 
                                         password = 'postgres')
@@ -49,8 +49,8 @@ class RequestAndBuildCompany:
 
 class RequestAndBuildSubIndustries:
     def __init__(self):
-        self.client = adapters.SubIndustryClient() # from client.py
-        self.sub_industry_builder = adapters.SubIndustryBuilder() # from sub_industries_builder.py
+        self.client = SubIndustryClient() # from client.py
+        self.sub_industry_builder = SubIndustryBuilder() # from sub_industries_builder.py
         self.conn = psycopg2.connect(database = 'investment_analysis', 
                                         user = 'postgres', 
                                         password = 'postgres')
@@ -70,8 +70,8 @@ class RequestAndBuildSubIndustries:
 
 class RequestAndBuildCompaniesBySubIndustry:
     def __init__(self):
-        self.client = adapters.CompanyClient()
-        self.company_builder = adapters.CompanyBuilder()
+        self.client = CompanyClient()
+        self.company_builder = CompanyBuilder()
         self.conn = psycopg2.connect(database = 'investment_analysis', 
                                         user = 'postgres', 
                                         password = 'postgres')
