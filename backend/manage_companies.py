@@ -8,8 +8,8 @@ app = create_app()
 cli = FlaskGroup(create_app=create_app)
 
 # prototyping 
-sp500_companies_runner = RequestAndBuildSP500Companies()
-sp500_companies_runner.run()
+sp500_companies_info_runner = RequestAndBuildSP500Companies() # to be refactored
+sp500_companies_info_runner.run()
 breakpoint()
 
 company_runner = RequestAndBuildCompany()

@@ -1,12 +1,13 @@
 import csv
 import api.src.models as models
 import api.src.db as db
-from apir.src.adpaters.client import CompaniesClient, CompanyBuilder
+import api.src.adapters.client as client
+from api.src.adapters.company_builder import CompanyBuilder
 import psycopg2
 
-class RequestAndBuildSP500Companies:
+class RequestAndBuildSP500Companies: # to be refactored
     def __init__(self):
-        self.client = CompaniesClient() # from adapter.client.py
+        self.filepath_client = client.SP500WikiDataFilePath() # from adapter.client.py
         self.company_builder = CompanyBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
@@ -14,24 +15,27 @@ class RequestAndBuildSP500Companies:
     def generate_sub_industry_id(self, sub_industry_name, sector_name):
         sub_industry_dict = {'sub_industry_GICS': sub_industry_name, 'sector_GICS': sector_name}
         sub_industry_obj = models.SubIndustry(**sub_industry_dict)
-        sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
+        try:
+            sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
+        except Exception as e:
+            print(e)
+            breakpoint()
         return sub_industry_id 
         
-    def run(self):
-        sp500_wiki_data_filepath = self.client.get_sp500_companies_info()
+    def run(self): # to be refactored, using Pandas?
+        sp500_wiki_data_filepath = self.filepath_client.get_sp500_companies_info()
         with open(sp500_wiki_data_filepath) as csv_file:
             reader = csv.DictReader(csv_file)
             sp500_companies_wiki_data = []
             for wiki_row in reader:
                 sub_industry_name = wiki_row['GICS Sub-Industry']
-                try:
-                    sub_industry_obj = (models.SubIndustry
-                                            .find_by_sub_industry_name(sub_industry_name, self.cursor))
-                    sub_industry_id = sub_industry_obj.__dict__['id']
-                except Exception as e:
-                    print(e)
+                sub_industry_obj = (models.SubIndustry
+                                        .find_by_sub_industry_name(sub_industry_name, self.cursor))
+                if not sub_industry_obj:
                     sector_name = wiki_row['GICS Sector']
                     sub_industry_id = self.generate_sub_industry_id(sub_industry_name, sector_name)
+                else:
+                    sub_industry_id = sub_industry_obj.__dict__['id']
                 # send wiki_row and sub_industry_id to a function to build a company object
                 company_obj = self.company_builder.run(wiki_row, sub_industry_id, self.conn, self.cursor)
                 sp500_companies_wiki_data.append(company_obj)

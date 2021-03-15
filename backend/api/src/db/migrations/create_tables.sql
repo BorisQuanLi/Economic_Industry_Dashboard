@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS companies (
   ticker VARCHAR(255) UNIQUE,
   sub_industry_id VARCHAR(255),
   year_founded VARCHAR(255),
-  number_of_employees INTEGER,
+  number_of_employees VARCHAR(255),
   HQ_state VARCHAR(255)
 );
 

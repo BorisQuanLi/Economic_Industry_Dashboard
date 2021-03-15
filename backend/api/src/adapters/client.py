@@ -1,12 +1,11 @@
 import json
-from api.data.ingest_process_data.ingest_sp500_wiki_info_n_employees_total import get_sp500_stocks_wiki_filepath
+from api.data.ingest_sp500_wiki_info_n_employees_total import ingest_sp500_stocks_info
 
-class CompaniesClient:
-    try:
-        if open ("./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"):
-            sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
-    except FileNotFoundError:
-        sp500_wiki_data_filepath = get_sp500_stocks_wiki_filepath()
+class SP500WikiDataFilePath:
+    if open ("./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"):
+        sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
+    else:
+        sp500_wiki_data_filepath = ingest_sp500_stocks_info()
     
     def get_sp500_companies_info(self):
         return self.sp500_wiki_data_filepath

@@ -9,11 +9,11 @@ class CompanyBuilder:
     attributes = ['name', 'ticker', 'sub_industry_id', 'year_founded', 'number_of_employees', 'HQ_state']
 
     def run(self, info_row, sub_industry_id, conn, cursor):
-        ticker = info_row['Symbol']
+        ticker = info_row['Ticker']
         if not db.find_by_ticker(models.Company, ticker, cursor):
             name = info_row['Security']
             year_founded = info_row['Founded']
-            number_of_employees = info_row['# Employees']
+            number_of_employees = info_row['Employees']
             hq_state = info_row['Headquarters Location'].split(', ')[1]
             values_vector = [name, ticker, sub_industry_id, year_founded, number_of_employees, hq_state]
 
