@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS quarterly_reports (
   id serial PRIMARY KEY,
   date DATE,
   company_id INTEGER,
-  closing_price FLOAT,
   revenue BIGINT,
   net_income BIGINT,
   earnings_per_share FLOAT4

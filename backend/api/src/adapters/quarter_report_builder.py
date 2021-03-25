@@ -5,9 +5,9 @@ import psycopg2
 import datetime
 import csv
 
-class CompanyBuilder:
-    attributes = ['name', 'ticker', 'sub_industry_id', 'year_founded', 'number_of_employees', 'HQ_state']
-
+class QuarterReportBuilder:
+    attributes = ['id', 'date', 'company_id', 'revenue', 'net_income', 'earnings_per_share']
+    
     def run(self, info_row, sub_industry_id, conn, cursor):
         ticker = info_row['Ticker']
         if not db.find_by_ticker(models.Company, ticker, cursor):

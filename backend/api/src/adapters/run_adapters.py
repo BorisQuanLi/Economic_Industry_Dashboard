@@ -3,93 +3,69 @@ import api.src.models as models
 import api.src.db as db
 import api.src.adapters.client as client
 from api.src.adapters.company_builder import CompanyBuilder
+from api.src.adapters.quarter_report_builder import QuarterReportBuilder
 import psycopg2
 
 class RequestAndBuildSP500Companies: # to be refactored
     def __init__(self):
-        self.filepath_client = client.SP500WikiDataFilePath() # from adapter.client.py
+        self.sp500_wiki_data_filepath = client.get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
-    
-    def generate_sub_industry_id(self, sub_industry_name, sector_name):
-        sub_industry_dict = {'sub_industry_GICS': sub_industry_name, 'sector_GICS': sector_name}
-        sub_industry_obj = models.SubIndustry(**sub_industry_dict)
-        try:
-            sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
-        except Exception as e:
-            print(e)
-            breakpoint()
-        return sub_industry_id 
         
     def run(self): # to be refactored, using Pandas?
-        sp500_wiki_data_filepath = self.filepath_client.get_sp500_companies_info()
-        with open(sp500_wiki_data_filepath) as csv_file:
+        with open(self.sp500_wiki_data_filepath) as csv_file: # user pandas.read_csv() instead?
             reader = csv.DictReader(csv_file)
             sp500_companies_wiki_data = []
             for wiki_row in reader:
-                sub_industry_name = wiki_row['GICS Sub-Industry']
-                sub_industry_obj = (models.SubIndustry
-                                        .find_by_sub_industry_name(sub_industry_name, self.cursor))
-                if not sub_industry_obj:
-                    sector_name = wiki_row['GICS Sector']
-                    sub_industry_id = self.generate_sub_industry_id(sub_industry_name, sector_name)
-                else:
-                    sub_industry_id = sub_industry_obj.__dict__['id']
-                # send wiki_row and sub_industry_id to a function to build a company object
-                company_obj = self.company_builder.run(wiki_row, sub_industry_id, self.conn, self.cursor)
+                company_obj = self.process_row_data(wiki_row)              
                 sp500_companies_wiki_data.append(company_obj)
-        return None # return a list of Company objects
+        return sp500_companies_wiki_data
 
-class RequestAndBuildCompany:
-    def __init__(self):
-        self.client = CompanyClient() # from adapter/client.py
-        self.company_builder = CompanyBuilder()
-        self.conn = psycopg2.connect(database = 'investment_analysis', 
-                                        user = 'postgres', 
-                                        password = 'postgres')
+    def process_row_data(self, wiki_row):
+        sub_industry_name = wiki_row['GICS Sub-Industry']
+        sub_industry_obj = (models.SubIndustry
+                                .find_by_sub_industry_name(sub_industry_name, self.cursor))
+        sub_industry_id = self.get_sub_industry_id(sub_industry_obj)
+        company_obj = self.company_builder.run(wiki_row, sub_industry_id, self.conn, self.cursor)
+        return company_obj
+
+    def get_sub_industry_id(self, sub_industry_obj):
+        if not sub_industry_obj:
+            sector_name = wiki_row['GICS Sector']
+            sub_industry_id = self.generate_sub_industry_id(sub_industry_name, sector_name)
+        else:
+            sub_industry_id = sub_industry_obj.__dict__['id'] 
+        return sub_industry_id
+
+    def generate_sub_industry_id(self, sub_industry_name, sector_name):
+        sub_industry_dict = {'sub_industry_GICS': sub_industry_name, 'sector_GICS': sector_name}
+        sub_industry_obj = models.SubIndustry(**sub_industry_dict)
+        sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
+        return sub_industry_id 
+
+class IngestQuarterlyReports:
+    API_KEY = "f269391116fc672392f1a2d538e93171" # to be saved in .env
+    def __init__(self, ticker):
+        self.ticker = ticker
+        self.quarter_reports_builder = QuarterReportBuilder()
+        self.conn = db.conn
         self.cursor = self.conn.cursor()
 
+    def get_quarterly_reports(self, ticker):
+        response = urlopen(f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}?period=quarter&apikey={self.API_KEY}")
+        data = response.read().decode("utf-8")
+        qtr_ic = json.loads(data)
+        recent_five_quarters = qtr_ic[:5]
+        quarterly_reports = self.extract_col_values(recent_five_quarters)
+        return quarterly_reports
 
-class RequestAndBuildSubIndustries:
-    def __init__(self):
-        self.client = SubIndustryClient() # from client.py
-        self.sub_industry_builder = SubIndustryBuilder() # from sub_industries_builder.py
-        self.conn = psycopg2.connect(database = 'investment_analysis', 
-                                        user = 'postgres', 
-                                        password = 'postgres')
-        self.cursor = self.conn.cursor()
-
-    def run(self, sector_name):
-        """
-        returns a list of sub-industry objects in the same sector passed in as the argument.
-        """
-        sector_name, sub_industries_names = self.client.get_sub_industries(sector_name)
-        sub_industry_objs = []
-        for sub_industry_name in sub_industries_names:
-            sub_industry_obj = self.sub_industry_builder.run(sector_name, sub_industry_name,
-                                                                self.conn, self.cursor)
-            sub_industry_objs.append(sub_industry_obj)
-        return sub_industry_objs
-
-class RequestAndBuildCompaniesBySubIndustry:
-    def __init__(self):
-        self.client = CompanyClient()
-        self.company_builder = CompanyBuilder()
-        self.conn = psycopg2.connect(database = 'investment_analysis', 
-                                        user = 'postgres', 
-                                        password = 'postgres')
-        self.cursor = self.conn.cursor()
-
-    def run(self, sub_industry_name):
-        # obtain values of al the Company from adpaters.client
-        companies_in_sub_industry = self.client.get_companies_by_sub_industry(sub_industry_name)
-        company_objs = []
-        for company_info_sp500 in companies_in_sub_industry:
-            company_obj = self.company_builder.run(company_info_sp500, sub_industry_name, self.conn, self.cursor)
-            if type(company_obj) == str:
-                print(company_obj)
-                continue
-            company_objs.append(company_obj)
-        return company_objs
+    def extract_col_values(self, recent_five_quarters):
+        quarterly_reports = list()
+        for quarter in recent_five_quarters:
+            quarterly_reports.append({'date': apple_qtr_ic[0]['date'],
+                                    'revenue': apple_qtr_ic[0]['revenue'],
+                                    'netIncome': apple_qtr_ic[0]['netIncome'],
+                                    'eps': apple_qtr_ic[0]['eps']})
+        return quarterly_reports
 

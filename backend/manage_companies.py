@@ -9,12 +9,10 @@ cli = FlaskGroup(create_app=create_app)
 
 # prototyping 
 sp500_companies_info_runner = RequestAndBuildSP500Companies() # to be refactored
-sp500_companies_info_runner.run()
+sp500_companies_wiki_data = sp500_companies_info_runner.run()
 breakpoint()
 
-company_runner = RequestAndBuildCompany()
-mmm_company_obj = company_runner.run('MMM')
-breakpoint()
+mmm = sp500_companies_wiki_data[0]
 
 """
 Next step: use for-loop iteration over all the sectors/sub_industries to write all the

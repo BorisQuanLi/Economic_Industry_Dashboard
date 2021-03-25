@@ -1,14 +1,22 @@
 import json
-from api.data.ingest_sp500_wiki_info_n_employees_total import ingest_sp500_stocks_info
+from api.data.ingest_sp500_info import ingest_sp500_stocks_info
 
-class SP500WikiDataFilePath:
-    if open ("./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"):
-        sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
-    else:
+def get_sp500_wiki_data():
+    if not sp500_data_file_exists():
         sp500_wiki_data_filepath = ingest_sp500_stocks_info()
-    
-    def get_sp500_companies_info(self):
-        return self.sp500_wiki_data_filepath
+    else:
+        sp500_wiki_data_filepath = sp500_data_file_exists()      
+    return sp500_wiki_data_filepath
+
+def sp500_data_file_exists():
+    sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
+    try: 
+        open(sp500_wiki_data_filepath)
+        return sp500_wiki_data_filepath
+    except:
+        return False
+
+# may not need to define these Classes:
 
 class SubIndustryClient:
     sub_industries_by_sector_file_path = "./api/data/sp500/processed_data/sub_industries.json"

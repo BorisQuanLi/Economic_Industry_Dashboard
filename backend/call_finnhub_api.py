@@ -1,3 +1,0 @@
-# from api.data.ingest_process_data.finnhubAPI_calls.labels import quarterly_statements_labels, company_historical_financials, single_quarter_ic_labels_values
-# from api.data.ingest_process_data.finnhubAPI_calls.fin_statement_items_variations import FinStatementItemName, set_fin_statement_items_names
-from api.data.ingest_process_data.finnhubAPI_calls.regex_parsing import company_labels_regex_extraction

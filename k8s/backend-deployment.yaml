@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: restaurants-api
-          image: ssbfc2001/investment-analysis-backend:v1
+          image: ssbfc2001/investment-analysis-backend:v6
           ports:
-          - containerPort: 5000
+          - containerPort: 5000 # Flask
