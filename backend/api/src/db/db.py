@@ -83,8 +83,8 @@ def find_companies_by_sub_industry_name(Class, sub_industry_name, cursor):
 def find_by_ticker(Class, ticker_symbol, cursor):
     search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s;"""
     cursor.execute(search_str, (ticker_symbol,))
-    record = cursor.fetchone()
-    return build_from_record(Class, record)
+    record = cursor.fetchall()
+    return build_from_records(Class, record)
 
 def find_company_by_name(company_name, cursor):
     search_str = "SELECT * From companies where name = %$;"

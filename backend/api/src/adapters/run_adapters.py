@@ -1,10 +1,10 @@
 import csv
+import pandas as pd
 import api.src.models as models
 import api.src.db as db
 import api.src.adapters.client as client
 from api.src.adapters.company_builder import CompanyBuilder
 from api.src.adapters.quarter_report_builder import QuarterReportBuilder
-import psycopg2
 
 class RequestAndBuildSP500Companies: # to be refactored
     def __init__(self):
@@ -44,28 +44,25 @@ class RequestAndBuildSP500Companies: # to be refactored
         sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
         return sub_industry_id 
 
-class IngestQuarterlyReports:
+class IngestBuildQuarterlyReports:
     API_KEY = "f269391116fc672392f1a2d538e93171" # to be saved in .env
-    def __init__(self, ticker):
-        self.ticker = ticker
+    SP500_WIKI_DATA_FILEPATH = client.get_sp500_wiki_data()
+
+    def __init__(self):
         self.quarter_reports_builder = QuarterReportBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def get_quarterly_reports(self, ticker):
-        response = urlopen(f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}?period=quarter&apikey={self.API_KEY}")
-        data = response.read().decode("utf-8")
-        qtr_ic = json.loads(data)
-        recent_five_quarters = qtr_ic[:5]
-        quarterly_reports = self.extract_col_values(recent_five_quarters)
-        return quarterly_reports
+    def run(self, number_api_calls = 3): # number_api_calls = 170
+        sql_str = f"""SELECT * FROM companies 
+                            LIMIT {number_api_calls}
+                    """
+        self.cursor.execute(sql_str)
+        companies_records = self.cursor.fetchall()
+        companies_objs = db.build_from_records(models.Company, companies_records)
+        for company_obj in companies_objs:            
+            ticker = company_obj.ticker
+            company_id = company_obj.id
+            self.quarter_reports_builder.run(ticker, company_id, self.conn, self.cursor)
 
-    def extract_col_values(self, recent_five_quarters):
-        quarterly_reports = list()
-        for quarter in recent_five_quarters:
-            quarterly_reports.append({'date': apple_qtr_ic[0]['date'],
-                                    'revenue': apple_qtr_ic[0]['revenue'],
-                                    'netIncome': apple_qtr_ic[0]['netIncome'],
-                                    'eps': apple_qtr_ic[0]['eps']})
-        return quarterly_reports
-
+    

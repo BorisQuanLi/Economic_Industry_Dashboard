@@ -1,18 +1,19 @@
 import sys
 from flask.cli import FlaskGroup
 from api.src import create_app
-from api.src.adapters.run_adapters import RequestAndBuildSP500Companies
+from api.src.adapters.run_adapters import (
+                        RequestAndBuildSP500Companies, IngestBuildQuarterlyReports)
 import click
 
 app = create_app()
 cli = FlaskGroup(create_app=create_app)
 
-# prototyping 
-sp500_companies_info_runner = RequestAndBuildSP500Companies() # to be refactored
-sp500_companies_wiki_data = sp500_companies_info_runner.run()
-breakpoint()
+# sp500_companies_info_runner = RequestAndBuildSP500Companies() 
+# sp500_companies_wiki_data = sp500_companies_info_runner.run()
 
-mmm = sp500_companies_wiki_data[0]
+quarterly_reports_runner = IngestBuildQuarterlyReports()
+quarterly_reports_runner.run()
+breakpoint()
 
 """
 Next step: use for-loop iteration over all the sectors/sub_industries to write all the
