@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS sub_industries(
 
 CREATE TABLE IF NOT EXISTS prices_pe(
 	id serial PRIMARY KEY,
+  date VARCHAR(15),
   company_id INTEGER,
 	closing_price FLOAT4,
 	price_earnings_ratio FLOAT4
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS prices_pe(
 
 CREATE TABLE IF NOT EXISTS quarterly_reports (
   id serial PRIMARY KEY,
-  date DATE,
+  date VARCHAR(15),
   company_id INTEGER,
   revenue BIGINT,
   net_income BIGINT,

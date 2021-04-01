@@ -45,24 +45,27 @@ class RequestAndBuildSP500Companies: # to be refactored
         return sub_industry_id 
 
 class IngestBuildQuarterlyReports:
-    API_KEY = "f269391116fc672392f1a2d538e93171" # to be saved in .env
-    SP500_WIKI_DATA_FILEPATH = client.get_sp500_wiki_data()
-
     def __init__(self):
         self.quarter_reports_builder = QuarterReportBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def run(self, number_api_calls = 3): # number_api_calls = 170
-        sql_str = f"""SELECT * FROM companies 
-                            LIMIT {number_api_calls}
+    def run(self, sector_name:str): 
+        companies_objs = self.get_batch_companies_objs(sector_name)
+        for company_obj in companies_objs:            
+            ticker = company_obj.ticker
+            company_id = company_obj.id
+            self.quarter_reports_builder.run(ticker, company_id, sector_name,
+                                            self.conn, self.cursor)
+
+    def get_batch_companies_objs(self, sector_name):
+        sql_str = f"""SELECT * FROM companies
+                        JOIN sub_industries 
+                        ON companies.sub_industry_id::INT = sub_industries.id
+                        WHERE sub_industries.sector_gics = '{sector_name}';
                     """
         self.cursor.execute(sql_str)
         companies_records = self.cursor.fetchall()
         companies_objs = db.build_from_records(models.Company, companies_records)
-        for company_obj in companies_objs:            
-            ticker = company_obj.ticker
-            company_id = company_obj.id
-            self.quarter_reports_builder.run(ticker, company_id, self.conn, self.cursor)
-
+        return companies_objs
     

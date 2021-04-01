@@ -1,10 +1,9 @@
 flask
-pytest
 psycopg2-binary
-simplejson
-python-dotenv
-requests
-pytz
 pandas
-intrinio_sdk
-finnhub-python
+pandas_market_calendars
+pytz
+simplejson
+requests
+python-dotenv
+pytest

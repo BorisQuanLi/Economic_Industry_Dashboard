@@ -8,11 +8,11 @@ import click
 app = create_app()
 cli = FlaskGroup(create_app=create_app)
 
-# sp500_companies_info_runner = RequestAndBuildSP500Companies() 
-# sp500_companies_wiki_data = sp500_companies_info_runner.run()
+#sp500_companies_info_runner = RequestAndBuildSP500Companies() 
+#sp500_companies_wiki_data = sp500_companies_info_runner.run()
 
 quarterly_reports_runner = IngestBuildQuarterlyReports()
-quarterly_reports_runner.run()
+quarterly_reports_runner.run('Health Care')
 breakpoint()
 
 """
