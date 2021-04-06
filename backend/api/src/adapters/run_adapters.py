@@ -4,9 +4,9 @@ import api.src.models as models
 import api.src.db as db
 import api.src.adapters.client as client
 from api.src.adapters.company_builder import CompanyBuilder
-from api.src.adapters.quarter_report_builder import QuarterReportBuilder
+from api.src.adapters.quarterly_financials_prices_pe_builder import QuarterFinancialsPricePEBuilder
 
-class RequestAndBuildSP500Companies: # to be refactored
+class BuildSP500Companies: # to be refactored
     def __init__(self):
         self.sp500_wiki_data_filepath = client.get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
@@ -44,9 +44,9 @@ class RequestAndBuildSP500Companies: # to be refactored
         sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
         return sub_industry_id 
 
-class IngestBuildQuarterlyReports:
+class BuildQuarterlyReportsPricesPE:
     def __init__(self):
-        self.quarter_reports_builder = QuarterReportBuilder()
+        self.financials_prices_pe_builder = QuarterFinancialsPricePEBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
@@ -55,7 +55,7 @@ class IngestBuildQuarterlyReports:
         for company_obj in companies_objs:            
             ticker = company_obj.ticker
             company_id = company_obj.id
-            self.quarter_reports_builder.run(ticker, company_id, sector_name,
+            self.financials_prices_pe_builder.run(ticker, company_id, sector_name,
                                             self.conn, self.cursor)
 
     def get_batch_companies_objs(self, sector_name):

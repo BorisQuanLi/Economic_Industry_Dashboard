@@ -10,7 +10,7 @@ import api.src.models as models
 import api.src.db as db
 import api.src.adapters as adapters
 
-class QuarterReportBuilder:
+class QuarterFinancialsPricePEBuilder:
     financials_attributes = ['date', 'company_id', 'revenue', 'net_income', 'earnings_per_share'] 
     prices_pe_attributes = ['date', 'company_id', 'closing_price', 'price_earnings_ratio']
     API_KEY = "f269391116fc672392f1a2d538e93171" # to be saved in .env
@@ -24,6 +24,7 @@ class QuarterReportBuilder:
             self.save_quarterly_financials_records(company_id, recent_five_quarterly_report_records)
             if not db.find(models.PricePE, company_id, cursor):
                 self.save_price_pe_records(ticker, company_id, recent_five_quarterly_report_records)
+        return None #
 
     def get_quarterly_financials(self, ticker, api_key= API_KEY):
         response = urlopen(f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}?period=quarter&apikey={api_key}")
@@ -75,12 +76,12 @@ class QuarterReportBuilder:
         return most_recent_day, closing_price
 
     def get_most_recent_price_available(self, date_in_report, historical_prices_dict):        
-        most_recent_trading_day_found = False
-        while not most_recent_trading_day_found:
+        found_most_recent_trading_day = False
+        while not found_most_recent_trading_day:
             try:
                 most_recent_trading_day = self.get_most_recent_busines_day_eastern(date_in_report)
                 closing_price = round(historical_prices_dict[most_recent_trading_day], 2)
-                most_recent_trading_day_found = True
+                found_most_recent_trading_day = True
             except:
                 # move the date earlier by one business day
                 date = self.get_most_recent_busines_day_eastern(date_in_report)

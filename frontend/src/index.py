@@ -106,8 +106,7 @@ performance_measurement_selected = st.multiselect('Performance measurements:',
                             ['avg_pe_ratio'])
 # extract the value of the single element in the list, a string 
 performance_measurement_selected = performance_measurement_selected[0]
-plot_sub_industries_avg_performance_history(sub_industries_selected, 
-                                            performance_measurement_selected)
+# plot_sub_industries_avg_performance_history(sub_industries_selected, performance_measurement_selected)
 
 ###############
 
@@ -120,7 +119,7 @@ companies_in_sector = companies_by_sub_industry(sub_industry_selected)
 for company_obj in companies_in_sector:
     st.write(company_obj)
 
-
+breakpoint()
 
 # earlier scripts - need reviewing and pruning. 
 

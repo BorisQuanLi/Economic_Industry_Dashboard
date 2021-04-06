@@ -11,8 +11,15 @@ cursor = conn.cursor()
 
 def get_db():
     if "db" not in g:
+        # connect to postgres on the local computer
+        g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
+            dbname = 'investment_analysis')
+
+        """
+        # connect to postgres on the AWS RDS instance
         g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
             dbname = current_app.config['DATABASE'])
+        """
     return g.db
 
 """
@@ -57,7 +64,7 @@ def find(Class, id, cursor):
 def show_companies_by_sector(Class, sector_name, cursor):
     sql_str = f"""SELECT * FROM companies 
                 JOIN sub_industries 
-                ON sub_industries.id = companies.sub_industry_name
+                ON sub_industries.id = companies.sub_industry_id
                 WHERE sub_industries.sector_gics = %s;
                 """
     cursor.execute(sql_str, (sector_name,))
@@ -73,7 +80,7 @@ def find_companies_by_sub_industry_name(Class, sub_industry_name, cursor):
     """
     sql_str = f"""SELECT companies.* FROM companies 
                   JOIN sub_industries
-                  ON companies.sub_industry_id= sub_industries.id
+                  ON companies.sub_industry_id::INTEGER = sub_industries.id
                   WHERE sub_industries.sub_industry_gics = %s;
                 """
     cursor.execute(sql_str, (sub_industry_name,))
@@ -83,8 +90,8 @@ def find_companies_by_sub_industry_name(Class, sub_industry_name, cursor):
 def find_by_ticker(Class, ticker_symbol, cursor):
     search_str = f"""SELECT * FROM {Class.__table__} WHERE ticker = %s;"""
     cursor.execute(search_str, (ticker_symbol,))
-    record = cursor.fetchall()
-    return build_from_records(Class, record)
+    record = cursor.fetchone()
+    return build_from_record(Class, record)
 
 def find_company_by_name(company_name, cursor):
     search_str = "SELECT * From companies where name = %$;"
@@ -118,7 +125,7 @@ def sub_industry_quarterly_avg_numbers(Class, sub_industry_name, report_date, cu
             the date of the SEC filing that includes the various financials and stock price.
 
     returns the average value of one quarter's financial numbers from both the quarterly_reports and prices_pe
-    table (revenue, cost, net_income in the former; closing_price and price_earnings_ratio in the latter).
+    table (revenue, net_income, earnings_per_share in the former; closing_price and price_earnings_ratio in the latter).
 
     Only the raw "row data" from the SQL query, can't be sent to the build_from_records function because
     the data comes from two different classes (SQL tables)?
@@ -127,18 +134,17 @@ def sub_industry_quarterly_avg_numbers(Class, sub_industry_name, report_date, cu
     sql_str = """SELECT ROUND(AVG(prices_pe.closing_price:: numeric), 2) avg_closing_price,
                         ROUND(AVG(prices_pe.price_earnings_ratio:: numeric), 2) avg_pe_ratio,
                         ROUND(AVG(quarterly_reports.revenue:: numeric), 2) avg_revenue,
-                        ROUND(AVG(quarterly_reports.cost:: numeric), 2) avg_cost,
                         ROUND(AVG(quarterly_reports.net_income:: numeric), 2) avg_net_income
                 FROM sub_industries 
                 JOIN companies 
-                ON sub_industries.id = companies.sub_industry_id
+                ON sub_industries.id = companies.sub_industry_id::INTEGER
                 JOIN prices_pe
                 ON prices_pe.company_id = companies.id
                 JOIN quarterly_reports
                 ON quarterly_reports.company_id = companies.id
                 WHERE sub_industries.sub_industry_gics = %s 
-                        AND prices_pe.date > %s
-                        AND prices_pe.date < %s
+                        AND prices_pe.date::DATE > %s
+                        AND prices_pe.date::DATE < %s
                 GROUP BY sub_industries.id;
                 """
     
@@ -159,10 +165,10 @@ def avg_quarterly_financials_by_sub_industry(Class, sub_industry_name, cursor):
     Param Class: QuarterlyReport
     """
     sql_str = """SELECT ROUND(AVG(revenue)) AS average_revenue, 
-                        ROUND(AVG(cost)) AS average_cost, 
-                        ROUND(AVG(net_income)) AS average_net_income
+                        ROUND(AVG(net_income)) AS average_net_income,
+                        ROUND(AVG(earnings_per_share)) AS earnings_per_share, 
                     FROM sub_industries JOIN companies 
-                    ON sub_industries.id = companies.sub_industry_name
+                    ON sub_industries.id = companies.sub_industry_id::INTEGER
                     JOIN quarterly_reports
                     ON quarterly_reports.company_id = companies.id
                     WHERE sub_industries.id = 31

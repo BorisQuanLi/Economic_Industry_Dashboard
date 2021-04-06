@@ -11,6 +11,7 @@ SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
 SECTOR_URL = "http://127.0.0.1:5000/sectors/sector/search"
 
 def find_companies_by_sub_industry(sub_industry_name):
+    breakpoint()
     response = requests.get(SUB_INDUSTRY_URL, params={'sub_industry': sub_industry_name})
     response.json()
 
@@ -21,6 +22,7 @@ def find_company_by_ticker(ticker):
 
 def find_companies_by_sector(sector):
     selected_sector = requests.get(SECTOR_URL, params = {'sector': sector})
+    breakpoint()
     return selected_sector.json()
 
 def avg_element_wise_list(list_of_tuples: list):
@@ -40,53 +42,8 @@ def avg_element_wise_list(list_of_tuples: list):
 sub_industries_selected = st.multiselect('Sub_industries:',
                         ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'],
                         ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'])
-# find_companies_by_sub_industry(sub_industries_selected)
-
-selected_sectors = st.multiselect(
-                        'Quarterly Price/Earnings ratios by industry sectors:',
-                    ['Health Care', 'Information Technology', 'Consumer Staples'],
-                    ['Health Care', 'Information Technology', 'Consumer Staples'])
-
-# plot each sector's average price/quarter-earnings ratio over 4 quarters
-fig = go.Figure()
-for sector in selected_sectors:
-    companies_by_sector = find_companies_by_sector(sector)
-    pe_list = []
-    for company in companies_by_sector:
-        ticker = company['ticker']
-        company_info = find_company_by_ticker(ticker)
-        pe_history = [quarter['price_earnings_ratio'] for quarter in company_info[
-                                                'Quarterly Closing Price and P/E ratio']]
-        date_history = [datetime.strptime(quarter['date'], "%Y-%m-%d") for quarter in company_info[
-                                                'Quarterly Closing Price and P/E ratio']]
-        pe_list.append(dict(zip(date_history, pe_history)))
-
-    companies_pe_history_list = [company_quarterly_pe
-                                        for company_pe_history_dict in pe_list 
-                                                for company_quarterly_pe in company_pe_history_dict.values()]
-    quarterly_average_pe_history = avg_element_wise_list(companies_pe_history_list)
-    quarter_ending_dates_history = [key for key in pe_list[0].keys()] 
-    
-
-    # y, x axis, respectively, above
-    # average quarterly p/e ratio trace for each sector    
-    fig.add_trace(go.Scatter(x= quarter_ending_dates_history,
-                            y= quarterly_average_pe_history,
-                            name = f"{sector}"))
-
-fig.update_layout(
-    title=f"""Average Price/Earnings ratio by sector""",
-    xaxis_title="Month-Year",
-    yaxis_title="Average P/E ratio",
-    legend_title="Average quarterly P/E ratio",
-    font=dict(
-        family="Courier New, monospace",
-        size=18,
-        color="RebeccaPurple"
-    )
-)
-
-st.plotly_chart(fig)
+find_companies_by_sub_industry(sub_industries_selected[0])
+breakpoint()
 
 selected_sectors = st.multiselect(
                     'Which sector are you interested in? (Select only one, please.)',
@@ -110,7 +67,6 @@ fig = go.Figure()
 for company in companies_by_sector:
     ticker = company['ticker']
     company_info = find_company_by_ticker(ticker)
-
     revenue_history = [report['revenue'] for report in company_info['History of quarterly financials']]
     date_history = [datetime.strptime(report['date'], "%Y-%m-%d") for report in company_info['History of quarterly financials']]
     
@@ -163,6 +119,7 @@ st.text(f"Ticker: {company_info['ticker']}")
 
 revenue_history = [report['revenue'] for report in company_info['History of quarterly financials']]
 date_history = [datetime.strptime(report['date'], "%Y-%m-%d") for report in company_info['History of quarterly financials']]
+
 #fig = plt.plot(date_history, revenue_history)
 #st.pyplot
 #st.plotly_chart
@@ -171,6 +128,4 @@ fig = go.Figure(data=go.Scatter(x=date_history,
                              y=revenue_history))
 st.plotly_chart(fig)
 #plt.savefig(fig)
-
-
 

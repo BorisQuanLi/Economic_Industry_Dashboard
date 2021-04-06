@@ -51,7 +51,9 @@ class Company:
 
     def quarterly_reports(self, cursor):
         sql_query = f"""SELECT * FROM quarterly_reports
-                    WHERE quarterly_reports.company_id = %s;"""
+                        JOIN companies 
+                        ON quarterly_reports.company_id = companies.id
+                        WHERE quarterly_reports.company_id = %s;"""
         cursor.execute(sql_query, (self.id,))
         records = cursor.fetchall()
         return db.build_from_records(models.QuarterlyReport, records) 
@@ -59,11 +61,10 @@ class Company:
     def to_quarterly_financials_json(self, cursor):
         quarterly_reports_prices_pe_json = self.__dict__
         quarterly_reports_obj = self.quarterly_reports(cursor)
-        quarterly_reports_prices_pe_json['Quarterly financials'] = [
+        quarterly_reports_prices_pe_json['Quarterly_financials'] = [
                             report_obj.__dict__ for report_obj in quarterly_reports_obj]
-
         prices_pe_obj = self.quarterly_prices_pe(cursor)
-        quarterly_reports_prices_pe_json['Quarterly Closing Price and P/E ratio'] = [
+        quarterly_reports_prices_pe_json['Closing_prices_and_P/E_ratios'] = [
                                                     price_pe_obj.__dict__ for price_pe_obj in prices_pe_obj]
         return quarterly_reports_prices_pe_json
 

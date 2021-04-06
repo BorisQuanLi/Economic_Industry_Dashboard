@@ -1,18 +1,26 @@
 import sys
 from flask.cli import FlaskGroup
 from api.src import create_app
-from api.src.adapters.run_adapters import (
-                        RequestAndBuildSP500Companies, IngestBuildQuarterlyReports)
+from api.src.adapters.run_adapters import (BuildSP500Companies, 
+                                           BuildQuarterlyReportsPricesPE)
 import click
 
 app = create_app()
 cli = FlaskGroup(create_app=create_app)
 
-#sp500_companies_info_runner = RequestAndBuildSP500Companies() 
-#sp500_companies_wiki_data = sp500_companies_info_runner.run()
+# sp500_companies_info_runner = RequestAndBuildSP500Companies() 
+# sp500_companies_wiki_data = sp500_companies_info_runner.run()
 
-quarterly_reports_runner = IngestBuildQuarterlyReports()
-quarterly_reports_runner.run('Health Care')
+quarterly_reports_runner = BuildQuarterlyReportsPricesPE()
+# quarterly_reports_runner.run('Health Care')
+quarterly_reports_runner.run('Energy') # 23 companies
+
+"""
+figure out why PFE or JNJ's info has not been written in db after the above line,
+and implement db.find_or_create methods.
+"""
+
+# instead of flask.cli, look into Airflow. 
 breakpoint()
 
 """

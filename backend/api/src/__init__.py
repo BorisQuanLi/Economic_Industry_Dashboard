@@ -1,6 +1,7 @@
 from flask import Flask
 import simplejson as json
 from flask import request
+from datetime import datetime
 
 import api.src.models as models
 import api.src.db as db
@@ -10,6 +11,19 @@ from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, DEBUG, TESTING
 def create_app():
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
+    
+    # connect to the local computer's Postgres
+    app.config.from_mapping(
+        DB_USER = 'postgres',
+        DB_NAME = 'investment_analysis',
+        DB_PASSWORD = 'postgres',
+        DB_HOST = '127.0.0.1',
+        DEBUG = DEBUG,
+        TESTING = TESTING
+    )
+
+    """
+    # connect to AWS RDS postgres
     app.config.from_mapping(
         DB_USER = DB_USER,
         DB_NAME = DB_NAME,
@@ -18,6 +32,7 @@ def create_app():
         DEBUG = DEBUG,
         TESTING = TESTING
     )
+    """
 
     @app.route('/')
     def root_url():
@@ -47,17 +62,12 @@ def create_app():
         return json.dumps(ic_pe_json, default = str)
 
     @app.route('/companies/company_overview/search') # see code above
-    def find_company_by_name_or_ticker():
+    def find_company_by_name():
         conn = db.get_db()
         cursor = conn.cursor()
         params = dict(request.args)
-        for key in params.keys():
-            if key == 'ticker':
-                ticker = params['ticker']
-                company = db.find_by_ticker(models.Company, ticker, cursor)
-            else:
-                name = params['name']
-                company = db.find_by_name(models.Company, name, cursor)
+        company_name = params['company_name']
+        company = db.find_by_name(models.Company, company_name, cursor)
         ic_pe_json = company.to_quarterly_financials_json(db.cursor)
         return json.dumps(ic_pe_json, default = str)
 
@@ -146,18 +156,21 @@ def create_app():
         # generate a list of companies in the same sub_industry
         companies_info = [company.__dict__ for company 
                                     in db.find_companies_by_sub_industry_name(models.Company, sub_industry_name, cursor)]
+        """
         # generate of list of quarterly performance numbers, by calling the relevant db method
         quarterly_numbers_history = []
         reports_dates_list = db.report_dates(cursor)
         for report_date in reports_dates_list:
+            report_date = datetime.strptime(report_date, '%Y-%m-%d')
             single_quarter_record_obj = db.sub_industry_quarterly_avg_numbers(models.SubIndustryPerformance, 
                                                                             sub_industry_name, 
                                                                             report_date, 
                                                                             cursor)
             quarterly_numbers_history.append(single_quarter_record_obj.__dict__)
+        """
         sub_industry_info = {}
         sub_industry_info['companies'] = companies_info
-        sub_industry_info['quarterly numbers'] = quarterly_numbers_history
+        # sub_industry_info['quarterly numbers'] = quarterly_numbers_history
         return json.dumps(sub_industry_info)
 
 
@@ -178,6 +191,7 @@ def create_app():
         cursor = conn.cursor()
         params = dict(request.args)
         sector_name = params['sector']
+        breakpoint()
         companies = db.show_companies_by_sector(models.Company, sector_name, cursor)
         for company in companies:
             company.to_quarterly_financials_json(cursor)
