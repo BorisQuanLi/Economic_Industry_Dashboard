@@ -61,16 +61,6 @@ def find(Class, id, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
-def show_companies_by_sector(Class, sector_name, cursor):
-    sql_str = f"""SELECT * FROM companies 
-                JOIN sub_industries 
-                ON sub_industries.id = companies.sub_industry_id
-                WHERE sub_industries.sector_gics = %s;
-                """
-    cursor.execute(sql_str, (sector_name,))
-    records = cursor.fetchall()
-    return build_from_records(Class, records)
-
 def find_companies_by_sub_industry_name(Class, sub_industry_name, cursor):
     """
     params  Class: models.Company

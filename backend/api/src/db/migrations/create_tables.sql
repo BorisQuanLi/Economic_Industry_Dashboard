@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS quarterly_reports (
   company_id INTEGER,
   revenue BIGINT,
   net_income BIGINT,
-  earnings_per_share FLOAT4
+  earnings_per_share FLOAT4,
+  profit_margin FLOAT4
 );
 

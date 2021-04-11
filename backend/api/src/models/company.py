@@ -7,11 +7,9 @@ class Company:
 
     def __init__(self, **kwargs):
         # possible error: TypeError: exceptions must derive from BaseException
-        """
         for key in kwargs.keys():
             if key not in self.columns:
                 raise f'{key} not in {self.columns}'
-        """
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -64,7 +62,7 @@ class Company:
         quarterly_reports_prices_pe_json['Quarterly_financials'] = [
                             report_obj.__dict__ for report_obj in quarterly_reports_obj]
         prices_pe_obj = self.quarterly_prices_pe(cursor)
-        quarterly_reports_prices_pe_json['Closing_prices_and_P/E_ratios'] = [
+        quarterly_reports_prices_pe_json['Closing_prices_and_P/E_ratio'] = [
                                                     price_pe_obj.__dict__ for price_pe_obj in prices_pe_obj]
         return quarterly_reports_prices_pe_json
 
@@ -95,8 +93,6 @@ class Company:
         # call sub_industry_average (or a generic group_average) function
         # call a function (to be worked out) that calculates the average of a financial of companies in the same sector
             # from one table: price, pe; from another: revenue, cost, earnings,
-        
-
     
     def search_quarterly_report_by_ticker(self, ticker_params, cursor):
         pass

@@ -3,7 +3,7 @@ from api.src import models
 
 class QuarterlyReport:
     __table__ = 'quarterly_reports'
-    columns = ['id', 'date', 'company_id', 'revenue', 'net_income', 'earnings_per_share']
+    columns = ['id', 'date', 'company_id', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin']
 
     def __init__(self, **kwargs):
         for key in kwargs.keys():

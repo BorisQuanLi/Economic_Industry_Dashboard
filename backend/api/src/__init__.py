@@ -65,11 +65,18 @@ def create_app():
     def find_company_by_name():
         conn = db.get_db()
         cursor = conn.cursor()
-        params = dict(request.args)
-        company_name = params['company_name']
-        company = db.find_by_name(models.Company, company_name, cursor)
-        ic_pe_json = company.to_quarterly_financials_json(db.cursor)
-        return json.dumps(ic_pe_json, default = str)
+        # params = dict(request.args)
+        company_names = request.args.getlist('company_name')
+        jsons_list = get_jsons(company_names, cursor)
+        return json.dumps(jsons_list, default = str)
+
+    def get_jsons(company_names:list, cursor):
+        json_list = []
+        for company_name in company_names:
+            company = db.find_by_name(models.Company, company_name, cursor)
+            ic_pe_json = company.to_quarterly_financials_json(db.cursor)
+            json_list.append(ic_pe_json)
+        return json_list
 
     @app.route('/companies/latest_quarter_company_overview/<ticker>')
     def latest_quarter_company_overview(ticker):
@@ -136,7 +143,7 @@ def create_app():
         """
         conn = db.get_db()
         cursor = conn.cursor()
-        
+        breakpoint()
         quarterly_numbers_history = []
         reports_dates_list = db.report_dates(cursor)
         for report_date in reports_dates_list:
@@ -157,46 +164,25 @@ def create_app():
         companies_info = [company.__dict__ for company 
                                     in db.find_companies_by_sub_industry_name(models.Company, sub_industry_name, cursor)]
         """
-        # generate of list of quarterly performance numbers, by calling the relevant db method
-        quarterly_numbers_history = []
-        reports_dates_list = db.report_dates(cursor)
-        for report_date in reports_dates_list:
-            report_date = datetime.strptime(report_date, '%Y-%m-%d')
-            single_quarter_record_obj = db.sub_industry_quarterly_avg_numbers(models.SubIndustryPerformance, 
-                                                                            sub_industry_name, 
-                                                                            report_date, 
-                                                                            cursor)
-            quarterly_numbers_history.append(single_quarter_record_obj.__dict__)
+        generate of list of quarterly performance numbers
         """
         sub_industry_info = {}
         sub_industry_info['companies'] = companies_info
         # sub_industry_info['quarterly numbers'] = quarterly_numbers_history
         return json.dumps(sub_industry_info)
 
-
-
-    @app.route('/sectors/sector/<sector_name>')
-    def companies_within_sector(sector_name): #may need to work out sub_industries_within_sector
-        conn = db.get_db()
-        cursor = conn.cursor()
-        companies = db.show_companies_by_sector(models.Company, sector_name, cursor)
-        for company in companies:
-            company.to_quarterly_reports_prices_pe_json_by_ticker(cursor)
-        companies_dicts = [company.__dict__ for company in companies]
-        return json.dumps(companies_dicts, default = str)
-
-    @app.route('/sectors/sector/search/')
-    def companies_by_sector():
+    @app.route('/sectors/search')
+    def sub_industries_within_sector():
         conn = db.get_db()
         cursor = conn.cursor()
         params = dict(request.args)
-        sector_name = params['sector']
-        breakpoint()
-        companies = db.show_companies_by_sector(models.Company, sector_name, cursor)
-        for company in companies:
-            company.to_quarterly_financials_json(cursor)
-        companies_dicts = [company.__dict__ for company in companies]
-        return json.dumps(companies_dicts, default = str)
+        sector_name = params['sector_name']
+        fin_statement_item = params['fin_statement_item']
+        historical_financials_json_dicts = (models.SubIndustry.
+                                                    find_avg_quarterly_financials_by_sub_industry(f'{sector_name}', f'{fin_statement_item}', cursor))
+        return json.dumps(historical_financials_json_dicts, default = str)
+
+    
     
     return app
 

@@ -8,3 +8,4 @@ DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DEBUG = True
 TESTING = True
+API_KEY = "f269391116fc672392f1a2d538e93171"

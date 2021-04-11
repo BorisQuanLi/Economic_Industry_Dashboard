@@ -120,7 +120,7 @@ class SubIndustry:
 
         return final_dict  
 
-    def average_financials_by_sub_industry(self, cursor):
+    def average_financials_by_sub_industry(self, cursor): # re-written below
         sql_str= f"""SELECT companies.* FROM companies
                      JOIN sub_industries
                      ON sub_industries.id = companies.sub_industry_id
@@ -134,3 +134,65 @@ class SubIndustry:
         final_dict = self.group_average(list_of_companies_financials)
         return final_dict
     
+    @classmethod
+    def find_avg_quarterly_financials_by_sub_industry(self, sector_name:str, fin_statement_item:str, cursor):
+        """
+        Within each chosen sector, calculate each sub_industry's average value of a chosen
+        financial-statement item (revenue, net_profit, etc.) over the most recent 
+        quarters (5 in total based on the API calls to this project's data source.
+
+        Returns a list of dictionaries with the key being a list of attributes, incl. [sector_name,
+        fin_statement_item name, year, quarter], and their corresponding values stored in a list as 
+        the dictionary value.
+        """
+        sql_str = f"""select {self.__table__}.id, {self.__table__}.sub_industry_gics,
+                            ROUND(AVG({fin_statement_item})::NUMERIC, 2) as profit_margin,
+                            EXTRACT(year from quarterly_reports.date::DATE) as year,
+                            EXTRACT(quarter from quarterly_reports.date::DATE) as quarter
+                        FROM quarterly_reports
+                        JOIN companies ON quarterly_reports.company_id::INTEGER = companies.id
+                        JOIN {self.__table__} ON {self.__table__}.id = companies.sub_industry_id::INTEGER
+                        WHERE {self.__table__}.sector_gics = '{sector_name}'
+                        GROUP BY year, quarter, {self.__table__}.id, {self.__table__}.sub_industry_gics;
+                    """
+        try:
+            cursor.execute(sql_str, (fin_statement_item, sector_name,))
+            records = cursor.fetchall()
+        except Exception as e:
+            print(e)
+            breakpoint()
+        avg_financial_by_sub_industries_dict = self.store_records_in_dict(self, records)
+        historical_financials_json_dict = self.to_historical_financials_json(self, sector_name, fin_statement_item,
+                                                                                    avg_financial_by_sub_industries_dict)
+        # avg_financial_by_sub_industries_dict = self.store_records_in_dict(records)
+        return historical_financials_json_dict
+
+    def store_records_in_dict(self, records):    
+        # self ->; 
+        # for each record, needs to create a Sub_industry instance.  
+        # The iteration of which needs to be done in the above classmethod.
+        avg_financial_by_sub_industries_dict = {}
+        for record in records:
+            sub_industry_id = record[0]
+            sub_industry_name = record[1]
+            financial_item_avg = record[2]
+            year_quarter = str(int(record[3])) + '-0' + str(int(record[4]))
+            if sub_industry_name not in avg_financial_by_sub_industries_dict:
+                avg_financial_by_sub_industries_dict[sub_industry_name] = {}
+            avg_financial_by_sub_industries_dict[sub_industry_name][
+                                                                year_quarter] = (sub_industry_id, int(financial_item_avg))
+        return avg_financial_by_sub_industries_dict
+
+    def to_historical_financials_json(self, sector_name, fin_statement_item, avg_financial_by_sub_industries_dict):        
+        historical_financials_json_dict = {}
+        for sub_industry, avg_financials_dict in avg_financial_by_sub_industries_dict.items():
+            sub_industry_id = list(avg_financials_dict.values())[0][0]
+            financial_item_avg_recent_quarters = {k:v[1] for k, v in avg_financials_dict.items()}
+            sub_industry_dict = dict(zip(self.columns,
+                                         [sub_industry_id, sub_industry, sector_name]))
+            sub_industry_obj = models.SubIndustry(**sub_industry_dict)
+            historical_financials_json = sub_industry_obj.__dict__
+            key = "Avg_quarterly_" + fin_statement_item + 's'
+            historical_financials_json[key] = financial_item_avg_recent_quarters
+            historical_financials_json_dict[f'{sub_industry}'] = historical_financials_json
+        return historical_financials_json_dict 

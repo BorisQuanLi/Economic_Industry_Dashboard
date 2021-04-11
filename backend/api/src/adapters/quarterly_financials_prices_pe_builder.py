@@ -9,11 +9,11 @@ import pandas_market_calendars as mcal
 import api.src.models as models
 import api.src.db as db
 import api.src.adapters as adapters
+from settings import API_KEY
 
 class QuarterFinancialsPricePEBuilder:
-    financials_attributes = ['date', 'company_id', 'revenue', 'net_income', 'earnings_per_share'] 
+    financials_attributes = ['date', 'company_id', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin'] 
     prices_pe_attributes = ['date', 'company_id', 'closing_price', 'price_earnings_ratio']
-    API_KEY = "f269391116fc672392f1a2d538e93171" # to be saved in .env
 
     def run(self, ticker, company_id, sector_name, conn, cursor):
         self.company_id = company_id
@@ -21,22 +21,30 @@ class QuarterFinancialsPricePEBuilder:
         self.cursor = cursor
         if not db.find(models.QuarterlyReport, company_id, cursor):
             recent_five_quarterly_report_records = self.get_quarterly_financials(ticker)
-            self.save_quarterly_financials_records(company_id, recent_five_quarterly_report_records)
+            try:
+                self.save_quarterly_financials_records(company_id, recent_five_quarterly_report_records)
+            except Exception as e:
+                print(ticker)
+                print(e)
+                breakpoint
             if not db.find(models.PricePE, company_id, cursor):
                 self.save_price_pe_records(ticker, company_id, recent_five_quarterly_report_records)
         return None #
 
-    def get_quarterly_financials(self, ticker, api_key= API_KEY):
-        response = urlopen(f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}?period=quarter&apikey={api_key}")
+    def get_quarterly_financials(self, ticker):
+        response = urlopen(f"https://financialmodelingprep.com/api/v3/income-statement/{ticker}?period=quarter&apikey={API_KEY}")
         data = response.read().decode("utf-8")
         qtr_ic =  json.loads(data)
         recent_five_quarterly_report_records = qtr_ic[:5]
+        if len(recent_five_quarterly_report_records) != 5:
+            print(f"recent_five_quarterly_report_records of {ticker} have more than 5 quarters of record.")
+            breakpoint()
         return recent_five_quarterly_report_records
 
     def save_quarterly_financials_records(self, company_id, quarterly_ic_records):
         quarterly_reports_objs = []
         for quarterly_ic_record in quarterly_ic_records:
-            quarterly_report_obj = self.save_quarterly_record(company_id, quarterly_ic_record)
+            quarterly_report_obj = self.save_quarterly_record(company_id, quarterly_ic_record)             
             quarterly_reports_objs.append(quarterly_report_obj)
         return quarterly_reports_objs
 
@@ -48,11 +56,14 @@ class QuarterFinancialsPricePEBuilder:
         return quarterly_report_obj
     
     def get_financials_vector(self, quarterly_ic_record, company_id):
+        profit_margin = round(100 * quarterly_ic_record['netIncome']
+                                  / quarterly_ic_record['revenue'], 2)
         values_vector = [quarterly_ic_record['date'],
                          company_id,
                          quarterly_ic_record['revenue'],
                          quarterly_ic_record['netIncome'],
-                         round(quarterly_ic_record['eps'], 2)]
+                         round(quarterly_ic_record['eps'], 2),
+                         profit_margin]
         return values_vector
 
     def save_price_pe_records(self, ticker, company_id, recent_five_quarterly_report_records):
@@ -96,7 +107,7 @@ class QuarterFinancialsPricePEBuilder:
         As of April 2021, going back 350 days to match the 5 quarters of Income Statement
         financials that were return by FMP api call with different parameters.
         """
-        response = urlopen(f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?serietype=line&apikey={self.API_KEY}")
+        response = urlopen(f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?serietype=line&apikey={API_KEY}")
         data = response.read().decode("utf-8")
         all_historical_prices = json.loads(data)['historical']
         # get only the needed number of days of closing prices

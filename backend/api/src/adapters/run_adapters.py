@@ -39,6 +39,11 @@ class BuildSP500Companies: # to be refactored
         return sub_industry_id
 
     def generate_sub_industry_id(self, sub_industry_name, sector_name):
+        """
+        In the event that a new sub-industry is returned from the API call (its name
+        has not been written into the db), create a new row in the sub_industries table,
+        return its ID number.
+        """
         sub_industry_dict = {'sub_industry_GICS': sub_industry_name, 'sector_GICS': sector_name}
         sub_industry_obj = models.SubIndustry(**sub_industry_dict)
         sub_industry_id = db.save(sub_industry_obj, self.conn, self.cursor).id
