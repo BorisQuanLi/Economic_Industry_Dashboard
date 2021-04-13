@@ -8,14 +8,14 @@ import api.src.db as db
 import api.src.adapters as adapters
 from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, DEBUG, TESTING
 
-def create_app():
+def create_app(database='investment_analysis', testing=False, debug=True):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
     
     # connect to the local computer's Postgres
     app.config.from_mapping(
         DB_USER = 'postgres',
-        DB_NAME = 'investment_analysis',
+        DB_NAME = database,
         DB_PASSWORD = 'postgres',
         DB_HOST = '127.0.0.1',
         DEBUG = DEBUG,
@@ -177,9 +177,9 @@ def create_app():
         cursor = conn.cursor()
         params = dict(request.args)
         sector_name = params['sector_name']
-        fin_statement_item = params['fin_statement_item']
+        financial_item = params['financial_item']
         historical_financials_json_dicts = (models.SubIndustry.
-                                                    find_avg_quarterly_financials_by_sub_industry(f'{sector_name}', f'{fin_statement_item}', cursor))
+                                                    find_avg_quarterly_financials_by_sub_industry(f'{sector_name}', f'{financial_item}', cursor))
         return json.dumps(historical_financials_json_dicts, default = str)
 
     

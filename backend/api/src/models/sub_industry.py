@@ -135,18 +135,18 @@ class SubIndustry:
         return final_dict
     
     @classmethod
-    def find_avg_quarterly_financials_by_sub_industry(self, sector_name:str, fin_statement_item:str, cursor):
+    def find_avg_quarterly_financials_by_sub_industry(self, sector_name:str, financial_item:str, cursor):
         """
         Within each chosen sector, calculate each sub_industry's average value of a chosen
         financial-statement item (revenue, net_profit, etc.) over the most recent 
         quarters (5 in total based on the API calls to this project's data source.
 
         Returns a list of dictionaries with the key being a list of attributes, incl. [sector_name,
-        fin_statement_item name, year, quarter], and their corresponding values stored in a list as 
+        financial_item name, year, quarter], and their corresponding values stored in a list as 
         the dictionary value.
         """
         sql_str = f"""select {self.__table__}.id, {self.__table__}.sub_industry_gics,
-                            ROUND(AVG({fin_statement_item})::NUMERIC, 2) as profit_margin,
+                            ROUND(AVG({financial_item})::NUMERIC, 2) as profit_margin,
                             EXTRACT(year from quarterly_reports.date::DATE) as year,
                             EXTRACT(quarter from quarterly_reports.date::DATE) as quarter
                         FROM quarterly_reports
@@ -156,26 +156,24 @@ class SubIndustry:
                         GROUP BY year, quarter, {self.__table__}.id, {self.__table__}.sub_industry_gics;
                     """
         try:
-            cursor.execute(sql_str, (fin_statement_item, sector_name,))
+            cursor.execute(sql_str, (financial_item, sector_name,))
             records = cursor.fetchall()
         except Exception as e:
             print(e)
             breakpoint()
-        avg_financial_by_sub_industries_dict = self.store_records_in_dict(self, records)
-        historical_financials_json_dict = self.to_historical_financials_json(self, sector_name, fin_statement_item,
-                                                                                    avg_financial_by_sub_industries_dict)
-        # avg_financial_by_sub_industries_dict = self.store_records_in_dict(records)
+        avg_financial_by_sub_industries_dict = self.store_records(self, records)
+        avg_financial_dict_with_uniform_length = self.get_uniform_length_dicts(self, avg_financial_by_sub_industries_dict) 
+        historical_financials_json_dict = self.to_historical_financials_json(self, sector_name, financial_item,
+                                                                                    avg_financial_dict_with_uniform_length)
         return historical_financials_json_dict
 
-    def store_records_in_dict(self, records):    
+    def store_records(self, records):    
         # self ->; 
         # for each record, needs to create a Sub_industry instance.  
         # The iteration of which needs to be done in the above classmethod.
         avg_financial_by_sub_industries_dict = {}
         for record in records:
-            sub_industry_id = record[0]
-            sub_industry_name = record[1]
-            financial_item_avg = record[2]
+            sub_industry_id, sub_industry_name, financial_item_avg = record[0], record[1], record[2]
             year_quarter = str(int(record[3])) + '-0' + str(int(record[4]))
             if sub_industry_name not in avg_financial_by_sub_industries_dict:
                 avg_financial_by_sub_industries_dict[sub_industry_name] = {}
@@ -183,7 +181,26 @@ class SubIndustry:
                                                                 year_quarter] = (sub_industry_id, int(financial_item_avg))
         return avg_financial_by_sub_industries_dict
 
-    def to_historical_financials_json(self, sector_name, fin_statement_item, avg_financial_by_sub_industries_dict):        
+    def get_uniform_length_dicts(self, avg_financial_by_sub_industries_dict):
+        uniformed_dicts = {}
+        for k, v in avg_financial_by_sub_industries_dict.items():
+            if len(v) > 5:
+                irregular_length_dict = v
+                uniform_length_keys = list(irregular_length_dict.keys())[-5:]
+                uniform_length_dict = {k:v for k, v in irregular_length_dict.items()
+                                                                if k in uniform_length_keys}
+                v = uniform_length_dict
+                # v = get_uniform_length_dict(v) # check with Jeff about classmethod calling regular method
+            uniformed_dicts[k] = v
+        return uniformed_dicts
+
+    def get_uniform_length_dict(irregular_length_dict):
+        uniform_length_keys = list(irregular_length_dict.keys())[-5:]
+        uniform_length_dict = {k:v for k, v in irregular_length_dict.items()
+                                                        if k in uniform_length_keys}
+        return uniform_length_dict
+
+    def to_historical_financials_json(self, sector_name, financial_item, avg_financial_by_sub_industries_dict):        
         historical_financials_json_dict = {}
         for sub_industry, avg_financials_dict in avg_financial_by_sub_industries_dict.items():
             sub_industry_id = list(avg_financials_dict.values())[0][0]
@@ -192,7 +209,7 @@ class SubIndustry:
                                          [sub_industry_id, sub_industry, sector_name]))
             sub_industry_obj = models.SubIndustry(**sub_industry_dict)
             historical_financials_json = sub_industry_obj.__dict__
-            key = "Avg_quarterly_" + fin_statement_item + 's'
-            historical_financials_json[key] = financial_item_avg_recent_quarters
+            financial_item_key = "Avg_quarterly_" + financial_item + 's'
+            historical_financials_json[financial_item_key] = financial_item_avg_recent_quarters
             historical_financials_json_dict[f'{sub_industry}'] = historical_financials_json
-        return historical_financials_json_dict 
+        return historical_financials_json_dict

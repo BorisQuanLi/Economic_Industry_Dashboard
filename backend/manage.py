@@ -11,9 +11,13 @@ cli = FlaskGroup(create_app=create_app)
 # sp500_companies_info_runner = BuildSP500Companies() 
 # sp500_companies_wiki_data = sp500_companies_info_runner.run()
 
-quarterly_reports_runner = BuildQuarterlyReportsPricesPE()
-# quarterly_reports_runner.run('Energy') # 23 companies
+# as of 04/12, has not ingested companies in the Health Care sector:
 # quarterly_reports_runner.run('Health Care') # 63 companies
+
+# quarterly_reports_runner = BuildQuarterlyReportsPricesPE()
+# quarterly_reports_runner.run('Consumer Staples') # 32
+# quarterly_reports_runner.run('Energy') # 23 companies
+# quarterly_reports_runner.run('Consumer Staples') # 29 companies
 
 """
 figure out why PFE or JNJ's info has not been written in db after the above line,

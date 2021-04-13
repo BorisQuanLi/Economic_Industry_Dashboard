@@ -2,9 +2,6 @@ import csv
 import pandas as pd
 import api.src.models as models
 import api.src.db as db
-import api.src.adapters.client as client
-from api.src.adapters.company_builder import CompanyBuilder
-from api.src.adapters.quarterly_financials_prices_pe_builder import QuarterFinancialsPricePEBuilder
 
 class BuildSP500Companies: # to be refactored
     def __init__(self):
