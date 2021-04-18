@@ -2,10 +2,13 @@ import csv
 import pandas as pd
 import api.src.models as models
 import api.src.db as db
+from .client import get_sp500_wiki_data
+from .companies_builder import CompanyBuilder
+from .quarterly_financials_prices_pe_builder import QuarterFinancialsPricePEBuilder
 
 class BuildSP500Companies: # to be refactored
     def __init__(self):
-        self.sp500_wiki_data_filepath = client.get_sp500_wiki_data()
+        self.sp500_wiki_data_filepath = get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
@@ -47,20 +50,19 @@ class BuildSP500Companies: # to be refactored
         return sub_industry_id 
 
 class BuildQuarterlyReportsPricesPE:
-    def __init__(self):
-        self.financials_prices_pe_builder = QuarterFinancialsPricePEBuilder()
-        self.conn = db.conn
-        self.cursor = self.conn.cursor()
-
+    def __init__(self, conn, cursor):
+        self.conn = conn
+        self.cursor = cursor
+        
     def run(self, sector_name:str): 
-        companies_objs = self.get_batch_companies_objs(sector_name)
+        companies_objs = self.get_sector_companies_objs(sector_name)
         for company_obj in companies_objs:            
-            ticker = company_obj.ticker
-            company_id = company_obj.id
-            self.financials_prices_pe_builder.run(ticker, company_id, sector_name,
-                                            self.conn, self.cursor)
-
-    def get_batch_companies_objs(self, sector_name):
+            if not models.QuarterlyReport.find_by_company_id(company_obj.id, self.cursor):
+                financials_prices_pe_builder = QuarterFinancialsPricePEBuilder(company_obj.ticker, self.conn, self.cursor)
+                financials_prices_pe_builder.run(company_obj.id, sector_name)
+            else: continue
+        
+    def get_sector_companies_objs(self, sector_name):
         sql_str = f"""SELECT * FROM companies
                         JOIN sub_industries 
                         ON companies.sub_industry_id::INT = sub_industries.id

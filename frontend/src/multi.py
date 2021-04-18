@@ -191,5 +191,7 @@ companies_xy_axis_values = [get_xy_axis_values(company_info)
 fig = add_traces_to_fig(companies_xy_axis_values)
 st.plotly_chart(fig)
    
+st.write("Data provided by Financial Modeling Prep:")
+st.write("https://financialmodelingprep.com/developer/docs/")
 # fig.show() -> plotly implementation, not streamlit
 

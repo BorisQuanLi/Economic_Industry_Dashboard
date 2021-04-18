@@ -50,89 +50,6 @@ class SubIndustry:
         cursor.execute(sql_str, (str(sub_industry_id),))
         records = cursor.fetchall() 
         return db.build_from_records(models.Company, records)
-
-    def group_average(self, list_of_companies_financials):
-        def reduced_4_quarter_dicts_list(financials_of_interest:list, list_of_companies_financials):
-            reduced_dict_list = reduce(lambda x, y: [{f'{key}': 
-                                                                (x[x.index(quarterly_fin_dict)][key] 
-                                                               + y[x.index(quarterly_fin_dict)][key])
-                                                                    for key in quarterly_fin_dict.keys() if key in financials_of_interest} 
-                                                                        for quarterly_fin_dict in x],
-                                                                                                list_of_companies_financials) 
-            return reduced_dict_list
-
-        reporting_dates_history = [quarter['date'].strftime("%Y-%m-%d") for quarter 
-                                                        in list_of_companies_financials[0]['Quarterly financials']]
-        number_of_companies = len(list_of_companies_financials)
-        final_dict = {}
-
-        companies_records = defaultdict(list)
-        for company in list_of_companies_financials:
-            for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
-                companies_records[reports_category].append(company[reports_category])
-        
-        for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
-            if reports_category == 'Quarterly Closing Price and P/E ratio':
-                financials_of_interest = ['closing_price', 'price_earnings_ratio']
-            else:
-                financials_of_interest = ['revenue', 'cost', 'net_income']
-            company_financials_list = companies_records[reports_category]
-            quarterly_sum_totals = reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)
-            quarterly_averages = map(lambda x: {k: v/number_of_companies for k, v in x.items()}, 
-                                                                                        quarterly_sum_totals)
-            final_dict["Avg. " + f"{reports_category}"] = dict(zip(reporting_dates_history, quarterly_averages))
-
-        print("*" * 20)
-        print("final_dict from new function:")
-        print(final_dict)
-        return final_dict
-        breakpoint()
-        
-        
-        for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
-            if reports_category == 'Quarterly Closing Price and P/E ratio':
-                company_financials_list = [company['Quarterly Closing Price and P/E ratio'] 
-                                                        for company in list_of_companies_financials]
-                financials_of_interest = ['closing_price', 'price_earnings_ratio']
-            else:
-                company_financials_list = [company['Quarterly financials'] 
-                                                        for company in list_of_companies_financials]
-                financials_of_interest = ['revenue', 'cost', 'net_income']
-            quarterly_sum_totals = reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)
-        print("-" * 20)
-        print("quarterly_sum_totals from old function, without defaultdict(list):")
-        print(quarterly_sum_totals)
-        breakpoint()
-
-        for reports_category in ['Quarterly Closing Price and P/E ratio', 'Quarterly financials']:
-            if reports_category == 'Quarterly Closing Price and P/E ratio':
-                company_financials_list = [company['Quarterly Closing Price and P/E ratio'] 
-                                                        for company in list_of_companies_financials]
-                financials_of_interest = ['closing_price', 'price_earnings_ratio']
-            else:
-                company_financials_list = [company['Quarterly financials'] 
-                                                        for company in list_of_companies_financials]
-                financials_of_interest = ['revenue', 'cost', 'net_income']
-            quarterly_sum_totals = reduced_4_quarter_dicts_list(financials_of_interest, company_financials_list)
-            quarterly_averages = map(lambda x: {k: v/number_of_companies 
-                                                        for k, v in x.items()}, quarterly_sum_totals)
-            final_dict["Avg. " + f"{reports_category}"] = dict(zip(reporting_dates_history, quarterly_averages))
-
-        return final_dict  
-
-    def average_financials_by_sub_industry(self, cursor): # re-written below
-        sql_str= f"""SELECT companies.* FROM companies
-                     JOIN sub_industries
-                     ON sub_industries.id = companies.sub_industry_id
-                     WHERE sub_industries.id = %s;
-                  """
-        cursor.execute(sql_str, (self.id,))
-        records = cursor.fetchall()
-        companies_objs_list = db.build_from_records(models.Company, records)
-        list_of_companies_financials = [obj.to_quarterly_financials_json(cursor) 
-                                                                for obj in companies_objs_list]
-        final_dict = self.group_average(list_of_companies_financials)
-        return final_dict
     
     @classmethod
     def find_avg_quarterly_financials_by_sub_industry(self, sector_name:str, financial_item:str, cursor):
@@ -146,7 +63,7 @@ class SubIndustry:
         the dictionary value.
         """
         sql_str = f"""select {self.__table__}.id, {self.__table__}.sub_industry_gics,
-                            ROUND(AVG({financial_item})::NUMERIC, 2) as profit_margin,
+                            ROUND(AVG({financial_item})::NUMERIC, 2) as Average,
                             EXTRACT(year from quarterly_reports.date::DATE) as year,
                             EXTRACT(quarter from quarterly_reports.date::DATE) as quarter
                         FROM quarterly_reports

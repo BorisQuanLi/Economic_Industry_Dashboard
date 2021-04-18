@@ -13,6 +13,14 @@ class QuarterlyReport:
             setattr(self, k, v)
 
     @classmethod
+    def find_by_company_id(self, company_id, cursor):
+        sql_str = f"""SELECT * FROM {self.__table__}
+                        WHERE company_id = %s;"""
+        cursor.execute(sql_str, (company_id,))
+        records = cursor.fetchall()
+        return db.build_from_records(models.SubIndustry, records)
+
+    @classmethod
     def find_quarterly_reports_by_ticker(self, ticker, cursor):
         sql_query = f"""SELECT * FROM quarterly_reports
                         JOIN companies
