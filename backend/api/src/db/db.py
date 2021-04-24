@@ -4,7 +4,6 @@ import psycopg2
 from datetime import datetime, timedelta
 from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
 
-
 # Connecting to Postgres on local Mac (parameters hard-coded):
 conn = psycopg2.connect(database = 'investment_analysis', user = 'postgres', password = 'postgres')
 cursor = conn.cursor()
@@ -13,7 +12,7 @@ def get_db():
     if "db" not in g:
         # connect to postgres on the local computer
         g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
-            dbname = 'investment_analysis')
+            dbname = current_app.config['DB_NAME']) # apply this to user, password in __init__.py (at the top of this script, already imported from SETTINGS)
 
         """
         # connect to postgres on the AWS RDS instance

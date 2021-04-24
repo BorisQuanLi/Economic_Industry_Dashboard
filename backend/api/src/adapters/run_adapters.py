@@ -16,21 +16,18 @@ class BuildSP500Companies: # to be refactored
     def run(self): # to be refactored, using Pandas?
         with open(self.sp500_wiki_data_filepath) as csv_file: # user pandas.read_csv() instead?
             reader = csv.DictReader(csv_file)
-            sp500_companies_wiki_data = []
             for wiki_row in reader:
                 company_obj = self.process_row_data(wiki_row)              
-                sp500_companies_wiki_data.append(company_obj)
-        return sp500_companies_wiki_data
 
     def process_row_data(self, wiki_row):
         sub_industry_name = wiki_row['GICS Sub-Industry']
         sub_industry_obj = (models.SubIndustry
                                 .find_by_sub_industry_name(sub_industry_name, self.cursor))
-        sub_industry_id = self.get_sub_industry_id(sub_industry_obj)
+        sub_industry_id = self.get_sub_industry_id(sub_industry_obj, sub_industry_name, wiki_row)
         company_obj = self.company_builder.run(wiki_row, sub_industry_id, self.conn, self.cursor)
         return company_obj
 
-    def get_sub_industry_id(self, sub_industry_obj):
+    def get_sub_industry_id(self, sub_industry_obj, sub_industry_name, wiki_row):
         if not sub_industry_obj:
             sector_name = wiki_row['GICS Sector']
             sub_industry_id = self.generate_sub_industry_id(sub_industry_name, sector_name)

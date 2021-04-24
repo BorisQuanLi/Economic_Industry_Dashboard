@@ -10,20 +10,18 @@ app = create_app()
 cli = FlaskGroup(create_app=create_app)
 
 # sp500_companies_info_runner = BuildSP500Companies() 
-# sp500_companies_wiki_data = sp500_companies_info_runner.run()
+# sp500_companies_info_runner.run()
 
 conn = db.conn
 cursor = conn.cursor()
 quarterly_reports_runner = BuildQuarterlyReportsPricesPE(conn, cursor)
 
-# quarterly_reports_runner.run('Consumer Staples') # 32
 # quarterly_reports_runner.run('Energy') # 23 companies
-quarterly_reports_runner.run('Consumer Staples') # 29 companies
-
-"""
-# as of 04/12, has not ingested companies in the Health Care sector:
+# quarterly_reports_runner.run('Consumer Staples') # 04/24, 31 out of 31 companies
+quarterly_reports_runner.run('Real Estate')
 # quarterly_reports_runner.run('Health Care') # 63 companies
 
+"""
 figure out why PFE or JNJ's info has not been written in db after the above line,
 and implement db.find_or_create methods.
 """
