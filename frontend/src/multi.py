@@ -18,10 +18,10 @@ def find_sub_industries_avg_financials_by_sector(sector_name, financial_item):
     return response_dict.json()
 
 # plotly chart
-def get_sub_industry_xy_axis_info(sub_industry_name, attr_dicts):
-    avg_financial_item_name = list(attr_dicts.keys())[-1]
-    dates_list = list(attr_dicts[avg_financial_item_name].keys())
-    values_list = list(attr_dicts[avg_financial_item_name].values())
+def get_sub_industry_xy_axis_info(sub_industry_name, attr_list):
+    avg_financial_item_name = attr_list[-1]
+    dates_list = list(attr_list[0][avg_financial_item_name].keys())
+    values_list = list(attr_list[0][avg_financial_item_name].values())
     return sub_industry_name, dates_list, values_list
 
 def add_traces_to_fig(sector_name, financial_item, sub_industries_xy_axis_info:list):
@@ -71,16 +71,13 @@ def update_layout(fig, sector_name, financial_item):
 
 def plot_avg_financial_sub_industries(sector_name, financial_item):
     avg_financials = find_sub_industries_avg_financials_by_sector(sector_name, financial_item)
-
-    #profit_margins_energy_sector = find_sub_industries_avg_financials_by_sector('Energy', 'profit_margin').json()
-    #revenues_energy_sector = find_sub_industries_avg_financials_by_sector('Energy', 'revenue').json()
-    sub_industries_xy_axis_info = [get_sub_industry_xy_axis_info(sub_industry_name, attr_dicts)
-                                        for sub_industry_name, attr_dicts in avg_financials.items()]
+    sub_industries_xy_axis_info = [get_sub_industry_xy_axis_info(sub_industry_name, attr_list)
+                                        for sub_industry_name, attr_list in avg_financials.items()]
     fig = add_traces_to_fig(f'{sector_name}', f'{financial_item}', sub_industries_xy_axis_info)
     st.plotly_chart(fig)
 
-plot_avg_financial_sub_industries('Real Estate', 'revenue')
-plot_avg_financial_sub_industries('Real Estate', 'profit_margin')
+plot_avg_financial_sub_industries('Consumer Staples', 'revenue')
+plot_avg_financial_sub_industries('Consumer Staples', 'profit_margin')
 plot_avg_financial_sub_industries('Energy', 'profit_margin')
 plot_avg_financial_sub_industries('Energy', 'revenue')
 

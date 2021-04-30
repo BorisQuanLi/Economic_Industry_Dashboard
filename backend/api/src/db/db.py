@@ -95,6 +95,45 @@ def find_company_by_ticker(Class, ticker_symbol, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+def values(obj):
+    company_attrs = obj.__dict__
+    return [company_attrs[attr] for attr in obj.columns if attr in company_attrs.keys()]
+
+def keys(obj):
+    company_attrs = obj.__dict__
+    selected = [attr for attr in obj.columns if attr in company_attrs.keys()]
+    return ', '.join(selected)
+
+def drop_records(cursor, conn, table_name):
+    cursor.execute(f"DELETE FROM {table_name};")
+    conn.commit()
+
+def drop_tables(table_names, cursor, conn):
+    for table_name in table_names:
+        drop_records(cursor, conn, table_name)
+
+def drop_all_tables(conn, cursor):
+    table_names = ['companies', 'sub_industries', 'quarterly_reports', 'prices_pe']
+    drop_tables(table_names, cursor, conn)
+
+def find_by_name(Class, name, cursor):
+    query = f"""SELECT * FROM {Class.__table__} WHERE name = %s """
+    cursor.execute(query, (name,))
+    record =  cursor.fetchone()
+    obj = build_from_record(Class, record)
+    return obj
+
+def find_or_create_by_name(Class, name, conn, cursor):
+    obj = find_by_name(Class, name, cursor)
+    if not obj:
+        new_obj = Class()
+        new_obj.name = name
+        obj = save(new_obj, conn, cursor)
+    return obj
+
+################ to be deleted
+
+
 # 02/02, based on Office Hour discussion with Jeff, to be called by the function that produces multiple quarters' numbers.
 def report_dates(cursor):
     sql_str = """
@@ -218,43 +257,5 @@ def save(obj, conn, cursor):
     except psycopg2.errors.UniqueViolation as e:
         print(e)
         pass
-
-def values(obj):
-    company_attrs = obj.__dict__
-    return [company_attrs[attr] for attr in obj.columns if attr in company_attrs.keys()]
-
-def keys(obj):
-    company_attrs = obj.__dict__
-    selected = [attr for attr in obj.columns if attr in company_attrs.keys()]
-    return ', '.join(selected)
-
-def drop_records(cursor, conn, table_name):
-    cursor.execute(f"DELETE FROM {table_name};")
-    conn.commit()
-
-def drop_tables(table_names, cursor, conn):
-    for table_name in table_names:
-        drop_records(cursor, conn, table_name)
-
-def drop_all_tables(conn, cursor):
-    table_names = ['companies', 'sub_industries', 'quarterly_reports', 'prices_pe']
-    drop_tables(table_names, cursor, conn)
-
-def find_by_name(Class, name, cursor):
-    query = f"""SELECT * FROM {Class.__table__} WHERE name = %s """
-    cursor.execute(query, (name,))
-    record =  cursor.fetchone()
-    obj = build_from_record(Class, record)
-    return obj
-
-def find_or_create_by_name(Class, name, conn, cursor):
-    obj = find_by_name(Class, name, cursor)
-    if not obj:
-        new_obj = Class()
-        new_obj.name = name
-        obj = save(new_obj, conn, cursor)
-    return obj
-
-
 
 

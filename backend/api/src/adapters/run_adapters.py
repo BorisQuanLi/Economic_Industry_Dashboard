@@ -6,7 +6,7 @@ from .client import get_sp500_wiki_data
 from .companies_builder import CompanyBuilder
 from .quarterly_financials_prices_pe_builder import QuarterFinancialsPricePEBuilder
 
-class BuildSP500Companies: # to be refactored
+class BuildSP500Companies: # to be refactored using Pandas?
     def __init__(self):
         self.sp500_wiki_data_filepath = get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
@@ -54,10 +54,9 @@ class BuildQuarterlyReportsPricesPE:
     def run(self, sector_name:str): 
         companies_objs = self.get_sector_companies_objs(sector_name)
         for company_obj in companies_objs:            
-            if not models.QuarterlyReport.find_by_company_id(company_obj.id, self.cursor):
-                financials_prices_pe_builder = QuarterFinancialsPricePEBuilder(company_obj.ticker, self.conn, self.cursor)
-                financials_prices_pe_builder.run(company_obj.id, sector_name)
-            else: continue
+            if models.QuarterlyReport.find_by_company_id(company_obj.id, self.cursor): continue
+            financials_prices_pe_builder = QuarterFinancialsPricePEBuilder(company_obj.ticker, self.conn, self.cursor)
+            financials_prices_pe_builder.run(company_obj.id, sector_name)
         
     def get_sector_companies_objs(self, sector_name):
         sql_str = f"""SELECT * FROM companies

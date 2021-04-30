@@ -132,27 +132,6 @@ def create_app(database='investment_analysis', testing=False, debug=True):
         objs_list = db.find_all(models.SubIndustry, cursor)
         dicts_list = [obj.__dict__ for obj in objs_list]
         return json.dumps(dicts_list)
-    
-    # 03/03/2021
-    @app.route('/sub_industries/<sub_industry_name>')
-    def sub_industry_by_name(sub_industry_name):
-        """
-        Returns a sub_industry's average value of various performance measurements each
-        quarter, over four consecutive quarters.
-        The measurements include revenue, cost, earnings, stock price, price/earnings ratios.
-        """
-        conn = db.get_db()
-        cursor = conn.cursor()
-        breakpoint()
-        quarterly_numbers_history = []
-        reports_dates_list = db.report_dates(cursor)
-        for report_date in reports_dates_list:
-            single_quarter_record_obj = db.sub_industry_quarterly_avg_numbers(models.SubIndustryPerformance, 
-                                                                            sub_industry_name, 
-                                                                            report_date, 
-                                                                            cursor)
-            quarterly_numbers_history.append(single_quarter_record_obj.__dict__)
-        return json.dumps(quarterly_numbers_history)
 
     @app.route('/sub_industries/search')
     def search_sub_industires():
