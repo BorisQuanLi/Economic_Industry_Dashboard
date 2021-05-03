@@ -1,86 +1,23 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-from datetime import time, datetime, timedelta
-import pandas as pd
-import pandas_market_calendars as mcal
+from datetime import datetime
+from helpers import unpack_year_quarter, get_financial_item_unit
+from plot_sub_industry_financials import plot_avg_financial_sub_industries
+from plot_sector_financials import plot_sectors_performance
 
 SEARCH_COMPANY_URL = "http://127.0.0.1:5000/companies/company_overview/search"
 SEARCH_SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
-SEARCH_SECTOR_URL = "http://127.0.0.1:5000/sectors/search"
-SECTOR_URL = "http://127.0.0.1:5000/sectors/<sector_name>"
+CROSS_SECTORS_URL = "http://127.0.0.1:5000/sectors"
 
 # present each sub-industry's average financials within a particular sector (after sector name is entered in the url)
+plot_sectors_performance()
 
-def find_sub_industries_avg_financials_by_sector(sector_name, financial_item):
-    response_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': sector_name,
-                                                             'financial_item': financial_item})
-    return response_dict.json()
-
-# plotly chart
-def get_sub_industry_xy_axis_info(sub_industry_name, attr_list):
-    avg_financial_item_name = attr_list[-1]
-    dates_list = list(attr_list[0][avg_financial_item_name].keys())
-    values_list = list(attr_list[0][avg_financial_item_name].values())
-    return sub_industry_name, dates_list, values_list
-
-def add_traces_to_fig(sector_name, financial_item, sub_industries_xy_axis_info:list):
-    fig = go.Figure()
-    for sub_industry_xy_axis_info in sub_industries_xy_axis_info:
-        sub_industry_name, dates_list, values_list = unpack_info(sub_industry_xy_axis_info)
-        fig.add_trace(go.Scatter(x = dates_list, y = values_list, 
-                                                        name = f"{sub_industry_name}"))
-    fig = update_layout(fig, sector_name, financial_item)
-    return fig
-
-def unpack_info(sub_industry_xy_axis_info):
-    sub_industry_name, values_list = sub_industry_xy_axis_info[0], sub_industry_xy_axis_info[2]
-    dates_list = [get_quarter_end_date_str(year_quarter) 
-                                            for year_quarter in sub_industry_xy_axis_info[1]]
-    return sub_industry_name, dates_list, values_list
-
-def get_quarter_end_trading_day(year_quarter_str:str):
-    end_date_str = get_quarter_end_date_str(year_quarter_str)
-    start_date = datetime.strptime(end_date_str, '%Y-%m-%d') - timedelta(days= 5)
-    start_date_str = datetime.strftime(start_date, '%Y-%m-%d')
-    nyse = mcal.get_calendar('NYSE')
-    days_range = nyse.valid_days(start_date= start_date_str, end_date= end_date_str)
-    quarter_end_trading_day = days_range[-1].date()
-    return quarter_end_trading_day
-
-def get_quarter_end_date_str(year_quarter_str:str):
-    year_str = year_quarter_str.split('-')[0]
-    quarter_str = year_quarter_str.split('-')[1]
-    quarter_ending_date_dict = {'01': '03-31', '02': '06-30', '03': '09-30', '04': '12-31'}
-    end_date_str = year_str + '-' + quarter_ending_date_dict[quarter_str]
-    return end_date_str
-
-def update_layout(fig, sector_name, financial_item):
-    fig.update_layout(
-        title=f"""Sub-industries in the {sector_name} sector:""", # change title
-        xaxis_title="Month Year",
-        yaxis_title=f"{'Average ' + ' '.join([i.capitalize() for i in financial_item.split('_')])}",
-        legend_title="Sub Industries:",
-        font=dict(
-            family="Courier New, monospace",
-            size=12,
-            color="RebeccaPurple"
-                    )
-                )
-    return fig
-
-def plot_avg_financial_sub_industries(sector_name, financial_item):
-    avg_financials = find_sub_industries_avg_financials_by_sector(sector_name, financial_item)
-    sub_industries_xy_axis_info = [get_sub_industry_xy_axis_info(sub_industry_name, attr_list)
-                                        for sub_industry_name, attr_list in avg_financials.items()]
-    fig = add_traces_to_fig(f'{sector_name}', f'{financial_item}', sub_industries_xy_axis_info)
-    st.plotly_chart(fig)
-
+# call the separate module (the one first worked out in this project)
 plot_avg_financial_sub_industries('Consumer Staples', 'revenue')
 plot_avg_financial_sub_industries('Consumer Staples', 'profit_margin')
 plot_avg_financial_sub_industries('Energy', 'profit_margin')
 plot_avg_financial_sub_industries('Energy', 'revenue')
-
 
 
 def find_company_info(selected_company_name):

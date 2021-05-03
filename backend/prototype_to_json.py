@@ -5,9 +5,85 @@ import simplejson as json
 from datetime import time, datetime, timedelta
 import pandas as pd
 import pandas_market_calendars as mcal
+from decimal import *
 
 conn = psycopg2.connect(database = 'investment_analysis_test', user = 'postgres', password = 'postgres')
 cursor = conn.cursor()
+
+# 05/02 work out plotly chart of financials_by_sector json return
+json_return = {'Consumer Staples': {'202001': {'avg_revenue': 12615849903.23, 'avg_net_income': 780862806.45, 'avg_earnings_per_share': 0.99, 'avg_profit_margin': 12.73}, '202002': {'avg_revenue': 12595588838.71, 'avg_net_income': 569776967.74, 'avg_earnings_per_share': 0.69, 'avg_profit_margin': 8.52}, '202003': {'avg_revenue': 13884618172.41, 'avg_net_income': 975771379.31, 'avg_earnings_per_share': 1.35, 'avg_profit_margin': 12.56}, '202004': {'avg_revenue': 13227184107.14, 'avg_net_income': 992984642.86, 'avg_earnings_per_share': 1.37, 'avg_profit_margin': 14.8}, '202101': {'avg_revenue': 22234742076.92, 'avg_net_income': 613684230.77, 'avg_earnings_per_share': 1.96, 'avg_profit_margin': 10.39}}, 'Energy': {'202001': {'avg_revenue': 10069083000.0, 'avg_net_income': -1516083350.0, 'avg_earnings_per_share': -2.71, 'avg_profit_margin': -33.63}, '202002': {'avg_revenue': 5641133850.0, 'avg_net_income': -1358037000.0, 'avg_earnings_per_share': -1.97, 'avg_profit_margin': -74.09}, '202003': {'avg_revenue': 7909252736.84, 'avg_net_income': -231239578.95, 'avg_earnings_per_share': -0.68, 'avg_profit_margin': -11.32}, '202004': {'avg_revenue': 8597901000.0, 'avg_net_income': -1214363888.89, 'avg_earnings_per_share': -0.64, 'avg_profit_margin': -10.72}}, 'Health Care': {'202001': {'avg_revenue': 6002043857.14, 'avg_net_income': 445198285.71, 'avg_earnings_per_share': 1.47, 'avg_profit_margin': 13.01}, '202002': {'avg_revenue': 5581698714.29, 'avg_net_income': -15565285.71, 'avg_earnings_per_share': 2.41, 'avg_profit_margin': 0.19}, '202003': {'avg_revenue': 6331397428.57, 'avg_net_income': 406568142.86, 'avg_earnings_per_share': 2.66, 'avg_profit_margin': 25.76}, '202004': {'avg_revenue': 8299446400.0, 'avg_net_income': 575688600.0, 'avg_earnings_per_share': 1.08, 'avg_profit_margin': 55.16}, '202101': {'avg_revenue': 3239000000.0, 'avg_net_income': 656000000.0, 'avg_earnings_per_share': 4.46, 'avg_profit_margin': 20.25}}}
+
+for sector, value in json_return.items():
+    print(sector)
+    for year_quarter, financials_dict in value.items():
+        print(year_quarter)
+        print('avg_revenue')
+        print(financials_dict['avg_revenue'])
+print('-' * 15)
+print([year_quarter for year_quarter in json_return['Energy'].keys()])
+print([(financials['avg_revenue']) for financials in json_return['Energy'].values()])
+
+def get_time_n_financials_axis(sector, quarterly_financials, financial_item):
+    x_axis_time_series = [year_quarter for year_quarter in json_return[sector].keys()]
+    y_axis_financials = [(financials[financial_item]) for financials in json_return[sector].values()]
+    return x_axis_time_series, y_axis_financials
+
+for sector, quarterly_financials in json_return.items():
+    print(sector)
+    print('avg_revenue')
+    x_axis_time_series, y_axis_financials = get_time_n_financials_axis(sector, quarterly_financials, 'avg_revenue')
+    print(x_axis_time_series)
+    print(y_axis_financials)
+breakpoint()
+
+
+# 05/01
+# sub_industry.py
+"""
+needs to find the latest year-quarter among all the sectors, then 
+set the cut-off quarter to be latest - 5
+"""
+sector_records_dict = {'Consumer Staples': {202101: {'avg_revenue': Decimal('22234742076.92'), 'avg_net_income': Decimal('613684230.77'), 'avg_earnings_per_share': Decimal('1.96'), 'avg_profit_margin': Decimal('10.39')}, 202004: {'avg_revenue': Decimal('13227184107.14'), 'avg_net_income': Decimal('992984642.86'), 'avg_earnings_per_share': Decimal('1.37'), 'avg_profit_margin': Decimal('14.80')}, 202003: {'avg_revenue': Decimal('13884618172.41'), 'avg_net_income': Decimal('975771379.31'), 'avg_earnings_per_share': Decimal('1.35'), 'avg_profit_margin': Decimal('12.56')}, 202002: {'avg_revenue': Decimal('12595588838.71'), 'avg_net_income': Decimal('569776967.74'), 'avg_earnings_per_share': Decimal('0.69'), 'avg_profit_margin': Decimal('8.52')}, 202001: {'avg_revenue': Decimal('12615849903.23'), 'avg_net_income': Decimal('780862806.45'), 'avg_earnings_per_share': Decimal('0.99'), 'avg_profit_margin': Decimal('12.73')}, 201904: {'avg_revenue': Decimal('6888409105.26'), 'avg_net_income': Decimal('544397421.05'), 'avg_earnings_per_share': Decimal('0.80'), 'avg_profit_margin': Decimal('8.36')}, 201903: {'avg_revenue': Decimal('2841600000.00'), 'avg_net_income': Decimal('-402800000.00'), 'avg_earnings_per_share': Decimal('-1.86'), 'avg_profit_margin': Decimal('-14.18')}, 201902: {'avg_revenue': Decimal('2948300000.00'), 'avg_net_income': Decimal('329400000.00'), 'avg_earnings_per_share': Decimal('1.52'), 'avg_profit_margin': Decimal('11.17')}}, 'Health Care': {202101: {'avg_revenue': Decimal('3239000000.00'), 'avg_net_income': Decimal('656000000.00'), 'avg_earnings_per_share': Decimal('4.46'), 'avg_profit_margin': Decimal('20.25')}, 202004: {'avg_revenue': Decimal('8299446400.00'), 'avg_net_income': Decimal('575688600.00'), 'avg_earnings_per_share': Decimal('1.08'), 'avg_profit_margin': Decimal('55.16')}, 202003: {'avg_revenue': Decimal('6331397428.57'), 'avg_net_income': Decimal('406568142.86'), 'avg_earnings_per_share': Decimal('2.66'), 'avg_profit_margin': Decimal('25.76')}, 202002: {'avg_revenue': Decimal('5581698714.29'), 'avg_net_income': Decimal('-15565285.71'), 'avg_earnings_per_share': Decimal('2.41'), 'avg_profit_margin': Decimal('0.19')}, 202001: {'avg_revenue': Decimal('6002043857.14'), 'avg_net_income': Decimal('445198285.71'), 'avg_earnings_per_share': Decimal('1.47'), 'avg_profit_margin': Decimal('13.01')}, 201904: {'avg_revenue': Decimal('5824841000.00'), 'avg_net_income': Decimal('760636857.14'), 'avg_earnings_per_share': Decimal('2.21'), 'avg_profit_margin': Decimal('22.11')}, 201903: {'avg_revenue': Decimal('2508767000.00'), 'avg_net_income': Decimal('140557000.00'), 'avg_earnings_per_share': Decimal('0.95'), 'avg_profit_margin': Decimal('5.60')}}, 'Energy': {202004: {'avg_revenue': Decimal('8597901000.00'), 'avg_net_income': Decimal('-1214363888.89'), 'avg_earnings_per_share': Decimal('-0.64'), 'avg_profit_margin': Decimal('-10.72')}, 202003: {'avg_revenue': Decimal('7909252736.84'), 'avg_net_income': Decimal('-231239578.95'), 'avg_earnings_per_share': Decimal('-0.68'), 'avg_profit_margin': Decimal('-11.32')}, 202002: {'avg_revenue': Decimal('5641133850.00'), 'avg_net_income': Decimal('-1358037000.00'), 'avg_earnings_per_share': Decimal('-1.97'), 'avg_profit_margin': Decimal('-74.09')}, 202001: {'avg_revenue': Decimal('10069083000.00'), 'avg_net_income': Decimal('-1516083350.00'), 'avg_earnings_per_share': Decimal('-2.71'), 'avg_profit_margin': Decimal('-33.63')}, 201904: {'avg_revenue': Decimal('12000061800.00'), 'avg_net_income': Decimal('-4031150.00'), 'avg_earnings_per_share': Decimal('-0.08'), 'avg_profit_margin': Decimal('-5.08')}, 201903: {'avg_revenue': Decimal('5687000000.00'), 'avg_net_income': Decimal('-794000000.00'), 'avg_earnings_per_share': Decimal('-1.08'), 'avg_profit_margin': Decimal('-13.96')}, 201902: {'avg_revenue': Decimal('4420000000.00'), 'avg_net_income': Decimal('635000000.00'), 'avg_earnings_per_share': Decimal('0.85'), 'avg_profit_margin': Decimal('14.37')}}}
+print(sector_records_dict.keys())
+print(sector_records_dict['Energy'])
+print(max(sector_records_dict['Energy'].keys()))
+print(list(sector_records_dict['Energy'].keys())[:5])
+print([(key, max(sector_records_dict[key].keys()), sector_records_dict[key].keys()) for key in sector_records_dict.keys()])
+print(max([max(sector_records_dict[key].keys()) for key in sector_records_dict.keys()]))
+print(max({max(sector_records_dict[key].keys()):key for key in sector_records_dict.keys()}))
+most_recent_quarter = max([max(sector_records_dict[key].keys()) for key in sector_records_dict.keys()])
+for value in sector_records_dict.values():
+    if most_recent_quarter not in value.keys():
+        continue
+    else:
+        most_recent_quarters = list(value.keys())[:5]
+        print(most_recent_quarters)
+        break
+print(most_recent_quarters) 
+
+def get_uniform_length_dicts(dict_of_dicts:dict, uniform_length=5):
+    most_recent_quarters = get_most_recent_quarters(dict_of_dicts, uniform_length)
+    for sector, quarterly_records_dict in dict_of_dicts.items():
+        dict_of_dicts[sector] = {key:value for key, value in quarterly_records_dict.items()
+                                                                    if key in most_recent_quarters}
+    return dict_of_dicts
+
+def get_most_recent_quarters(dict_of_dicts, uniform_length):
+    most_recent_quarter = max([max(sector_records_dict[key].keys()) 
+                                            for key in sector_records_dict.keys()])
+    for sector_quarterly_records in dict_of_dicts.values():
+        if most_recent_quarter not in sector_quarterly_records.keys(): continue
+        else:
+            most_recent_quarters = list(sector_quarterly_records.keys())[:uniform_length]
+            break
+    return most_recent_quarters
+
+uniformed_dicts = get_uniform_length_dicts(sector_records_dict)
+
+for sector in uniformed_dicts:
+    print(uniformed_dicts[sector])
+    print('-' * 15)
+breakpoint()
 
 # state = find_or_create_by_name(src.State, state_name, conn, cursor)
 
