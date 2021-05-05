@@ -1,240 +1,146 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-import json
+from plot_sub_industry_financials import plot_avg_financial_sub_industries
+from plot_sector_financials import plot_sectors_performance
+from helpers import (beautify_streamlit_presentation, welcome_message, provide_financial_indicator_choice_menu,
+                     underscored_to_spaced_words_dict, spaced_to_underscored_words_dict)
+
+SEARCH_COMPANY_URL = "http://127.0.0.1:5000/companies/company_overview/search"
+SEARCH_SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
+
+welcome_message()
+beautify_streamlit_presentation()
+
+# present each sub-industry's average financials within a particular sector (after sector name is entered in the url)
+AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
+plot_sectors_performance(AGGREGATION_BY_SECTOR_URL)
+
+# radio button
+sector_selected = st.radio("Which economic sector's performance are your interested in?",
+                            [' ', 'Consumer Staples', 'Energy', 'Healthcare']) # sector names hard-coded for now 
+st.write(f"You selected: {sector_selected}")
+
+# Historical financial performance by sub-industries within an economic sector.
+st.title("Historical financial performance by sub-industries within an economic sector.")
+st.title(" ")
+SEARCH_SECTOR_URL = "http://127.0.0.1:5000/sectors/search"
+plot_avg_financial_sub_industries('Consumer Staples', 'revenue')
+plot_avg_financial_sub_industries('Consumer Staples', 'profit_margin')
+plot_avg_financial_sub_industries('Energy', 'profit_margin')
+plot_avg_financial_sub_industries('Energy', 'revenue')
+
+
+# plot company-level financial history. Move to a separate module.
+st.title("Historical financial performance by companies within a sub-industry.")
+st.title(" ")
 from datetime import datetime
-from functools import reduce
-
-COMPANY_URL = "http://127.0.0.1:5000/companies/company_overview/search"
-SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
-SECTOR_URL = "http://127.0.0.1:5000/sectors/sector/search"
-
-def sub_industry_avg_performance_history(sub_industry_name):
-    """
-    Through a backend SQL query, returns a sub_industry's average performance numbers in each of the most recently available
-    4 quarters, as provided in the companies' SEC filings, including:
-
-    revenue, cost, net_earnings, stock price, price/earnings ratio
-    """
-    response = requests.get(SUB_INDUSTRY_URL, params= {'sub_industry': sub_industry_name})
+def find_company_info(selected_company_name):
+    response = requests.get(SEARCH_COMPANY_URL, params= {'company_name': selected_company_name})
     return response.json()
 
-def avg_performance_by_sub_industries(sub_industries):
-    avg_performances = dict()
-    for sub_industry_name in sub_industries:
-        sub_industry_avg_performance_hist = sub_industry_avg_performance_history(sub_industry_name)[
-                                                                                                'quarterly numbers']
-        sub_industry_name = sub_industry_avg_performance_hist[0]['sub_industry_name']
-        avg_performances[sub_industry_name] = sub_industry_avg_performance_hist
-    return avg_performances
+def extract_company_info(company_info:dict):
+    # get only the most recent quarter's financials
+    company_info = {k:v for k, v in company_info.items()
+                            if k not in ['id', 'sub_industry_id', 'HQ_state']}
+    company_info['Quarterly_financials'] = [extract_financials_dict(quarterly_financials)
+                                                for quarterly_financials in company_info['Quarterly_financials']]
+    company_info['Closing_prices_and_P/E_ratio'] = [extract_price_pe_dict(quarterly_price_pe)
+                                                        for quarterly_price_pe in company_info['Closing_prices_and_P/E_ratio']]
+    return company_info
 
-def sub_industry_single_measure_avg_performance(sub_industry_name:str, 
-                                                performance_measurement:str,
-                                                avg_performance_by_sub_industries):
-    """
-    Ruturns a sub_industry's a single performance measure's historical values over 4 quarters,
-    in the right format for a steamlit trace.  
-    """
-    quarterly_results = [quarter[performance_measurement] for quarter 
-                                            in avg_performance_by_sub_industries[
-                                                                                sub_industry_name]]
-    quarterly_report_dates = [quarter['date'] for quarter 
-                                            in avg_performance_by_sub_industries[
-                                                                                sub_industry_name]]
-    return quarterly_results, quarterly_report_dates
+def extract_financials_dict(quarterly_financials:dict):
+    extracted_financials_dict =  {k:v for k, v in quarterly_financials.items()
+                                                        if k not in ['id', 'company_id']}
+    return extracted_financials_dict
 
+def extract_price_pe_dict(quarterly_price_pe:dict):
+    extracted_price_pe_dict = {k:v for k, v in quarterly_price_pe.items()
+                                                                if k not in ['id', 'company_id']}
+    return extracted_price_pe_dict
 
-def plot_sub_industries_avg_performance_history(sub_industries:list, performance_measurement):
-    sub_industries_avg_performance = avg_performance_by_sub_industries(sub_industries)
+def st_text_companies_info(companies_info:list):
+    for company_info in companies_info:
+        st_text(company_info)
+    
+def st_text(streamlined_company_info:dict):
+    for k, v in streamlined_company_info.items():
+        if k == ['Quarterly_financials']:
+            st.text(k)
+            for key, value in v:
+                st.text(key)
+                st.text(value)
+        elif k == ['Closing_prices_and_P/E_ratio']:
+            st.text(k)
+            for key, value in v:
+                st.text(key)
+                st.text(value)
+        else:
+            st.text(k)
+            st.text(v)
+
+def get_xy_axis_values(company_info):
+    company_name = company_info['name']
+    revenue_history = [report['revenue'] for report in company_info['Quarterly_financials']]
+    date_history = [datetime.strptime(report['date'], "%Y-%m-%d") for report 
+                                        in company_info['Quarterly_financials']]
+    return company_name, revenue_history, date_history
+
+def add_traces_to_fig(companies_xy_axis_values:list):
+    company_names, revenue_histories, dates_str = unpack_values(companies_xy_axis_values)
     fig = go.Figure()
-    for sub_industry in sub_industries:
-        quarterly_results, quarterly_report_dates = sub_industry_single_measure_avg_performance(
-                                                                            sub_industry, 
-                                                                            performance_measurement,
-                                                                            sub_industries_avg_performance)
-          
-        fig.add_trace(go.Scatter(x= quarterly_report_dates,
-                                y= quarterly_results,
-                                name = f"{sub_industry}"))
+    for company_name, company_rev_history in zip(company_names, revenue_histories):
+        fig.add_trace(go.Scatter(x = dates_str, y = company_rev_history, 
+                                                        name = f"{company_name}"))
+    fig = update_layout(fig)
+    return fig
+
+def unpack_values(companies_xy_axis_values):
+    company_names = [name for name, revenue, dates in companies_xy_axis_values]
+    revenue_histories = [revenue for name, revenue, dates in companies_xy_axis_values]
+    dates_history = [dates for name, revenue, dates in companies_xy_axis_values][0]
+    dates_str = [datetime.strftime(date.date(), '%Y-%m-%d')
+                                                    for date in dates_history]
+    return company_names, revenue_histories, dates_str
+
+def update_layout(fig):
+
+    # go.Figure(data=[])
+    # st.plotly_chart(fig)
+    # https://plotly.com/python/figure-labels/
 
     fig.update_layout(
-        title=f"""Quarterly {performance_measurement} by sub-industry""",
+        title=f"""Companies in the Energy sector:""", # change title
         xaxis_title="Month-Year",
-        yaxis_title= f"{performance_measurement}",
-        legend_title= "Sub-industries:",
-        legend=dict(
-                x=0,
-                y=1,
-                traceorder='normal',
-                font=dict(
-                    size=12,),
-                    ),
+        yaxis_title="Quarterly Revenue",
+        legend_title="Companies",
         font=dict(
             family="Courier New, monospace",
             size=18,
             color="RebeccaPurple"
-        )
-    )
-
-    st.plotly_chart(fig)
-
-####################
-# functions to anaylyz companies within a sub-industry
-def companies_by_sub_industry(sub_industry_name):
-    response = requests.get(SUB_INDUSTRY_URL, params= {'sub_industry': sub_industry_name})
-    companies_in_sub_industry = response.json()['companies']
-    return companies_in_sub_industry
-    
-
-    
+                    )
+                )
+    return fig
 
 
-#####
-# Various plots
-#####
 
-sub_industries_selected = st.multiselect('Sub_industries:',
-                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'],
-                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'])
+selected_company_name = st.multiselect(f"Please select an Energy company: ",
+                                    ['Valero Energy', 'Phillips 66', 'Chevron Corp.', 'Exxon Mobil Corp.'],
+                                    ['Valero Energy', 'Phillips 66', 'Chevron Corp.', 'Exxon Mobil Corp.'])
+st.write(selected_company_name)
+companies_info = find_company_info(selected_company_name)
+extracted_companies_info = [extract_company_info(company_info) 
+                                                    for company_info in companies_info]
+# print text info to screen:
+# st_text_companies_info(extracted_companies_info)
 
-# show one performance measurement, 'avg_pe_ratio', for demo purpose, to be followed by a menu choice of # all the performance measurments
-
-# plot_sub_industries_avg_performance_history(sub_industries_selected, 'avg_closing_price')
-
-performance_measurement_selected = st.multiselect('Performance measurements:',
-                            ['avg_pe_ratio', 'avg_closing_price', 'avg_revenue', 'avg_cost', 'avg_net_income'],
-                            ['avg_pe_ratio'])
-# extract the value of the single element in the list, a string 
-performance_measurement_selected = performance_measurement_selected[0]
-# plot_sub_industries_avg_performance_history(sub_industries_selected, performance_measurement_selected)
-
-###############
-
-# 10 am, 02/04, develop more steps of the frontend menu choices: starting with company-level.
-sub_industry_selected = st.multiselect('Analyze companies within a sub_industry (please select only one):',
-                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'],
-                        ['Hypermarkets & Super Centers', 'Pharmaceuticals', 'Technology Hardware, Storage & Peripherals'])
-
-companies_in_sector = companies_by_sub_industry(sub_industry_selected)
-for company_obj in companies_in_sector:
-    st.write(company_obj)
-
-breakpoint()
-
-# earlier scripts - need reviewing and pruning. 
-
-selected_sectors = st.multiselect(
-                    'Which sector are you interested in? (Select only one, please.)',
-                    ['Health Care', 'Information Technology', 'Consumer Staples'],
-                    ['Health Care', 'Information Technology', 'Consumer Staples'])
-
-selected_sector = selected_sectors[0]
-st.write(f'You selected: {selected_sector}')
-
-companies_by_sector = find_companies_by_sector(selected_sector)
-st.text(f"Companies in the {selected_sector} sector:")
-st.text("=" * 30)
-for company in companies_by_sector:
-    st.text(f"{company['name']}   Ticker: {company['ticker']}")
-    st.text(f"Year founded: {company['year_founded']}")
-    st.text(f"Number of employees: {company['number_of_employees']}")
-    st.text('_' * 30)
-
-
-fig = go.Figure()
-for company in companies_by_sector:
-    ticker = company['ticker']
-    company_info = find_company_by_ticker(ticker)
-
-    revenue_history = [report['revenue'] for report in company_info['History of quarterly financials']]
-    date_history = [datetime.strptime(report['date'], "%Y-%m-%d") for report in company_info['History of quarterly financials']]
-    
-    # https://plotly.com/python/figure-labels/
-    
-    fig.add_trace(go.Scatter(x=date_history,
-                            y=revenue_history,
-                            name = f"{company_info['name']}"))
-
-fig.update_layout(
-    title=f"""Companies in {selected_sector}:""",
-    xaxis_title="Month-Year",
-    yaxis_title="Quarterly Revenue",
-    legend_title="Companies",
-    font=dict(
-        family="Courier New, monospace",
-        size=18,
-        color="RebeccaPurple"
-    )
-)
-
+# plotly plot
+companies_xy_axis_values = [get_xy_axis_values(company_info) 
+                                                for company_info in extracted_companies_info]
+fig = add_traces_to_fig(companies_xy_axis_values)
 st.plotly_chart(fig)
+   
+st.write("Data provided by Financial Modeling Prep:")
+st.write("https://financialmodelingprep.com/developer/docs/")
 # fig.show() -> plotly implementation, not streamlit
-
-# Next-level choice menu
-
-# develop a companies_by_sector method, pass in selected_sector, obtains a list of companies
-# in a chosen sector, then pass it to the st.multiselect below:
-
-
-# should be done in the backend, through the Flask app, not the frontend.  
-companies_in_sector = [company['name'] for company in companies_by_sector]
-company_response = st.multiselect(
-                    f'Which company in the {selected_sector} sector are you interested in? (Select only one, please.)',
-                    companies_in_sector,
-                    companies_in_sector)
-company_name = company_response[0]
-st.write('You selected:', company_name)
-
-def find_company_by_name(name):
-    response = requests.get(COMPANY_URL, params = {'name': name})
-    return response.json()
-
-companies_by_sector = find_company_by_name(company_response)
-ticker = companies_by_sector['ticker']
-
-company_info = find_company_by_ticker(ticker)
-st.text(f"Name: {company_info['name']}")
-st.text(f"Ticker: {company_info['ticker']}")
-
-revenue_history = [report['revenue'] for report in company_info['History of quarterly financials']]
-date_history = [datetime.strptime(report['date'], "%Y-%m-%d") for report in company_info['History of quarterly financials']]
-#fig = plt.plot(date_history, revenue_history)
-#st.pyplot
-#st.plotly_chart
-
-fig = go.Figure(data=go.Scatter(x=date_history,
-                             y=revenue_history))
-st.plotly_chart(fig)
-#plt.savefig(fig)
-
-#####################
-# functions developed in January
-def find_companies_by_sub_industry(sub_industry_name):
-    response = requests.get(SUB_INDUSTRY_URL, params={'sub_industry': sub_industry_name})
-    return response.json()
-
-def find_company_by_ticker(ticker):
-    '''returns the company ticker from the web interface'''
-    response = requests.get(COMPANY_URL, params = {'ticker': ticker})
-    return response.json()
-
-def find_companies_by_sector(sector):
-    selected_sector = requests.get(SECTOR_URL, params = {'sector': sector})
-    return selected_sector.json()
-
-def avg_element_wise_list(list_of_tuples: list):
-    """
-    Turns a list of tuples into a list of element-wise average numbers.
-    """
-    sum_element_wise_list = (reduce(lambda x, y: [tup[0] + tup[1] for tup in zip(x,y)], list_of_tuples) 
-                                if type(list_of_tuples[0]) == tuple 
-                                else list_of_tuples)
-    if type(list_of_tuples[0]) == tuple:
-        number_companies = len(list_of_tuples)
-        return list(map(lambda sum_element_wise: sum_element_wise/ number_companies,
-                            sum_element_wise_list))
-    else:
-        return list_of_tuples
-
-
 

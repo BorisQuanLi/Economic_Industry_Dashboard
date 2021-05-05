@@ -10,6 +10,16 @@ from decimal import *
 conn = psycopg2.connect(database = 'investment_analysis_test', user = 'postgres', password = 'postgres')
 cursor = conn.cursor()
 
+# 05/05 Reuven Lerner while loop for input
+
+name = True
+while name:
+    name = input("What's your first name, please? ")
+    if name:
+        print(f"Your name is all lowercase is spelled: {name.lower()}")
+    else: break
+
+breakpoint()
 # 05/02 work out plotly chart of financials_by_sector json return
 json_return = {'Consumer Staples': {'202001': {'avg_revenue': 12615849903.23, 'avg_net_income': 780862806.45, 'avg_earnings_per_share': 0.99, 'avg_profit_margin': 12.73}, '202002': {'avg_revenue': 12595588838.71, 'avg_net_income': 569776967.74, 'avg_earnings_per_share': 0.69, 'avg_profit_margin': 8.52}, '202003': {'avg_revenue': 13884618172.41, 'avg_net_income': 975771379.31, 'avg_earnings_per_share': 1.35, 'avg_profit_margin': 12.56}, '202004': {'avg_revenue': 13227184107.14, 'avg_net_income': 992984642.86, 'avg_earnings_per_share': 1.37, 'avg_profit_margin': 14.8}, '202101': {'avg_revenue': 22234742076.92, 'avg_net_income': 613684230.77, 'avg_earnings_per_share': 1.96, 'avg_profit_margin': 10.39}}, 'Energy': {'202001': {'avg_revenue': 10069083000.0, 'avg_net_income': -1516083350.0, 'avg_earnings_per_share': -2.71, 'avg_profit_margin': -33.63}, '202002': {'avg_revenue': 5641133850.0, 'avg_net_income': -1358037000.0, 'avg_earnings_per_share': -1.97, 'avg_profit_margin': -74.09}, '202003': {'avg_revenue': 7909252736.84, 'avg_net_income': -231239578.95, 'avg_earnings_per_share': -0.68, 'avg_profit_margin': -11.32}, '202004': {'avg_revenue': 8597901000.0, 'avg_net_income': -1214363888.89, 'avg_earnings_per_share': -0.64, 'avg_profit_margin': -10.72}}, 'Health Care': {'202001': {'avg_revenue': 6002043857.14, 'avg_net_income': 445198285.71, 'avg_earnings_per_share': 1.47, 'avg_profit_margin': 13.01}, '202002': {'avg_revenue': 5581698714.29, 'avg_net_income': -15565285.71, 'avg_earnings_per_share': 2.41, 'avg_profit_margin': 0.19}, '202003': {'avg_revenue': 6331397428.57, 'avg_net_income': 406568142.86, 'avg_earnings_per_share': 2.66, 'avg_profit_margin': 25.76}, '202004': {'avg_revenue': 8299446400.0, 'avg_net_income': 575688600.0, 'avg_earnings_per_share': 1.08, 'avg_profit_margin': 55.16}, '202101': {'avg_revenue': 3239000000.0, 'avg_net_income': 656000000.0, 'avg_earnings_per_share': 4.46, 'avg_profit_margin': 20.25}}}
 

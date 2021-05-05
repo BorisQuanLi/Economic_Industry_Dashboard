@@ -82,7 +82,7 @@ class SubIndustry:
         self.sector_name = record[0]
         if self.sector_name not in self.sector_records_dict:
             self.sector_records_dict[f'{self.sector_name}'] = {}
-        self.year_quarter = self.unpack_year_quarter(record)
+        self.year_quarter = self.get_year_quarter(record)
         self.sector_price_pe_dict = self.get_price_pe_dict(record)
         return self.sector_records_dict
 
@@ -133,22 +133,21 @@ class SubIndustry:
     def unpack_sector_quarterly_report_record(self, record):
         self.sector_name = record[0]
         if self.sector_name not in self.sector_records_dict:
-            self.sector_records_dict[f'{self.sector_name}'] = {}
-        self.year_quarter = self.unpack_year_quarter(record)
+            self.sector_records_dict[self.sector_name] = {}
+        self.year_quarter = self.get_year_quarter(record)
         self.sector_records_dict = self.get_quarter_financials_dict(record)
         return self.sector_records_dict
 
     @classmethod
-    def unpack_year_quarter(self, record):
-        year = str(int(record[1]))
-        quarter = str(int(record[2]))
+    def get_year_quarter(self, record):
+        year, quarter = str(int(record[1])), str(int(record[2]))
         year_quarter = int(f"{year}0{quarter}")
         return year_quarter
 
     @classmethod
     def get_quarter_financials_dict(self, record):
-        self.sector_records_dict[f'{self.sector_name}'][self.year_quarter] = {}
-        quarter_financials_dict = self.sector_records_dict[f'{self.sector_name}'][self.year_quarter]
+        self.sector_records_dict[self.sector_name][self.year_quarter] = {}
+        quarter_financials_dict = self.sector_records_dict[self.sector_name][self.year_quarter]
         quarter_financials_dict['avg_revenue'] = record[3]
         quarter_financials_dict['avg_net_income'] = record[4]
         quarter_financials_dict['avg_earnings_per_share'] = record[5]
