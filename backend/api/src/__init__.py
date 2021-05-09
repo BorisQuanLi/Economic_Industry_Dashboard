@@ -156,29 +156,33 @@ def create_app(database='investment_analysis', testing=False, debug=True):
         cursor = conn.cursor()
         params = dict(request.args)
         sector_name = params['sector_name']
-        financial_item = params['financial_item']
+        financial_indicator = params['financial_indicator']
         historical_financials_json_dicts = (models.SubIndustry.
-                                                    find_avg_quarterly_financials_by_sub_industry(f'{sector_name}', f'{financial_item}', cursor))
+                                                    find_avg_quarterly_financials_by_sub_industry(f'{sector_name}', f'{financial_indicator}', cursor))
         return json.dumps(historical_financials_json_dicts, default = str)
 
 
     @app.route('/sectors')
     def sector_level_aggregation():
-        conn, cursor, financial_item = set_up_sectors_query()
-        if financial_item in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
+        conn, cursor, financial_indicator = set_up_sectors_query()
+        if not financial_indicator:
+            # no financial_indicator selected, return all the financials
+            # to be implemented through a for loop in a to-be-created models.SunIndustry class method.
+            historical_financials_json_dicts = {}
+        elif financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
             historical_financials_json_dicts = (models.SubIndustry.
                                                     find_avg_quarterly_financials_by_sectors(cursor))
-        elif financial_item in ['closing_price', 'price_earnings_ratio']:
+        elif financial_indicator in ['closing_price', 'price_earnings_ratio']:
             historical_financials_json_dicts = (models.SubIndustry.
-                                                    find_avg_price_pe_by_sectors(financial_item, cursor))
+                                                    find_avg_price_pe_by_sectors(financial_indicator, cursor))
         return json.dumps(historical_financials_json_dicts, default = str)
 
     def set_up_sectors_query():
         conn = db.get_db()
         cursor = conn.cursor()
         params = dict(request.args)
-        financial_item = params['financial_item']
-        return conn, cursor, financial_item
+        financial_indicator = params.get('financial_indicator', 0)
+        return conn, cursor, financial_indicator
 
     return app
 

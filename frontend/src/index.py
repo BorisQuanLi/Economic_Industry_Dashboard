@@ -14,7 +14,7 @@ beautify_streamlit_presentation()
 
 # present each sub-industry's average financials within a particular sector (after sector name is entered in the url)
 AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
-plot_sectors_performance(AGGREGATION_BY_SECTOR_URL)
+plot_sectors_performance()
 
 # radio button
 sector_selected = st.radio("Which economic sector's performance are your interested in?",
@@ -129,6 +129,7 @@ selected_company_name = st.multiselect(f"Please select an Energy company: ",
                                     ['Valero Energy', 'Phillips 66', 'Chevron Corp.', 'Exxon Mobil Corp.'])
 st.write(selected_company_name)
 companies_info = find_company_info(selected_company_name)
+breakpoint()
 extracted_companies_info = [extract_company_info(company_info) 
                                                     for company_info in companies_info]
 # print text info to screen:

@@ -6,7 +6,7 @@ import pandas as pd
 import pandas_market_calendars as mcal
 from helpers import (unpack_year_quarter, get_financial_item_unit,
                     underscored_to_spaced_words_dict, spaced_to_underscored_words_dict)
-                    
+
 SEARCH_SECTOR_URL = "http://127.0.0.1:5000/sectors/search"
 
 def plot_avg_financial_sub_industries(sector_name, financial_item):

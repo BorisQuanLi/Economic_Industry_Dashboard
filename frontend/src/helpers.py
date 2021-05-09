@@ -28,6 +28,14 @@ def unpack_year_quarter(year_quarter:int):
     quarter_ending_month = quarter_ending_month_dict[int(year_quarter[-1])]
     return f'{quarter_ending_month} {year}'
 
+def assemble_year_quarter(quarterly_dict):
+    year = str(int(quarterly_dict['year']))
+    quarter_ending_month_dict = dict(zip(range(1,5), 
+                                        ['March', 'June', 'September', 'December']))
+    quarter_ending_month = quarter_ending_month_dict[int(quarterly_dict['quarter'])]
+
+    return f'{quarter_ending_month} {year}'
+
 def get_financial_item_unit(financial_item):
     usd_financial_items = ['revenue', 'net_income', 'earnings_per_share', 'closing_price']
     financial_item_unit_dict = {usd_item: 'USD' for usd_item in usd_financial_items}
@@ -36,8 +44,9 @@ def get_financial_item_unit(financial_item):
     return financial_item_unit_dict[financial_item]
 
 def provide_financial_indicator_choice_menu():
-    st.write('Please choose a financial performance indicator from')
     quarterly_report_item_selected, point_in_time_item_selected = streamlit_radio_button_choices()
+    st.text(quarterly_report_item_selected)
+    st.text(point_in_time_item_selected)
     if quarterly_report_item_selected: 
         print(quarterly_report_item_selected)
         breakpoint()
@@ -49,7 +58,7 @@ def provide_financial_indicator_choice_menu():
         print('No user selection yet, but it should not reach this stage if there were a wait/listening mode.')
         breakpoint()
 
-@st.cache
+@st.cache(suppress_st_warning=True)
 def streamlit_radio_button_choices():
     time_period_financial_items = [''] + [underscored_to_spaced_words_dict(item) for item 
                                             in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']]
