@@ -1,11 +1,13 @@
 from api.src.db import db
 import api.src.models as models
 from psycopg2 import sql
-from api.src.models.aggregation_by_quarter import PricePEQuarterlyResult
+import api.src.models.query_sub_industry_price_pe as query_sub_industry_price_pe
+import api.src.models.query_sub_industry_quarterly_financials as query_sub_industry_quarterly_financials
 
 #  import api.src.models.find_avg_quarterly_financials_by_sub_industry
 
-class SubIndustry:
+class SubIndustry(query_sub_industry_price_pe.Mixin,
+                  query_sub_industry_quarterly_financials.Mixin): # query_method
     __table__ = "sub_industries"
     columns = ['id', 'sub_industry_GICS', 'sector_GICS']
 
@@ -43,147 +45,34 @@ class SubIndustry:
         cursor.execute(sql_str, (str(sub_industry_id),))
         records = cursor.fetchall() 
         return db.build_from_records(models.Company, records)
-    
-    @classmethod
-    def unpack_by_sector_record(self, record, financial_item, avg_quartlerly_financial_dict):
-        sector_name = record[0]
-        if sector_name not in avg_quartlerly_financial_dict:
-            breakpoint()
-            avg_quartlerly_financial_dict[f'{sector_name}'] = {}
-            quarter_dict = avg_quartlerly_financial_dict[f'{sector_name}']
-        quarter_dict['year_quarter'] = self.get_year_quarter(record)
-        quarter_dict[f'avg_quarterly_{financial_item}'] = record[-1]
         
 
     ### find_avg_price_pe_by_sectors
     @classmethod
     def find_avg_price_pe_by_sectors(self, financial_item, cursor):
         returned_json = self.to_quarterly_financials_json(financial_item, cursor)
-        # delete the method in this line? sector_record_dicts = self.unpack_sector_price_pe_records(records, financial_item) # "self" here is the Class, so what follows is a class method
-        # to work out the self.get_uniform_length_list method below, see the data structure first in the browser
-        # uniform_length_list_json = [self.get_uniform_length_list(returned_json[sector]) 
-        #                                                            for sector in returned_json]
         # TBD: uniform_length_sector_record_dicts = self.get_uniform_time_periods_dicts(returned_json, uniform_length=5) 
         return returned_json # uniform_length_list_json
 
     @classmethod
     def to_quarterly_financials_json(self, financial_item, cursor):
         sector_price_pe_history_dict = {}
-        sector_names = self.get_all_sector_names(cursor)
+        sector_names = self.get_all_sector_names(self, cursor) #Jeff, before I adopted MixIn class: SubIndustry.get_all_sector_names(), instead of self.get_all_sector_name
         for sector_name in sector_names:
-            sector_price_pe_history_dict[sector_name[0]] = self.to_sector_quarterly_financials_json(sector_name[0], cursor) 
+            sector_price_pe_history_dict[sector_name[0]] = self.to_sector_quarterly_financials_json(self, sector_name[0], cursor) 
         return sector_price_pe_history_dict
-
-    @classmethod
-    def get_all_sector_names(self, cursor):
-        sql_str = f"""  SELECT DISTINCT({self.__table__}.sector_gics)
-                        FROM {self.__table__}
-                        JOIN companies
-                        ON companies.sub_industry_id::INT = {self.__table__}.id
-                        JOIN quarterly_reports
-                        ON quarterly_reports.company_id = companies.id;
-                    """
-        cursor.execute(sql_str)
-        sector_names = cursor.fetchall()
-        return sector_names
-
-    @classmethod
-    def to_sector_quarterly_financials_json(self, sector_name, cursor):
-        sector_price_pe_quarterly_records = self.get_sector_price_pe_quarterly_records(sector_name, cursor)
-        quarterly_price_pe_objs = [self.build_quarterly_price_pe_obj(record, cursor)
-                                                                        for record in sector_price_pe_quarterly_records]
-        return quarterly_price_pe_objs
-
-    @classmethod
-    def get_sector_price_pe_quarterly_records(self, sector_name, cursor):
-        sql_str = self.sector_price_pe_history_query_str()
-        cursor.execute(sql_str, (sector_name,))
-        records = cursor.fetchall()
-        return records
-
-    @classmethod
-    def sector_price_pe_history_query_str(self):
-        sql_str = f"""  SELECT  EXTRACT(year from date::DATE) as year,
-                                EXTRACT(quarter from date::DATE) as quarter,
-                                ROUND(AVG(closing_price)::NUMERIC, 2) as quarterly_average,
-                                ROUND(AVG(price_earnings_ratio)::NUMERIC, 2) as quarterly_average         
-                        FROM prices_pe
-                        JOIN companies 
-                        ON companies.id = prices_pe.company_id
-                        JOIN sub_industries
-                        ON companies.sub_industry_id::INT = sub_industries.id
-                        WHERE sector_gics = %s
-                        GROUP BY sub_industries.sector_gics, year, quarter
-                        ORDER BY year, quarter;
-                    """
-        return sql_str
-
-    @classmethod
-    def build_quarterly_price_pe_obj(self, sector_price_pe_quarterly_record, cursor):
-        # to create a PricePEQuarterlyResult instance (wihout to_json method?)
-        # confirm the elements in tuple sector_price_pe_quarterly_record matches class PricePEQuarterlyResult's attributes
-        attrs = ['year', 'quarter', 'closing_price', 'price_earnings_ratio']
-        quarterly_obj = PricePEQuarterlyResult(**dict(zip(
-                                                        attrs, sector_price_pe_quarterly_record)))
-        return quarterly_obj.__dict__
-
-    @classmethod
-    def unpack_sector_price_pe_records(self, records, financial_item):
-        sector_records_dict = {}
-        [self.unpack_sector_price_pe_record(
-                                    record, sector_records_dict, financial_item) for record in records]
-        return sector_records_dict
-
-    @classmethod
-    def unpack_sector_price_pe_record(self, record, sector_records_dict, financial_item):
-        sector_name = record[0] # use object instead: SubIndustry().sector_gics
-        if sector_name not in sector_records_dict:
-            sector_records_dict[sector_name] = {}
-        year_quarter = self.get_year_quarter(record)
-        sector_records_dict[sector_name][year_quarter] = {}
-        quarter_price_pe_dict = sector_records_dict[sector_name][year_quarter]
-        quarter_price_pe_dict[financial_item] = record[-1]
-        pass
-        #        return self.sector_records_dict
-
-    # TBD?
-    @classmethod
-    def get_price_pe_dict(self, record):
-        self.sector_records_dict[f'{self.sector_name}'][self.year_quarter] = {}
-        quarter_price_pe_dict = self.sector_records_dict[f'{self.sector_name}'][self.year_quarter]
-        quarter_price_pe_dict['avg_closing_price'] = record[3]
-        quarter_price_pe_dict['avg_price_earnings_ratio'] = record[4]
-        return self.sector_records_dict
 
     ### find_avg_quarterly_financials_by_sectors
     @classmethod
     def find_avg_quarterly_financials_by_sectors(self, cursor):
-        sql_str = self.sector_quarterly_financials_sql_query()
+        sql_str = self.sector_quarterly_financials_sql_query(self)
         cursor.execute(sql_str)
         records = cursor.fetchall()
         sector_record_dicts = self.unpack_sector_quarterly_report_records(records)
         uniform_length_sector_record_dicts = self.get_uniform_time_periods_dicts(sector_record_dicts, uniform_length=5) 
         return uniform_length_sector_record_dicts
 
-    @classmethod
-    def sector_quarterly_financials_sql_query(self): 
-        sql_str = f"""  SELECT  sector_gics,
-                                EXTRACT(year from date::DATE) as year,
-                                EXTRACT(quarter from date::DATE) as quarter,
-                                ROUND(AVG(revenue)::NUMERIC, 2) as avg_revenue,
-                                ROUND(AVG(net_income)::NUMERIC, 2) as avg_net_income,
-                                ROUND(AVG(earnings_per_share)::NUMERIC, 2) as avg_earnings_per_share,
-                                ROUND(AVG(profit_margin)::NUMERIC, 2) as avg_profit_margin              
-                        FROM quarterly_reports
-                        JOIN companies 
-                        ON companies.id = quarterly_reports.company_id
-                        JOIN sub_industries
-                        ON companies.sub_industry_id::INT = sub_industries.id
-                        GROUP BY sub_industries.sector_gics, year, quarter
-                        ORDER BY year, quarter;
-                    """
-        return sql_str
-
+    
     @classmethod
     def unpack_sector_quarterly_report_records(self, records):
         self.sector_records_dict = {}
@@ -217,7 +106,6 @@ class SubIndustry:
 
     @classmethod
     def get_uniform_time_periods_dicts(self, dict_of_dicts, uniform_length=5):
-        breakpoint()
         most_recent_quarters = self.get_most_recent_quarters(dict_of_dicts, uniform_length)
         for key, value in dict_of_dicts.items():
             dict_of_dicts[key] = {quarter:quarter_records for quarter, quarter_records in value.items()

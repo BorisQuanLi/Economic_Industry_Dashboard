@@ -163,12 +163,12 @@ def create_app(database='investment_analysis', testing=False, debug=True):
 
 
     @app.route('/sectors')
-    def sector_level_aggregation():
+    def financial_performance_by_sector():
         conn, cursor, financial_indicator = set_up_sectors_query()
         if not financial_indicator:
             # no financial_indicator selected, return all the financials
             # to be implemented through a for loop in a to-be-created models.SunIndustry class method.
-            historical_financials_json_dicts = {}
+            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
         elif financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
             historical_financials_json_dicts = (models.SubIndustry.
                                                     find_avg_quarterly_financials_by_sectors(cursor))

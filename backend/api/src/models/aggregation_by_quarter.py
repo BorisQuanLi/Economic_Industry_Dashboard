@@ -1,4 +1,4 @@
-class PricePEQuarterlyResult:
+class QuarterlyPricePE:
     attributes = ['year', 'quarter', 'closing_price', 'price_earnings_ratio']
     def __init__(self, **kwargs):
         for key in kwargs.keys():
