@@ -28,7 +28,7 @@ def unpack_year_quarter(year_quarter:int):
     quarter_ending_month = quarter_ending_month_dict[int(year_quarter[-1])]
     return f'{quarter_ending_month} {year}'
 
-def assemble_year_quarter(quarterly_dict):
+def assemble_year_quarter(quarterly_dict:dict()):
     year = str(int(quarterly_dict['year']))
     quarter_ending_month_dict = dict(zip(range(1,5), 
                                         ['March', 'June', 'September', 'December']))
@@ -44,20 +44,32 @@ def get_financial_item_unit(financial_item):
     return financial_item_unit_dict[financial_item]
 
 def provide_financial_indicator_choice_menu():
-    quarterly_report_item_selected, point_in_time_item_selected = streamlit_radio_button_choices()
-    st.text(quarterly_report_item_selected)
-    st.text(point_in_time_item_selected)
-    if quarterly_report_item_selected: 
-        print(quarterly_report_item_selected)
-        breakpoint()
-        return quarterly_report_item_selected
-    elif point_in_time_item_selected: 
-        breakpoint()
-        return point_in_time_item_selected
-    else:
-        print('No user selection yet, but it should not reach this stage if there were a wait/listening mode.')
-        breakpoint()
+    st.sidebar.header("Please select a financial indicator from")
+    quarterly_report_item_selected = st.sidebar.multiselect('either time-period indicators:',
+                                                        ['revenue', 'net_income', 'earnings_per_share', 'profit_margin'])
+    point_in_time_item_selected = st.sidebar.multiselect('or point-in-time indicators:', ['closing_price', 'price_earnings_ratio'])
+    if st.sidebar.button("Show historical financial performance:"):
+        try:
+            if quarterly_report_item_selected or point_in_time_item_selected:
+                st.write(quarterly_report_item_selected)
+                st.write(point_in_time_item_selected)
+        except:
+            print("Please select only as many indicators as of interest.")
 
+    # quarterly_report_item_selected, point_in_time_item_selected = streamlit_sidebar_choices() # TBD streamlit_radio_button_choices()
+    
+
+def streamlit_sidebar_choices():
+    st.sidebar.header("Please select a financial indicator from")
+    quarterly_report_item_selected = st.sidebar.multiselect('either time-period indicators:',
+                                                        ['revenue', 'net_income', 'earnings_per_share', 'profit_margin'])
+    point_in_time_item_selected = st.sidebar.multiselect('or point-in-time indicators:', ['closing_price', 'price_earnings_ratio'])
+    if st.sidebar.button("Show historical financial performance:"):
+        st.write(quarterly_report_item_selected)
+        st.write(point_in_time_item_selected)
+        return quarterly_report_item_selected, point_in_time_item_selected
+
+# to be replaced with st.button
 @st.cache(suppress_st_warning=True)
 def streamlit_radio_button_choices():
     time_period_financial_items = [''] + [underscored_to_spaced_words_dict(item) for item 
@@ -78,7 +90,6 @@ def streamlit_radio_button_choices():
     # bool(quarterly_report_item_selected) or bool(point_in_time_item_selected):
 
         
-#return quarterly_report_item_selected, point_in_time_item_selected
 
 def underscored_to_spaced_words_dict(underscored_words_financial_item, 
                                      underscored_words_financial_items 

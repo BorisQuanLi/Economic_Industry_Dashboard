@@ -3,15 +3,16 @@ import requests
 import plotly.graph_objects as go
 from helpers import (assemble_year_quarter, get_financial_item_unit, provide_financial_indicator_choice_menu,
                     underscored_to_spaced_words_dict, spaced_to_underscored_words_dict)
+from call_experiment import try_st_button
 
 AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
 
 def plot_sectors_performance():
+    st.header('Historical financial performance by economic sectors.')
     plot_selected_financial_indicator('closing_price')
 
-    st.title('Historical financial performance by economic sectors.')
-    st.title(' ')
-    st.write('Please choose a financial performance indicator from')
+    # st.title(' ')
+    # st.write('Please choose a financial performance indicator from')
     """
     # st.multiselect()
     financial_items = [underscored_to_spaced_words_dict(item)
@@ -20,12 +21,14 @@ def plot_sectors_performance():
     financial_indicator = [spaced_to_underscored_words_dict(item) for item in financial_indicator]
     """
     
-    selected_financial_indicator = provide_financial_indicator_choice_menu()
-    if not selected_financial_indicator:
-        print(selected_financial_indicator)
-        breakpoint()
-    plot_selected_financial_indicator(financial_indicator)
-
+    # selected_financial_indicator = provide_financial_indicator_choice_menu()
+    try_st_button()
+    # if try_st_button() selected_financial_indicator:
+    #    print(selected_financial_indicator)
+    #    breakpoint()
+        
+# 
+# plot_selected_financial_indicator(financial_indicator)
 def plot_selected_financial_indicator(financial_indicator):
     fig = go.Figure()
     get_plotly_chart_data(fig, financial_indicator)
@@ -34,8 +37,6 @@ def plot_selected_financial_indicator(financial_indicator):
 
 def get_plotly_chart_data(fig, financial_indicator):
     quarterly_financial_history_by_sector = find_sector_avg_financials(financial_indicator)
-    print(len(quarterly_financial_history_by_sector))
-    breakpoint()
     for sector, quarterly_financials in quarterly_financial_history_by_sector.items():
         x_axis_time_series, y_axis_financials = get_time_n_financials_axis(sector,
                                                                             quarterly_financials,

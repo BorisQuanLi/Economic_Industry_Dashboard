@@ -10,11 +10,13 @@ SEARCH_COMPANY_URL = "http://127.0.0.1:5000/companies/company_overview/search"
 SEARCH_SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
 
 welcome_message()
-beautify_streamlit_presentation()
+# beautify_streamlit_presentation()
 
 # present each sub-industry's average financials within a particular sector (after sector name is entered in the url)
 AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
+
 plot_sectors_performance()
+breakpoint()
 
 # radio button
 sector_selected = st.radio("Which economic sector's performance are your interested in?",

@@ -133,7 +133,6 @@ def find_or_create_by_name(Class, name, conn, cursor):
 
 ################ to be deleted
 
-
 # 02/02, based on Office Hour discussion with Jeff, to be called by the function that produces multiple quarters' numbers.
 def report_dates(cursor):
     sql_str = """

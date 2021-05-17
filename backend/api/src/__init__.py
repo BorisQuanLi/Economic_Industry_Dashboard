@@ -6,6 +6,7 @@ from datetime import datetime
 import api.src.models as models
 import api.src.db as db
 import api.src.adapters as adapters
+import api.src.adapters.helpers as helpers
 from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, DEBUG, TESTING
 
 def create_app(database='investment_analysis', testing=False, debug=True):
@@ -152,37 +153,36 @@ def create_app(database='investment_analysis', testing=False, debug=True):
 
     @app.route('/sectors/search')
     def sub_industries_within_sector():
-        conn = db.get_db()
-        cursor = conn.cursor()
-        params = dict(request.args)
-        sector_name = params['sector_name']
-        financial_indicator = params['financial_indicator']
-        historical_financials_json_dicts = (models.SubIndustry.
-                                                    find_avg_quarterly_financials_by_sub_industry(f'{sector_name}', f'{financial_indicator}', cursor))
+        conn, cursor, sector_name, financial_indicator = (helpers.
+                                                            sub_industry_performance_query_tools())
+        if financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
+            historical_financials_json_dicts = (models.SubIndustry.
+                                                    find_sub_industry_avg_quarterly_financials(sector_name, financial_indicator, cursor))
+        elif financial_indicator in ['closing_price', 'price_earnings_ratio']:
+            historical_financials_json_dicts = (models.SubIndustry.
+                                                    find_sub_industry_avg_quarterly_price_pe(sector_name, financial_indicator, cursor))
+        else:
+            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
         return json.dumps(historical_financials_json_dicts, default = str)
-
+        
 
     @app.route('/sectors')
     def financial_performance_by_sector():
-        conn, cursor, financial_indicator = set_up_sectors_query()
-        if not financial_indicator:
-            # no financial_indicator selected, return all the financials
-            # to be implemented through a for loop in a to-be-created models.SunIndustry class method.
-            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
-        elif financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
+        """
+        param: name of a financial performance indicator, such as revenue, stock closing_price.
+        returns the quarterly average, over the most recent 5 quarters, of the financial indicator of all the sectors
+        """
+        conn, cursor, financial_indicator = helpers.sector_performance_query_tools()
+        if financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
             historical_financials_json_dicts = (models.SubIndustry.
-                                                    find_avg_quarterly_financials_by_sectors(cursor))
+                                                        find_sector_avg_quarterly_financials(financial_indicator, cursor))
         elif financial_indicator in ['closing_price', 'price_earnings_ratio']:
             historical_financials_json_dicts = (models.SubIndustry.
-                                                    find_avg_price_pe_by_sectors(financial_indicator, cursor))
+                                                        find_sector_avg_price_pe(financial_indicator, cursor))
+        else:
+            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
         return json.dumps(historical_financials_json_dicts, default = str)
 
-    def set_up_sectors_query():
-        conn = db.get_db()
-        cursor = conn.cursor()
-        params = dict(request.args)
-        financial_indicator = params.get('financial_indicator', 0)
-        return conn, cursor, financial_indicator
 
     return app
 
