@@ -2,7 +2,7 @@
 import api.src.db as db
 from flask import request
 
-def sector_performance_query_tools():
+def financial_performance_query_tools():
     conn = db.get_db()
     cursor = conn.cursor()
     params = dict(request.args)

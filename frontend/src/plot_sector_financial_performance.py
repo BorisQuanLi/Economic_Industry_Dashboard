@@ -1,34 +1,21 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-from helpers import (assemble_year_quarter, get_financial_item_unit, provide_financial_indicator_choice_menu,
-                    underscored_to_spaced_words_dict, spaced_to_underscored_words_dict)
-from call_experiment import try_st_button
+from frontend_utilities import (assemble_year_quarter, get_financial_item_unit, underscored_to_spaced_words_dict)
+from choice_menus import sector_level_first_round_choice_menu, sector_level_follow_up_choice_menu
 
 AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
 
-def plot_sectors_performance():
+def plot_sector_level_performance():
     st.header('Historical financial performance by economic sectors.')
-    plot_selected_financial_indicator('closing_price')
-
-    # st.title(' ')
-    # st.write('Please choose a financial performance indicator from')
-    """
-    # st.multiselect()
-    financial_items = [underscored_to_spaced_words_dict(item)
-                                for item in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'closing_price', 'price_earnings_ratio']]
-    financial_indicator = st.multiselect('Please select a financial-statement item:', financial_items, financial_items)
-    financial_indicator = [spaced_to_underscored_words_dict(item) for item in financial_indicator]
-    """
+    plot_selected_financial_indicator('price_earnings_ratio')
+    selected_financial_indicator = sector_level_first_round_choice_menu()
+    if selected_financial_indicator == 'Continue to the Sub-Industry level.':
+        return 'Finished. Continue to the Sub-Industry level.'
+    plot_selected_financial_indicator(selected_financial_indicator)
+    follow_up_financial_indicator_selected = sector_level_follow_up_choice_menu()
     
-    # selected_financial_indicator = provide_financial_indicator_choice_menu()
-    try_st_button()
-    # if try_st_button() selected_financial_indicator:
-    #    print(selected_financial_indicator)
-    #    breakpoint()
-        
-# 
-# plot_selected_financial_indicator(financial_indicator)
+
 def plot_selected_financial_indicator(financial_indicator):
     fig = go.Figure()
     get_plotly_chart_data(fig, financial_indicator)
@@ -36,12 +23,17 @@ def plot_selected_financial_indicator(financial_indicator):
     st.plotly_chart(fig, use_container_width= True)
 
 def get_plotly_chart_data(fig, financial_indicator):
-    quarterly_financial_history_by_sector = find_sector_avg_financials(financial_indicator)
-    for sector, quarterly_financials in quarterly_financial_history_by_sector.items():
-        x_axis_time_series, y_axis_financials = get_time_n_financials_axis(sector,
-                                                                            quarterly_financials,
-                                                                            financial_indicator)
-        add_trace(fig, sector, x_axis_time_series, y_axis_financials)
+    try:
+        quarterly_financial_history_by_sector = find_sector_avg_financials(financial_indicator)
+        for sector, quarterly_financials in quarterly_financial_history_by_sector.items():
+            x_axis_time_series, y_axis_financials = get_time_n_financials_axis(sector,
+                                                                                quarterly_financials,
+                                                                                financial_indicator)
+            add_trace(fig, sector, x_axis_time_series, y_axis_financials)
+    except Exception as e:
+        print(e)
+        print(quarterly_financial_history_by_sector)
+        breakpoint()
 
 def find_sector_avg_financials(financial_indicator):
     response_dict = requests.get(AGGREGATION_BY_SECTOR_URL, params= {'financial_indicator': financial_indicator})

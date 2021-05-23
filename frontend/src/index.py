@@ -1,27 +1,25 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-from plot_sub_industry_financials import plot_avg_financial_sub_industries
-from plot_sector_financials import plot_sectors_performance
-from helpers import (beautify_streamlit_presentation, welcome_message, provide_financial_indicator_choice_menu,
-                     underscored_to_spaced_words_dict, spaced_to_underscored_words_dict)
+from plot_sub_industry_financial_performance import plot_sub_industry_level_performance
+from plot_sector_financial_performance import plot_sector_level_performance
+from frontend_utilities import welcome_message
 
 SEARCH_COMPANY_URL = "http://127.0.0.1:5000/companies/company_overview/search"
 SEARCH_SUB_INDUSTRY_URL = "http://127.0.0.1:5000/sub_industries/search"
 
 welcome_message()
-# beautify_streamlit_presentation()
 
-# present each sub-industry's average financials within a particular sector (after sector name is entered in the url)
-AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
+if plot_sector_level_performance() == 'Finished. Continue to the Sub-Industry level.':
+    plot_sub_industry_level_performance()
 
-plot_sectors_performance()
 breakpoint()
-
-# radio button
+# TBD
+# radio button. Again move this into a function: plot_sub_industry_performance.
 sector_selected = st.radio("Which economic sector's performance are your interested in?",
-                            [' ', 'Consumer Staples', 'Energy', 'Healthcare']) # sector names hard-coded for now 
-st.write(f"You selected: {sector_selected}")
+                            [' ', 'Consumer Staples', 'Energy', 'Healthcare'])
+if not st.write(f"You selected: {sector_selected}"):
+    st.stop()
 
 # Historical financial performance by sub-industries within an economic sector.
 st.title("Historical financial performance by sub-industries within an economic sector.")
