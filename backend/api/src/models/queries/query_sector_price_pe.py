@@ -1,5 +1,5 @@
-from api.src.models.aggregation_averaging.aggregation_by_quarter import QuarterlyPricePE
-from api.src.models.queries.sql_query_strings import (query_all_sector_records, 
+from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyPricePE
+from api.src.models.queries.sql_query_strings import (query_all_sector_names_in_quarterly_reports_table, 
                                                       sector_avg_price_pe_history_query_str)
 
 """
@@ -8,8 +8,10 @@ http://www.qtrac.eu/pyclassmulti.html
 """
 
 class Mixin:
+    """mixin with class SubIndustry"""
     def get_all_sector_names(self, cursor):
-        sql_str = query_all_sector_records(self)
+        # self: class SubIndustry
+        sql_str = query_all_sector_names_in_quarterly_reports_table(self)
         cursor.execute(sql_str)
         sector_names = [sector_record[0] for sector_record in cursor.fetchall()]
         return sector_names

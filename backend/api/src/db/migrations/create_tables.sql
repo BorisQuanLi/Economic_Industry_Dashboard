@@ -1,30 +1,30 @@
 DROP TABLE IF EXISTS companies;
-DROP TABLE IF EXISTS sectors;
-DROP TABLE IF EXISTS prices;
-DROP TABLE IF EXISTS financials;
+DROP TABLE IF EXISTS sub_industries;
+DROP TABLE IF EXISTS prices_pe;
+DROP TABLE IF EXISTS quarterly_reports;
 
 CREATE TABLE IF NOT EXISTS companies (
   id serial PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  ticker VARCHAR(255) UNIQUE,
-  sub_industry_id VARCHAR(255),
-  year_founded VARCHAR(255),
-  number_of_employees VARCHAR(255),
-  HQ_state VARCHAR(255)
+  name VARCHAR(64) NOT NULL,
+  ticker VARCHAR(8) UNIQUE,
+  sub_industry_id SMALLINT,
+  year_founded VARCHAR(64),
+  number_of_employees INTEGER,
+  HQ_state VARCHAR(64)
 );
 
 CREATE TABLE IF NOT EXISTS sub_industries(
   id serial PRIMARY KEY,
-  sub_industry_GICS VARCHAR(255),
-  sector_GICS VARCHAR(255)
+  sub_industry_GICS VARCHAR(64),
+  sector_GICS VARCHAR(64)
 );
 
 CREATE TABLE IF NOT EXISTS prices_pe(
 	id serial PRIMARY KEY,
   date VARCHAR(15),
   company_id INTEGER,
-	closing_price FLOAT4,
-	price_earnings_ratio FLOAT4
+	closing_price NUMERIC,
+	price_earnings_ratio NUMERIC
 	);
 
 CREATE TABLE IF NOT EXISTS quarterly_reports (
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS quarterly_reports (
   company_id INTEGER,
   revenue BIGINT,
   net_income BIGINT,
-  earnings_per_share FLOAT4,
-  profit_margin FLOAT4
+  earnings_per_share NUMERIC,
+  profit_margin NUMERIC
 );
 

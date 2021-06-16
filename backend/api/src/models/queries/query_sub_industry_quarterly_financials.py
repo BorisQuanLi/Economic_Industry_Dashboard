@@ -1,4 +1,4 @@
-from api.src.models.aggregation_averaging.aggregation_by_quarter import QuarterlyReportResult
+from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyReportResult
 from api.src.models.queries.sql_query_strings import sub_industry_avg_quarterly_financial_query_str
 
 class Mixin:

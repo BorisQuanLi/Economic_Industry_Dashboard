@@ -1,20 +1,29 @@
-def query_all_sector_records(self):
+def query_all_sector_names_in_quarterly_reports_table(self):
+    # self: SubIndustry class
     sql_str = f"""  SELECT DISTINCT({self.__table__}.sector_gics)
-                        FROM {self.__table__}
-                        JOIN companies
-                        ON companies.sub_industry_id::INT = {self.__table__}.id
-                        JOIN quarterly_reports
-                        ON quarterly_reports.company_id = companies.id;
+                    FROM {self.__table__} JOIN companies 
+                    ON companies.sub_industry_id = {self.__table__}.id                    
+                    JOIN quarterly_reports
+                    ON quarterly_reports.company_id = companies.id;
                     """
     return sql_str
 
-def sub_industry_names_in_sector_query_str():
+def sub_industry_names_in_sector_query_str(self):
+    # returns all the sub_industries of a Sector that a sub_industry belongs to
     sql_str =  f"""
                 SELECT DISTINCT(sub_industries.sub_industry_gics)
                 FROM sub_industries
-                JOIN companies 
-                ON companies.sub_industry_id::INT = sub_industries.id
                 WHERE sub_industries.sector_gics = %s;
+                """
+    return sql_str
+
+def companies_within_sub_industry_str(self):
+    # self: class Company
+    sql_str = f"""
+                SELECT companies.* FROM {self.__table__}
+                JOIN sub_industries
+                ON sub_industries.id = {self.__table__}.sub_industry_id
+                WHERE sub_indstries.sub_industry_gics = %s;
                 """
     return sql_str
 
@@ -57,8 +66,8 @@ def sub_industry_avg_quarterly_financial_query_str(self):
 def sector_avg_price_pe_history_query_str(self):
     sql_str = f"""  SELECT  EXTRACT(year from date::DATE) as year,
                             EXTRACT(quarter from date::DATE) as quarter,
-                            ROUND(AVG(closing_price)::NUMERIC, 2) as avg_closing_price,
-                            ROUND(AVG(price_earnings_ratio)::NUMERIC, 2) as avg_quarterly_average         
+                            ROUND(AVG(closing_price), 2) as avg_closing_price,
+                            ROUND(AVG(price_earnings_ratio), 2) as avg_quarterly_average         
                     FROM prices_pe
                     JOIN companies 
                     ON companies.id = prices_pe.company_id

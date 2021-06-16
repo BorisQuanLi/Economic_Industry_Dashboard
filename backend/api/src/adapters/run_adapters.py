@@ -4,20 +4,21 @@ import api.src.models as models
 import api.src.db as db
 from .client import get_sp500_wiki_data
 from .companies_builder import CompanyBuilder
-from .quarterly_financials_prices_pe_builder import QuarterFinancialsPricePEBuilder
+from .quarterly_financials_builder import QuarterlyFinancialsBuilder
+from .quarterly_price_pe_builder import QuarterlyPricePEBuilder
 
-class BuildSP500Companies: # to be refactored using Pandas?
+class BuildSP500Companies: 
     def __init__(self):
         self.sp500_wiki_data_filepath = get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
         
-    def run(self): # to be refactored, using Pandas?
+    def run(self): 
         with open(self.sp500_wiki_data_filepath) as csv_file: # user pandas.read_csv() instead?
             reader = csv.DictReader(csv_file)
             for wiki_row in reader:
-                company_obj = self.process_row_data(wiki_row)              
+                self.process_row_data(wiki_row)     
 
     def process_row_data(self, wiki_row):
         sub_industry_name = wiki_row['GICS Sub-Industry']
@@ -25,7 +26,6 @@ class BuildSP500Companies: # to be refactored using Pandas?
                                 .find_by_sub_industry_name(sub_industry_name, self.cursor))
         sub_industry_id = self.get_sub_industry_id(sub_industry_obj, sub_industry_name, wiki_row)
         company_obj = self.company_builder.run(wiki_row, sub_industry_id, self.conn, self.cursor)
-        return company_obj
 
     def get_sub_industry_id(self, sub_industry_obj, sub_industry_name, wiki_row):
         if not sub_industry_obj:
@@ -52,20 +52,12 @@ class BuildQuarterlyReportsPricesPE:
         self.cursor = cursor
         
     def run(self, sector_name:str): 
-        companies_objs = self.get_sector_companies_objs(sector_name)
+        companies_objs = db.find_company_objs_by_sector(models.Company, sector_name, self.cursor)
         for company_obj in companies_objs:            
-            if models.QuarterlyReport.find_by_company_id(company_obj.id, self.cursor): continue
-            financials_prices_pe_builder = QuarterFinancialsPricePEBuilder(company_obj.ticker, self.conn, self.cursor)
-            financials_prices_pe_builder.run(company_obj.id, sector_name)
-        
-    def get_sector_companies_objs(self, sector_name):
-        sql_str = f"""SELECT * FROM companies
-                        JOIN sub_industries 
-                        ON companies.sub_industry_id::INT = sub_industries.id
-                        WHERE sub_industries.sector_gics = '{sector_name}';
-                    """
-        self.cursor.execute(sql_str)
-        companies_records = self.cursor.fetchall()
-        companies_objs = db.build_from_records(models.Company, companies_records)
-        return companies_objs
+            if not models.QuarterlyReport.find_by_company_id(company_obj.id, self.cursor):
+                quarterly_financials_builder = QuarterlyFinancialsBuilder(company_obj.ticker, self.conn, self.cursor)
+                quarterly_financials_builder.run(company_obj.id)
+            if not models.PricePE.find_by_company_id(company_obj.id, self.cursor):
+                quarterly_price_pe_builder = QuarterlyPricePEBuilder(company_obj.ticker, self.conn, self.cursor)
+                quarterly_price_pe_builder.run(company_obj.id)
     

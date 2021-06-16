@@ -60,6 +60,17 @@ def find(Class, id, cursor):
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+def find_company_objs_by_sector(Class, sector_name, cursor):
+    sql_str = f"""SELECT * FROM companies
+                    JOIN sub_industries 
+                    ON companies.sub_industry_id::INT = sub_industries.id
+                    WHERE sub_industries.sector_gics = %s;
+                """
+    cursor.execute(sql_str, (sector_name,))
+    companies_records = cursor.fetchall()
+    companies_objs = build_from_records(Class, companies_records)
+    return companies_objs
+    
 def find_companies_by_sub_industry_name(Class, sub_industry_name, cursor):
     """
     params  Class: models.Company

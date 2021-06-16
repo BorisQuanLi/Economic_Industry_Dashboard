@@ -1,39 +1,36 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-from frontend_utilities import (assemble_year_quarter, get_financial_item_unit, 
-                                underscored_to_spaced_words_dict, underscored_to_spaced_words_dict, 
-                                frontend_backend_string_format_conversion, get_indicators_in_frontend_format)
+from frontend_utilities import (assemble_year_quarter, get_financial_item_unit, underscored_to_spaced_words_dict)
+from choice_menus import sector_level_first_round_choice_menu, sector_level_follow_up_choice_menu
 
-AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
+def companies_within_sub_sector_url(sub_sector_name):
+    return f"http://127.0.0.1:5000/sub_industries/{sub_sector_name}"
 
-def plot_sector_level_performance():
-    st.header('Historical financial performance by economic sectors.')
-    st.header(' ')
-    done_statement = 'Done. Continue to the sub-Sector level.'
-    indicators_in_backend_format = ['closing_price', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'price_earnings_ratio'] + [done_statement]
-    indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
-    st.write("Please select a financial performance indicator from this drop-down menu:")
-    selected_financial_indicator = st.selectbox('', indicators_in_frontend_format)
-    selected_financial_indicator = frontend_backend_string_format_conversion()[selected_financial_indicator]
+def plot_companies_performance_within_sub_sector(sector_name):
+    selected_company_name = display_all_sub_sectors(sector_name)
+    breakpoint()
+
+    plot_selected_financial_indicator('price_earnings_ratio')
+    selected_financial_indicator = sector_level_first_round_choice_menu()
+    if selected_financial_indicator == 'Go to the next granular level, sub-Sectors within an economic Sector.':
+        return 'Done. Continue to the Sub-Industry level.'
     plot_selected_financial_indicator(selected_financial_indicator)
-    return None
-    """
-    if selected_financial_indicator != done_statement:
-        lastly_selected_financial_indicator = selected_financial_indicator
-        breakpoint()
-    # turn it into indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
-    else: # 'Go to the next granular level, sub-Sectors within an economic Sector.':
-        breakpoint()
-        plot_selected_financial_indicator(lastly_selected_financial_indicator)
-        return done_statement   
-    plot_selected_financial_indicator(selected_financial_indicator)
-    st.stop()
-    
     follow_up_financial_indicator_selected = sector_level_follow_up_choice_menu()
-    if follow_up_financial_indicator_selected == 'No, go to the next granular level, sub-sectors within an economic Sector.':   
-        return done_statement
-    """
+    if follow_up_financial_indicator_selected == 'No, go to the next granular level, sub-Sectors within an economic Sector.':   
+        return 'Done. Continue to the Sub-Industry level.'
+
+def display_all_sub_sectors(sector_name):
+    st.header('Historical financial performance by companies within a sub-Sector.')
+    sub_sector_names_response = requests.get(companies_within_sub_sector_url('all_sub_industries'),
+                                                    params= {'financial_indicator': sector_name})
+    breakpoint()
+    sub_sector_names = sub_sector_names_response.json()['sub_sector_names']
+    selection_instruction = "Select from this pull-down menu an economic sub-Sector whose companies are of interest:"
+    sub_sector_choice = st.selectbox('', [selection_instruction] + sub_sector_names, index=0)
+    if sub_sector_choice == selection_instruction:
+        st.stop()
+    return sub_sector_choice
 
 def plot_selected_financial_indicator(financial_indicator):
     fig = go.Figure()

@@ -18,7 +18,7 @@ class QuarterlyReport:
                         WHERE company_id = %s;"""
         cursor.execute(sql_str, (company_id,))
         records = cursor.fetchall()
-        return db.build_from_records(models.SubIndustry, records)
+        return db.build_from_records(self, records)
 
     @classmethod
     def find_quarterly_reports_by_ticker(self, ticker, cursor):
@@ -28,4 +28,4 @@ class QuarterlyReport:
                         WHERE companies.ticker = %s;"""
         cursor.execute(sql_query, (ticker,))
         records = cursor.fetchall()
-        return db.build_from_records(QuarterlyReport, records)
+        return db.build_from_records(self, records)

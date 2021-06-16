@@ -5,7 +5,7 @@ from api.src.models.queries.query_sector_quarterly_financials import Mixin as Mi
 from api.src.models.queries.query_sector_price_pe import Mixin as MixinSectorPricePE
 from api.src.models.queries.query_sub_industry_price_pe import Mixin as MixinSubIndustryPricePE
 from api.src.models.queries.query_sub_industry_quarterly_financials import Mixin as MixinSubIndustryQuarterlyFinancials
-from api.src.models.queries.sql_query_strings import select_financial_indicator_json
+from api.src.models.queries.sql_query_strings import select_financial_indicator_json, companies_within_sub_industry_str
 
 class SubIndustry(MixinSectorPricePE, 
                   MixinSectorQuarterlyFinancials,
@@ -22,7 +22,16 @@ class SubIndustry(MixinSectorPricePE,
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    ### find_sector_avg_price_pe
+    @classmethod
+    def find_by_sub_industry_name(self, sub_industry_name, cursor):
+        """ to be called by run_adapters.py """
+        sql_query = """SELECT * FROM sub_industries 
+                        WHERE sub_industry_gics = %s;
+                    """
+        cursor.execute(sql_query, (sub_industry_name,))
+        record = cursor.fetchone()
+        return db.build_from_record(self, record)
+
     @classmethod
     def find_sector_avg_price_pe(self, financial_indicator, cursor):
         all_sectors_price_pe_json = self.to_sector_avg_quarterly_price_pe_json(cursor)
