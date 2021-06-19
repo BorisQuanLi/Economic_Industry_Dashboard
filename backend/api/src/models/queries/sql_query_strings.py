@@ -8,7 +8,7 @@ def query_all_sector_names_in_quarterly_reports_table(self):
                     """
     return sql_str
 
-def sub_industry_names_in_sector_query_str(self):
+def sub_sector_names_in_sector_query_str(self):
     # returns all the sub_industries of a Sector that a sub_industry belongs to
     sql_str =  f"""
                 SELECT DISTINCT(sub_industries.sub_industry_gics)
@@ -17,17 +17,17 @@ def sub_industry_names_in_sector_query_str(self):
                 """
     return sql_str
 
-def companies_within_sub_industry_str(self):
+def companies_within_sub_sector_str():
     # self: class Company
     sql_str = f"""
-                SELECT companies.* FROM {self.__table__}
+                SELECT companies.* FROM companies
                 JOIN sub_industries
-                ON sub_industries.id = {self.__table__}.sub_industry_id
-                WHERE sub_indstries.sub_industry_gics = %s;
+                ON sub_industries.id = companies.sub_industry_id
+                WHERE sub_industries.sub_industry_gics = %s;
                 """
     return sql_str
 
-def sub_industry_avg_price_pe_history_query_str(self):
+def sub_sector_avg_price_pe_history_query_str(self):
     sql_str = f"""  SELECT  sub_industry_gics,
                             EXTRACT(year from date::DATE) as year,
                             EXTRACT(quarter from date::DATE) as quarter,
@@ -92,8 +92,37 @@ def per_sector_avg_quarterly_financials_query_str(self):
                         ON companies.id = quarterly_reports.company_id
                         JOIN sub_industries
                         ON companies.sub_industry_id::INT = sub_industries.id
+                        WHERE sector_gics = %s
                         GROUP BY sub_industries.sector_gics, year, quarter
                         ORDER BY year, quarter;
+                    """
+        return sql_str
+
+def company_price_pe_history_query_str(self):
+    sql_str = f"""  SELECT  companies.name,
+                            EXTRACT(year from date::DATE) as year,
+                            EXTRACT(quarter from date::DATE) as quarter,
+                            closing_price,
+                            price_earnings_ratio         
+                    FROM prices_pe
+                    JOIN companies 
+                    ON companies.id = prices_pe.company_id
+                    WHERE companies.name = %s;
+                """
+    return sql_str
+
+def company_quarterly_financials_query_str(self): 
+        sql_str = f"""  SELECT  companies.name,
+                                EXTRACT(year from date::DATE) as year,
+                                EXTRACT(quarter from date::DATE) as quarter,
+                                revenue,
+                                net_income,
+                                earnings_per_share,
+                                profit_margin            
+                        FROM quarterly_reports
+                        JOIN companies 
+                        ON companies.id = quarterly_reports.company_id
+                        WHERE companies.name = %s;
                     """
         return sql_str
 

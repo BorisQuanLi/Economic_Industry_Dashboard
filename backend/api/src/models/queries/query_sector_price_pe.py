@@ -7,7 +7,7 @@ The "definitive version" in:
 http://www.qtrac.eu/pyclassmulti.html
 """
 
-class Mixin:
+class MixinSectorPricePE:
     """mixin with class SubIndustry"""
     def get_all_sector_names(self, cursor):
         # self: class SubIndustry

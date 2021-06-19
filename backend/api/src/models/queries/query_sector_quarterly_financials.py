@@ -1,7 +1,7 @@
 from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyReportResult
 from api.src.models.queries.sql_query_strings import per_sector_avg_quarterly_financials_query_str 
 
-class Mixin:
+class MixinSectorQuarterlyFinancials:
     def to_avg_quarterly_financials_json_by_sector(self, sector_name, cursor):
         sql_str = per_sector_avg_quarterly_financials_query_str(self)
         cursor.execute(sql_str, (sector_name,))

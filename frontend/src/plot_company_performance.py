@@ -1,80 +1,67 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-from frontend_utilities import (assemble_year_quarter, get_financial_item_unit, underscored_to_spaced_words_dict)
-from choice_menus import sector_level_first_round_choice_menu, sector_level_follow_up_choice_menu
+from frontend_utilities import (assemble_year_quarter, frontend_backend_string_format_conversion, 
+                                get_indicators_in_frontend_format, underscored_to_spaced_words_dict)
 
-def companies_within_sub_sector_url(sub_sector_name):
-    return f"http://127.0.0.1:5000/sub_industries/{sub_sector_name}"
+SEARCH_SUB_SECTOR_URL = "http://127.0.0.1:5000/sub_sectors/search"
 
 def plot_companies_performance_within_sub_sector(sector_name):
-    selected_company_name = display_all_sub_sectors(sector_name)
-    breakpoint()
+    selected_sub_sector_name = select_sub_sector_within_sector(sector_name)
+    indicators_in_backend_format = ['closing_price', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'price_earnings_ratio']
+    indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
+    selected_financial_indicator = st.selectbox('', indicators_in_frontend_format, index=0, key= 'company_level')
+    selected_financial_indicator = frontend_backend_string_format_conversion()[selected_financial_indicator]
+    plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_financial_indicator)
+    return selected_sub_sector_name
 
-    plot_selected_financial_indicator('price_earnings_ratio')
-    selected_financial_indicator = sector_level_first_round_choice_menu()
-    if selected_financial_indicator == 'Go to the next granular level, sub-Sectors within an economic Sector.':
-        return 'Done. Continue to the Sub-Industry level.'
-    plot_selected_financial_indicator(selected_financial_indicator)
-    follow_up_financial_indicator_selected = sector_level_follow_up_choice_menu()
-    if follow_up_financial_indicator_selected == 'No, go to the next granular level, sub-Sectors within an economic Sector.':   
-        return 'Done. Continue to the Sub-Industry level.'
-
-def display_all_sub_sectors(sector_name):
+def select_sub_sector_within_sector(sector_name):
     st.header('Historical financial performance by companies within a sub-Sector.')
-    sub_sector_names_response = requests.get(companies_within_sub_sector_url('all_sub_industries'),
-                                                    params= {'financial_indicator': sector_name})
-    breakpoint()
+    st.header(' ')
+    st.write(f"Select from the dropdown menu an economic sub-Sector in the {sector_name} sector:")
+    sub_sector_names_response = requests.get(SEARCH_SUB_SECTOR_URL, 
+                                                params= {'sub_sector_name': 'all_sub_sectors', 'financial_indicator': sector_name})
     sub_sector_names = sub_sector_names_response.json()['sub_sector_names']
-    selection_instruction = "Select from this pull-down menu an economic sub-Sector whose companies are of interest:"
-    sub_sector_choice = st.selectbox('', [selection_instruction] + sub_sector_names, index=0)
-    if sub_sector_choice == selection_instruction:
-        st.stop()
+    sub_sector_choice = st.selectbox('', sub_sector_names, index=0, key= 'company_level_entrypoint')
     return sub_sector_choice
 
-def plot_selected_financial_indicator(financial_indicator):
-    fig = go.Figure()
-    get_plotly_chart_data(fig, financial_indicator)
-    update_layout(fig, financial_indicator)
-    st.plotly_chart(fig, use_container_width= True)
+def plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_financial_indicator):
+    avg_financials = find_company_financials_within_sub_sector(selected_sub_sector_name, selected_financial_indicator)
+    sub_sectors_xy_axis_info = {company_name : get_sub_industry_xy_axis_info(selected_financial_indicator, quarterly_info_dicts)
+                                        for company_name, quarterly_info_dicts in avg_financials.items()}
+    fig = add_traces_to_fig(selected_sub_sector_name, selected_financial_indicator, sub_sectors_xy_axis_info)
+    st.plotly_chart(fig)
 
-def get_plotly_chart_data(fig, financial_indicator):
-    try:
-        quarterly_financial_history_by_sector = find_sector_avg_financials(financial_indicator)
-        for sector, quarterly_financials in quarterly_financial_history_by_sector.items():
-            x_axis_time_series, y_axis_financials = get_time_n_financials_axis(sector,
-                                                                                quarterly_financials,
-                                                                                financial_indicator)
-            add_trace(fig, sector, x_axis_time_series, y_axis_financials)
-    except Exception as e:
-        print(e)
-        print(quarterly_financial_history_by_sector)
-        breakpoint()
-
-def find_sector_avg_financials(financial_indicator):
-    response_dict = requests.get(AGGREGATION_BY_SECTOR_URL, params= {'financial_indicator': financial_indicator})
+def find_company_financials_within_sub_sector(sub_sector_name, financial_indicator):
+    response_dict = requests.get(SEARCH_SUB_SECTOR_URL, params= {'sub_sector_name': sub_sector_name, 'financial_indicator': financial_indicator})
     return response_dict.json()
 
-def get_time_n_financials_axis(sector, quarterly_financials, financial_indicator):
-    x_axis_time_series = [assemble_year_quarter(quarterly_dict) for quarterly_dict in quarterly_financials]
-    y_axis_financials = [quarterly_dict[financial_indicator] for quarterly_dict in quarterly_financials]
-    return x_axis_time_series, y_axis_financials
+def get_sub_industry_xy_axis_info(financial_indicator, quarterly_info_dicts):
+    dates_list = [assemble_year_quarter(quarterly_dict) 
+                                for quarterly_dict in quarterly_info_dicts]
+    values_list = [quarterly_dict[financial_indicator] 
+                                for quarterly_dict in quarterly_info_dicts]
+    return dates_list, values_list
 
-def add_trace(fig, sector, x_axis_time_series, y_axis_financials):
-    fig.add_trace(go.Scatter(x = x_axis_time_series,
-                            y = y_axis_financials,
-                            mode = 'lines',
-                            name = sector))
+def add_traces_to_fig(sub_sector_name, financial_indicator, sub_sectors_xy_axis_info:dict):
+    fig = go.Figure()
+    for company_name, sub_sector_xy_axis_info in sub_sectors_xy_axis_info.items():
+        dates_list, values_list = sub_sector_xy_axis_info
+        fig.add_trace(go.Scatter(x = dates_list, y = values_list, 
+                                                        name = f"{company_name}"))
+    fig = update_layout(fig, sub_sector_name, financial_indicator)
+    return fig
 
-def update_layout(fig, financial_indicator):
-    return fig.update_layout(
-                                title= f"{underscored_to_spaced_words_dict(financial_indicator)} (Average)",
-                                yaxis_title= get_financial_item_unit(financial_indicator),
-                                legend_title="Economic sectors",
-                                font=dict(
-                                            family="Courier New, monospace",
-                                            size=18,
-                                            color="RebeccaPurple"
-                                        )
-                            )
-
+def update_layout(fig, sub_sector_name, financial_indicator):
+    fig.update_layout(
+        title=f"""{underscored_to_spaced_words_dict(financial_indicator)}:""",
+        xaxis_title="Month Year",
+        yaxis_title=f"{underscored_to_spaced_words_dict(financial_indicator)}",
+        legend_title=f"Companies in {sub_sector_name}:",
+        font=dict(
+            family="Courier New, monospace",
+            size=12,
+            color="RebeccaPurple"
+                    )
+                )
+    return fig

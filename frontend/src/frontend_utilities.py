@@ -6,7 +6,7 @@ def welcome_message():
     st.write("                           by Boris Li, 2021")
 
 
-def frontend_backend_string_format_conversion(direction='frontend-to-backend-translation'):
+def frontend_backend_string_format_conversion(direction = 'frontend-to-backend-translation'):
     indicators_in_backend_format = ['revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'closing_price', 'price_earnings_ratio']
     indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
     backend_to_frontend_format_dict = dict(zip(indicators_in_backend_format, indicators_in_frontend_format))

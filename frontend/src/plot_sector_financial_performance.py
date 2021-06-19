@@ -14,26 +14,10 @@ def plot_sector_level_performance():
     indicators_in_backend_format = ['closing_price', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'price_earnings_ratio'] + [done_statement]
     indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
     st.write("Please select a financial performance indicator from this drop-down menu:")
-    selected_financial_indicator = st.selectbox('', indicators_in_frontend_format)
+    selected_financial_indicator = st.selectbox('', indicators_in_frontend_format, key= 'sector_level')
     selected_financial_indicator = frontend_backend_string_format_conversion()[selected_financial_indicator]
     plot_selected_financial_indicator(selected_financial_indicator)
     return None
-    """
-    if selected_financial_indicator != done_statement:
-        lastly_selected_financial_indicator = selected_financial_indicator
-        breakpoint()
-    # turn it into indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
-    else: # 'Go to the next granular level, sub-Sectors within an economic Sector.':
-        breakpoint()
-        plot_selected_financial_indicator(lastly_selected_financial_indicator)
-        return done_statement   
-    plot_selected_financial_indicator(selected_financial_indicator)
-    st.stop()
-    
-    follow_up_financial_indicator_selected = sector_level_follow_up_choice_menu()
-    if follow_up_financial_indicator_selected == 'No, go to the next granular level, sub-sectors within an economic Sector.':   
-        return done_statement
-    """
 
 def plot_selected_financial_indicator(financial_indicator):
     fig = go.Figure()
