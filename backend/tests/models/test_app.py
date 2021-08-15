@@ -4,7 +4,6 @@ from api.src import create_app
 from api.src.db.db import get_db, close_db, drop_records, save
 from api.src.models import Venue, Category
 
-
 @pytest.fixture(scope = 'module')
 def app():
     flask_app = create_app('investment_analysis_test', testing = True, debug = True)

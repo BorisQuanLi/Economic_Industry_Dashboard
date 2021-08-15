@@ -43,7 +43,8 @@ class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-
         sector_names = MixinSectorPricePE.get_all_sector_names(self, cursor)
         sector_avg_price_pe_history_dict = {}
         for sector_name in sector_names:
-            sector_avg_price_pe_history_dict[sector_name] = MixinSectorPricePE.to_avg_quarterly_price_pe_json_by_sector(self, sector_name, cursor)
+            sector_avg_price_pe_history_dict[sector_name] = (MixinSectorPricePE.
+                                                                    to_avg_quarterly_price_pe_json_by_sector(self, sector_name, cursor))
         return sector_avg_price_pe_history_dict
 
     @classmethod

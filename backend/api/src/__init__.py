@@ -43,14 +43,6 @@ def create_app(database='investment_analysis', testing=False, debug=True):
     def root_url():
         return 'Welcome to the Economic Analysis api, through the prism of the S&P 500 stocks performance.'
 
-    @app.route('/sub_sectors/')
-    def find_all_sub_sectors():
-        conn = db.get_db()
-        cursor = conn.cursor()
-        objs_list = db.find_all(models.SubIndustry, cursor)
-        dicts_list = [obj.__dunict__ for obj in objs_list]
-        return json.dumps(dicts_list)
-
     @app.route('/sub_sectors/search')
     def search_sub_sectors():
         """
