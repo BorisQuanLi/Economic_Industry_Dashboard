@@ -45,4 +45,6 @@ $ cd frontend/
 
 frontend $ streamlit run src/index.py 
 
+[Dashboard](https://docs.google.com/document/d/e/2PACX-1vR32tVoSvUYB9-jgy_jT3-YbqrjJxQw8pXt13lmcwcjT7hfUW-2L4C5LJG5-BooBSDPGmUDvryonoaL/pub)
+
 ?? Talk about containerization and deploying the project on the appropriate AWS instances?
