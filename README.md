@@ -1,11 +1,11 @@
 
 ### Description
 
-This Project makes API calls to ingest the most recents 8 quarters of financial statements filed by the S&P 500 publicly listed companies, then stores the data on a Postgres DB, utilizing the Adapter and Model-View-Controller (MVC) design patterns along the way.
+This Project makes API calls to ingest the most recent 8 quarters of financial statements filed by the S&P 500 publicly listed companies, then stores the data on a Postgres DB, utilizing the Adapter and Model-View-Controller (MVC) design patterns along the way.
 
 A Flask API app allows the user to query both aggregate and company-level data such as average quarterly revenue, cost, and price/earnings ratios, returning the results in JSON format in a web browser.
 
-Various plots based these data can be viewed in an interactive dashboard in a broswer, where a user can select sector, sub-sector, company, and the financial-performance indicator.  An example is cross-sector comparision of average quarterly earnings over the last 8 quarters.
+Various plots based these data can be viewed in an interactive dashboard in a broswer, where a user can select different economic sectors and sub-sectors, companies, and financial-performance indicators.  For example, cross-sector comparison of average quarterly earnings over the last 8 quarters.
 
 ### Prerequisite Technologies
 
@@ -24,7 +24,7 @@ Frontend
 
 ### Getting Started
 
-Once all the technologies are installed, clone this project's repo in the local drive of your local machine.
+Once all the technologies are installed, clone this project's repo in your local machine.
 
 * Backend
 
