@@ -30,11 +30,11 @@ Once all the technologies are installed, clone this project's repo in the local 
 
 To spin up the Flask app and access the back-end Postgres DB, navigate to the backend folder from the project directory's root level:
 
-$ cd backend/
+```$ cd backend/
 
 Then execute:
 
-backend $ python3 run.py 
+```backend $ python3 run.py 
 
 Paste this url in a browser:
 
@@ -44,9 +44,9 @@ http://127.0.0.1:5000/
 
 To experience the frontend dashboard, navigate to the frontend folder from the project directory's root level:
 
-$ cd frontend/
+```$ cd frontend/
 
-frontend $ streamlit run src/index.py 
+```frontend $ streamlit run src/index.py 
 
 
 ### Click here to check out a few screenshots of the [Dashboard](https://docs.google.com/document/d/e/2PACX-1vR32tVoSvUYB9-jgy_jT3-YbqrjJxQw8pXt13lmcwcjT7hfUW-2L4C5LJG5-BooBSDPGmUDvryonoaL/pub).
