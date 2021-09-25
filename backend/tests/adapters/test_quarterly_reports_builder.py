@@ -4,7 +4,6 @@ from decimal import *
 import api.src.db.db as db
 import api.src.models as models
 import api.src.adapters as adapters
-# from tests.adapters.venue_details import imperfect_venue_details
 
 
 location =  {'address': '141 Front St', 'crossStreet': 'Pearl St', 'lat': 40.70243624175102, 'lng': -73.98753900608666, 'labeledLatLngs': [{'label': 'display', 'lat': 40.70243624175102, 'lng': -73.98753900608666}], 'postalCode': '11201', 'cc': 'US', 'neighborhood': 'DUMBO', 'city': 'New York', 'state': 'NY', 

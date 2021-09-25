@@ -19,21 +19,10 @@ quarterly_reports_runner = BuildQuarterlyReportsPricesPE(conn, cursor)
 quarterly_reports_runner.run('Energy') # 23 companies
 quarterly_reports_runner.run('Consumer Staples') # 32 companies
 quarterly_reports_runner.run('Real Estate') # 29 companies
-
-""" 06/11/2021
-can't handle 63 Health Care companies,
-each company 5 quarters of financials and prices_pe
-63 * (5 + 5) = 630 API calls 
-exceeded the 300 API calls/minute limit by FMP, the data source.
-"""
 quarterly_reports_runner.run('Health Care') # 63 companies 
 
-"""
-figure out why PFE or JNJ's info has not been written in db after the above line,
-and implement db.find_or_create methods.
-"""
 
-# instead of flask.cli, look into Airflow. 
+# instead of flask.cli, implement Airflow. 
 breakpoint()
 
 """

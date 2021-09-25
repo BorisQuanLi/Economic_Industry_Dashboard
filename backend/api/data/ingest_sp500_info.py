@@ -14,15 +14,17 @@ def ingest_sp500_stocks_info():
     To be executed from the root level of the /backend dicectory:
     backend$ python3 api/data/ingest_process_data/ingest_sp500_wiki_info_employees_total.py
     """
-    if not sp500_data_file_exists():
-        sp500_df = get_sp500_wiki_info()
-        employees_total_df = get_employees_total()
-        sp500_incl_employees_df = merge_df(sp500_df, employees_total_df)
-        sp500_wiki_data_filepath = save_csv(sp500_incl_employees_df)
+    sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
+    with open(sp500_wiki_data_filepath) as existing_file:
+        if not existing_file:
+            sp500_df = get_sp500_wiki_info()
+            employees_total_df = get_employees_total()
+            sp500_incl_employees_df = merge_df(sp500_df, employees_total_df)
+            sp500_wiki_data_filepath = save_csv(sp500_incl_employees_df, sp500_wiki_data_filepath)
     return sp500_wiki_data_filepath
 
 def get_sp500_wiki_info():
-    # ingest each S&P500 company's basic info from Wikipedia
+    """ingest each and every S&P 500 company's basic info from the Wikipedia web page"""
     sp500_df = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0]
     column_names = list(sp500_df.columns)
     column_names[0] = 'Ticker'
@@ -46,9 +48,8 @@ def merge_df(sp500_df, employees_total_df):
     sp500_incl_employees_df = sp500_incl_employees_df[security_col_notna]
     return sp500_incl_employees_df
 
-def save_csv(sp500_incl_employees_df):
+def save_csv(sp500_incl_employees_df, sp500_wiki_data_filepath):
     # save the merged dataframe in a csv file
-    sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
     sp500_incl_employees_df.to_csv(sp500_wiki_data_filepath)
     return sp500_wiki_data_filepath
 

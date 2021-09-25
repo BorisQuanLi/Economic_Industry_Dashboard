@@ -50,8 +50,6 @@ def create_app(database='investment_analysis', testing=False, debug=True):
         http://127.0.0.1:5000/sub_sectors/search?sub_sector_name=Xyz&financial_indicator=revenue
         """
         conn, cursor, sub_sector_name, financial_indicator = utilities.company_performance_query_tools()
-        conn = db.get_db()
-        cursor = conn.cursor()
         if sub_sector_name == 'all_sub_sectors':
             sector_name = financial_indicator
             sub_sector_names = MixinSubSectorPricePE.get_sub_sector_names_of_sector(models.SubIndustry, sector_name, cursor)
@@ -124,7 +122,7 @@ def create_app(database='investment_analysis', testing=False, debug=True):
             return json.dumps(historical_financials_json_dicts, default = str)
             
 
-    @app.route('/sectors')
+    @app.route('/sectors/')
     def sector_avg_financial_performance():
         """
         url: /sectors?financial_indicator={financial_indicator_name}
@@ -139,7 +137,6 @@ def create_app(database='investment_analysis', testing=False, debug=True):
                                                         find_sector_avg_price_pe(financial_indicator, cursor))
         else:
             historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
-            breakpoint()
         return json.dumps(historical_financials_json_dicts, default = str)
 
     @app.route('/sectors/<sector_name>')
@@ -150,105 +147,3 @@ def create_app(database='investment_analysis', testing=False, debug=True):
         return json.dumps({'sub_sector_names': sub_sector_names}, default=str)
 
     return app
-
-    """
-    To be implemented after the Company.search() method is worked out.
-
-    @app.route('/companies/search')
-    def search_companies():
-        conn = db.get_db()
-        cursor = conn.cursor()
-
-        params = dict(request.args)
-        venues = models.Company.search(params, cursor)
-        venue_dicts = [venue.to_json(cursor) for venue in venues]
-        return json.dumps(venue_dicts, default = str)
-    
-    
-    @app.route('/companies')
-    def companies():
-        conn = db.get_db()
-        cursor = conn.cursor()
-        companies = db.find_all(models.Company, cursor)
-        company_dicts = [company.__dict__ for company in companies]
-        return json.dumps(company_dicts, default = str)
-
-    @app.route('/companies/<id>')
-    def company(id):
-        conn = db.get_db()
-        cursor = conn.cursor()
-        company = db.find(models.Company, id, cursor)
-        return json.dumps(company.__dict__, default = str)
-
-    @app.route('/companies/company_overview/<ticker>') 
-    def company_overview_by_ticker(ticker):
-        conn = db.get_db()
-        cursor = conn.cursor()
-        company = db.find_by_ticker(models.Company, ticker, cursor)
-        ic_pe_json = company.to_quarterly_financials_json(db.cursor)
-        return json.dumps(ic_pe_json, default = str)
-
-    @app.route('/companies/company_overview/search') # see code above
-    def find_company_by_name():
-        conn = db.get_db()
-        cursor = conn.cursor()
-        # params = dict(request.args)
-        company_names = request.args.getlist('company_name')
-        jsons_list = get_jsons(company_names, cursor)
-        return json.dumps(jsons_list, default = str)
-
-    def get_jsons(company_names:list, cursor):
-        json_list = []
-        for company_name in company_names:
-            company = db.find_by_name(models.Company, company_name, cursor)
-            ic_pe_json = company.to_quarterly_financials_json(db.cursor)
-            json_list.append(ic_pe_json)
-        return json_list
-
-    @app.route('/companies/latest_quarter_company_overview/<ticker>')
-    def latest_quarter_company_overview(ticker):
-        conn = db.get_db()
-        cursor = conn.cursor()
-        company = db.find_by_ticker(models.Company, ticker, cursor)
-        ic_pe_json = company.to_quarterly_reports_prices_pe_json_by_ticker(db.cursor)
-        
-        latest_quarterly_report = ic_pe_json['History of quarterly financials'][0]
-        ic_pe_json["Latest quarter's financials"] = latest_quarterly_report
-        ic_pe_json.pop('History of quarterly financials')
-
-        latest_price_pe = ic_pe_json['History of quarterly Closing Price and Price to Earnings ratios'][0]
-        ic_pe_json["Latest quarter's stock price and price-to-earnings ratio"] = latest_price_pe
-        ic_pe_json.pop('History of quarterly Closing Price and Price to Earnings ratios')
-
-        return json.dumps(ic_pe_json, default = str)
-
-
-    @app.route('/companies/quarterly_reports_by_company/<ticker>')
-    def quarterly_reports_by_ticker(ticker):
-        conn = db.get_db()
-        cursor = conn.cursor()
-        quarterly_reports_objs = db.find_quarterly_reports_by_ticker(models.QuarterlyReport, ticker, cursor)
-        quarterly_reports_dicts = [report.__dict__ 
-                                            for report in quarterly_reports_objs]
-        return json.dumps(quarterly_reports_dicts, default = str)
-
-    @app.route('/companies/latest_quarterly_result_by_company/<ticker>')
-    def latest_quarterly_result_company(ticker):
-        conn = db.get_db()
-        cursor = conn.cursor()
-        quarterly_reports_objs = db.find_quarterly_reports_by_ticker(models.QuarterlyReport, ticker, cursor)
-        latest_quarterly_report_obj = quarterly_reports_objs[0]
-        return json.dumps(
-                    latest_quarterly_report_obj.__dict__, default = str)
-                    
-    # develop all_quarterly_result
-    
-    @app.route('/companies/price_pe/<ticker>')
-    def price_pe_company(ticker):
-        conn = db.get_db()
-        cursor = conn.cursor()
-        company_price_pe = db.find_latest_company_price_pe_by_ticker(
-            models.PricePE, ticker, cursor)
-        company_price_pe = company_price_pe.to_latest_pe_json(cursor)
-        return json.dumps(company_price_pe, default = str)
-    """

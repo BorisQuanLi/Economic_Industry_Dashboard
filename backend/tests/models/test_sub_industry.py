@@ -8,7 +8,7 @@ from fixture import build_records
 def db_cursor():
     flask_app = create_app(database='investment_analysis_test', testing = True, debug = True)
 
-    with flask_app.app_context(): # flask method app_context.  No need to involve .env
+    with flask_app.app_context():
         conn = get_db()
         cursor = conn.cursor()
 

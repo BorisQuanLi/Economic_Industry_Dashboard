@@ -9,13 +9,25 @@ from .quarterly_price_pe_builder import QuarterlyPricePEBuilder
 
 class BuildSP500Companies: 
     def __init__(self):
+        """
+        Iterate over the csv file extract from the Wikepedia web page with 
+        name, ticker symbol, and other basic information of the S&P 500
+        component stocks, and
+
+        create models.Company object for each company and, if the models.SubIndustry
+        object the company belongs to does not exist in the database, create a new  
+        SubIndustry object.
+        
+        To be instantiated and called by
+        backend $ python3 manage.py
+        """
         self.sp500_wiki_data_filepath = get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
         self.conn = db.conn
         self.cursor = self.conn.cursor()
         
     def run(self): 
-        with open(self.sp500_wiki_data_filepath) as csv_file: # user pandas.read_csv() instead?
+        with open(self.sp500_wiki_data_filepath) as csv_file:
             reader = csv.DictReader(csv_file)
             for wiki_row in reader:
                 self.process_row_data(wiki_row)     
