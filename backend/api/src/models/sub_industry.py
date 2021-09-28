@@ -64,7 +64,7 @@ class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-
     
     ### find_sub_industry_avg_quarterly_financials
     @classmethod
-    def find_sub_industry_avg_quarterly_financials(self, sector_name:str, financial_indicator:str, cursor):
+    def find_avg_quarterly_financials_by_sub_industry(self, sector_name:str, financial_indicator:str, cursor):
         """
         Within each chosen sector, calculate each sub_industry's average value of a chosen
         financial-statement item (revenue, net_profit, etc.) over the most recent 8 quarters.

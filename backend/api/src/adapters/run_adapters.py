@@ -10,12 +10,12 @@ from .quarterly_price_pe_builder import QuarterlyPricePEBuilder
 class BuildSP500Companies: 
     def __init__(self):
         """
-        Iterate over the csv file extract from the Wikepedia web page with 
+        Iterate over the csv file extracted from the Wikepedia web page, with 
         name, ticker symbol, and other basic information of the S&P 500
-        component stocks, and
+        component stocks.
 
-        create models.Company object for each company and, if the models.SubIndustry
-        object the company belongs to does not exist in the database, create a new  
+        Create models.Company object for each company and, if the models.SubIndustry
+        object that the company belongs to does not exist in the database, create a new  
         SubIndustry object.
         
         To be instantiated and called by

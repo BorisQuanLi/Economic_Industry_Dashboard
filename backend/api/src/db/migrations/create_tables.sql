@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS quarterly_reports;
 CREATE TABLE IF NOT EXISTS companies (
   id serial PRIMARY KEY,
   name VARCHAR(64) NOT NULL,
-  ticker VARCHAR(8) UNIQUE,
+  ticker VARCHAR(16) UNIQUE,
   sub_industry_id SMALLINT,
   year_founded VARCHAR(64),
   number_of_employees INTEGER,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS sub_industries(
 
 CREATE TABLE IF NOT EXISTS prices_pe(
 	id serial PRIMARY KEY,
-  date VARCHAR(15),
+  date VARCHAR(16),
   company_id INTEGER,
 	closing_price NUMERIC,
 	price_earnings_ratio NUMERIC
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS prices_pe(
 
 CREATE TABLE IF NOT EXISTS quarterly_reports (
   id serial PRIMARY KEY,
-  date VARCHAR(15),
+  date VARCHAR(16),
   company_id INTEGER,
   revenue BIGINT,
   net_income BIGINT,
