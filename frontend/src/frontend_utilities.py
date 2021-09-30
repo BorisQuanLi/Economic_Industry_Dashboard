@@ -7,7 +7,8 @@ def welcome_message():
 
 
 def frontend_backend_string_format_conversion(direction = 'frontend-to-backend-translation'):
-    indicators_in_backend_format = ['revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'closing_price', 'price_earnings_ratio']
+    done_statement = 'Done. Continue to the sub-Sector level.'
+    indicators_in_backend_format = ['revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'closing_price', 'price_earnings_ratio'] + [done_statement]
     indicators_in_frontend_format = get_indicators_in_frontend_format(indicators_in_backend_format)
     backend_to_frontend_format_dict = dict(zip(indicators_in_backend_format, indicators_in_frontend_format))
     frontend_to_backend_format_dict = dict((zip(indicators_in_frontend_format, indicators_in_backend_format)))

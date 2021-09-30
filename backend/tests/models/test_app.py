@@ -35,8 +35,5 @@ def client(app):
 
 def test_root_url(app, client):
     response = client.get('/')
-    print(dir(response))
-    breakpoint()
     assert b'' in response.data
 
-    # app_sw1 = save(Company(**dict(zip())))

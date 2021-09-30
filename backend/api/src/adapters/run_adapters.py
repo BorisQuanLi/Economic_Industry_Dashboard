@@ -2,10 +2,10 @@ import csv
 import pandas as pd
 import api.src.models as models
 import api.src.db as db
-from .client import get_sp500_wiki_data
-from .companies_builder import CompanyBuilder
-from .quarterly_financials_builder import QuarterlyFinancialsBuilder
-from .quarterly_price_pe_builder import QuarterlyPricePEBuilder
+from api.src.adapters.wiki_page_client import get_sp500_wiki_data
+from api.src.adapters.companies_builder import CompanyBuilder
+from api.src.adapters.quarterly_financials_builder import QuarterlyFinancialsBuilder
+from ap.src.adapters.quarterly_price_pe_builder import QuarterlyPricePEBuilder
 
 class BuildSP500Companies: 
     def __init__(self):
@@ -21,6 +21,7 @@ class BuildSP500Companies:
         To be instantiated and called by
         backend $ python3 manage.py
         """
+        
         self.sp500_wiki_data_filepath = get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
         self.conn = db.conn

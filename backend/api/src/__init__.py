@@ -45,10 +45,6 @@ def create_app(database='investment_analysis', testing=False, debug=True):
 
     @app.route('/sub_sectors/search')
     def search_sub_sectors():
-        """
-        url format:
-        http://127.0.0.1:5000/sub_sectors/search?sub_sector_name=Xyz&financial_indicator=revenue
-        """
         conn, cursor, sub_sector_name, financial_indicator = utilities.company_performance_query_tools()
         if sub_sector_name == 'all_sub_sectors':
             sector_name = financial_indicator
@@ -63,23 +59,8 @@ def create_app(database='investment_analysis', testing=False, debug=True):
             else:
                 historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
             return json.dumps(historical_financials_json_dicts, default = str)
-        # TBD, to the end of this function
-        conn = db.get_db()
-        cursor = conn.cursor()
-        params = dict(request.args)
-        sub_industry_name = params['sub_industry']
-        # generate a list of companies in the same sub_industry
-        companies_info = [company.__dict__ for company 
-                                    in db.find_companies_by_sub_industry_name(models.Company, sub_industry_name, cursor)]
-        """
-        generate of list of quarterly performance numbers
-        """
-        sub_industry_info = {}
-        sub_industry_info['companies'] = companies_info
-        # sub_industry_info['quarterly numbers'] = quarterly_numbers_history
-        return json.dumps(sub_industry_info)
-
-    @app.route('/sub_sectors/<sub_sector_name>')
+        y
+    @app.route('/sub_sectors/<sub_industry_name>')
     def company_financial_performance(sub_industry_name):
         conn, cursor, financial_indicator = utilities.financial_performance_query_tools()
         if sub_industry_name == 'all_sub_industries':
@@ -97,30 +78,6 @@ def create_app(database='investment_analysis', testing=False, debug=True):
                 historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
             return json.dumps(historical_financials_json_dicts, default = str)
     
-
-    @app.route('/sectors/search')
-    def sub_industries_within_sector():
-        """
-        url format:
-        http://127.0.0.1:5000/sectors/search?sector_name=Energy&financial_indicator=revenue
-        """
-        conn, cursor, sector_name, financial_indicator = utilities.sub_sector_performance_query_tools()
-        if sector_name == 'all_sectors':
-            conn = db.get_db()
-            cursor = conn.cursor()
-            sector_names = MixinSectorPricePE.get_all_sector_names(models.SubIndustry, cursor)
-            return json.dumps({'sector_names': sector_names}, default=str)
-        else:
-            if financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
-                historical_financials_json_dicts = (models.SubIndustry.
-                                                        find_sub_industry_avg_quarterly_financials(sector_name, financial_indicator, cursor))
-            elif financial_indicator in ['closing_price', 'price_earnings_ratio']:
-                historical_financials_json_dicts = (models.SubIndustry.
-                                                        find_sub_industry_avg_quarterly_price_pe(sector_name, financial_indicator, cursor))
-            else:
-                historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
-            return json.dumps(historical_financials_json_dicts, default = str)
-            
 
     @app.route('/sectors/')
     def sector_avg_financial_performance():
@@ -145,5 +102,25 @@ def create_app(database='investment_analysis', testing=False, debug=True):
         cursor = conn.cursor()
         sub_sector_names = MixinSubSectorPricePE.get_sub_sector_names_of_sector(models.SubIndustry, sector_name, cursor) 
         return json.dumps({'sub_sector_names': sub_sector_names}, default=str)
+
+    @app.route('/sectors/search')
+    def sub_industries_within_sector():
+        conn, cursor, sector_name, financial_indicator = utilities.sub_sector_performance_query_tools()
+        if sector_name == 'all_sectors':
+            conn = db.get_db()
+            cursor = conn.cursor()
+            sector_names = MixinSectorPricePE.get_all_sector_names(models.SubIndustry, cursor)
+            return json.dumps({'sector_names': sector_names}, default=str)
+        else:
+            if financial_indicator in ['revenue', 'net_income', 'earnings_per_share', 'profit_margin']:
+                historical_financials_json_dicts = (models.SubIndustry.
+                                                        find_avg_quarterly_financials_by_sub_industry(sector_name, financial_indicator, cursor))
+            elif financial_indicator in ['closing_price', 'price_earnings_ratio']:
+                historical_financials_json_dicts = (models.SubIndustry.
+                                                        find_sub_industry_avg_quarterly_price_pe(sector_name, financial_indicator, cursor))
+            else:
+                historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
+            return json.dumps(historical_financials_json_dicts, default = str)
+            
 
     return app

@@ -24,30 +24,27 @@ def db_cursor():
         drop_all_tables(conn, cursor)
         close_db()
 
-def test_avg_revenue_semiconductor_2020_4th_qtr(db_cursor):
+def test_value_most_recent_quater(db_cursor):
     sector_name = 'Information Technology'
     fin_statement_item = 'revenue'
-    avg_qtr_rev_by_Energy_sub_industries = SubIndustry.find_avg_quarterly_financials_by_sub_industry(
+    avg_sub_industry_qtr_revs_in_info_tech = SubIndustry.find_avg_quarterly_financials_by_sub_industry(
                                                                                     sector_name, fin_statement_item, db_cursor)
-    breakpoint()
-    assert avg_qtr_rev_by_Energy_sub_industries['Semiconductors'][
-                                            'Avg_quarterly_revenues']['2020-04'] == 2500
+    value_most_recent_quarter = (int(avg_sub_industry_qtr_revs_in_info_tech['Semiconductors'][-1]['year']) * 100
+                            + int(avg_sub_industry_qtr_revs_in_info_tech['Semiconductors'][-1]['quarter']))
+    assert value_most_recent_quarter == 202004
 
-"""
-def test_avg_revenue_semiconductor_2020_4th_qtr(db_cursor):
+def test_semiconductors_avg_revenue_2020_4th_qtr(db_cursor):
     sector_name = 'Information Technology'
     fin_statement_item = 'revenue'
-    avg_qtr_rev_by_Energy_sub_industries = SubIndustry.find_avg_quarterly_financials_by_sub_industry(
+    avg_sub_industry_qtr_revs_in_info_tech = SubIndustry.find_avg_quarterly_financials_by_sub_industry(
                                                                                     sector_name, fin_statement_item, db_cursor)
-    print(avg_qtr_rev_by_Energy_sub_industries)
-    breakpoint()
-    assert avg_qtr_rev_by_Energy_sub_industries['Semiconductors'][0][
-                                            'Avg_quarterly_revenue'][202004] == 2500"""
+    most_recent_qtr_semiconductors_sub_industry_avg_rev = int(avg_sub_industry_qtr_revs_in_info_tech['Semiconductors'][-1]['revenue'])
+    assert most_recent_qtr_semiconductors_sub_industry_avg_rev == 2000
 
-def test_avg_revenue_application_sw_2020_4th_qtr(db_cursor):
+def test_app_sw_avg_revenue_2020_4th_qtr(db_cursor):
     sector_name = 'Information Technology'
     fin_statement_item = 'revenue'
-    avg_qtr_rev_by_Energy_sub_industries = SubIndustry.find_avg_quarterly_financials_by_sub_industry(
+    avg_sub_industry_qtr_revs_in_info_tech = SubIndustry.find_avg_quarterly_financials_by_sub_industry(
                                                                                     sector_name, fin_statement_item, db_cursor)
-    assert avg_qtr_rev_by_Energy_sub_industries['Application Software'][0][
-                                            'Avg_quarterly_revenue'][202004] == 1250
+    most_recent_qtr_app_sw_sub_industry_avg_rev = int(avg_sub_industry_qtr_revs_in_info_tech['Application Software'][-1]['revenue'])
+    assert most_recent_qtr_app_sw_sub_industry_avg_rev == 1000
