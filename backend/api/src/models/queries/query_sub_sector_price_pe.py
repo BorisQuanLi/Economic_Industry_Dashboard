@@ -4,7 +4,7 @@ from api.src.models.queries.sql_query_strings import (sub_sector_names_in_sector
 
 class MixinSubSectorPricePE:
     def get_sub_sector_names_of_sector(self, sector_name, cursor):
-        sql_str = sub_sector_names_in_sector_query_str(self)
+        sql_str = sub_sector_names_in_sector_query_str()
         cursor.execute(sql_str, (sector_name,))
         sub_sector_names = [sub_sector_record[0] for sub_sector_record in cursor.fetchall()]
         return sub_sector_names

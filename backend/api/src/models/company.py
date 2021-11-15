@@ -3,7 +3,7 @@ import api.src.models as models
 from api.src.models.queries.sql_query_strings import companies_within_sub_sector_str
 from api.src.models.queries.query_company_price_pe_history import MixinCompanyPricePE
 from api.src.models.queries.query_company_financials_history import MixinCompanyFinancials
-from api.src.models.queries.sql_query_strings import select_financial_indicator_json, companies_within_sub_sector_str
+from api.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str
 
 
 class Company(MixinCompanyPricePE, MixinCompanyFinancials): 
@@ -90,7 +90,7 @@ class Company(MixinCompanyPricePE, MixinCompanyFinancials):
         the dictionary value.
         """
         companies_quarterly_financials_json = self.to_company_quarterly_financials_json(sub_sector_name, financial_indicator, cursor)
-        single_financial_indicator_json = select_financial_indicator_json(financial_indicator, companies_quarterly_financials_json)
+        single_financial_indicator_json = extract_single_financial_indicator(financial_indicator, companies_quarterly_financials_json)
         return single_financial_indicator_json
 
     @classmethod
@@ -105,7 +105,7 @@ class Company(MixinCompanyPricePE, MixinCompanyFinancials):
     @classmethod
     def find_company_quarterly_price_pe(self, sub_sector_name:str, financial_indicator:str, cursor):
         companies_quarterly_price_pe_json = self.to_company_quarterly_price_pe_json(sub_sector_name, financial_indicator, cursor)
-        single_financial_indicator_json = select_financial_indicator_json(financial_indicator, companies_quarterly_price_pe_json)
+        single_financial_indicator_json = extract_single_financial_indicator(financial_indicator, companies_quarterly_price_pe_json)
         return single_financial_indicator_json
 
     @classmethod

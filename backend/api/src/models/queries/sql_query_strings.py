@@ -8,7 +8,7 @@ def query_all_sector_names_in_quarterly_reports_table(self):
                     """
     return sql_str
 
-def sub_sector_names_in_sector_query_str(self):
+def sub_sector_names_in_sector_query_str():
     # returns all the sub_industries of a Sector that a sub_industry belongs to
     sql_str =  f"""
                 SELECT DISTINCT(sub_industries.sub_industry_gics)
@@ -126,9 +126,13 @@ def company_quarterly_financials_query_str(self):
                     """
         return sql_str
 
-def select_financial_indicator_json(financial_indicator, full_range_json):
+def extract_single_financial_indicator(financial_indicator, full_range_fiancial_indicators_json):
+    """
+    returns in JSON format each sector's quarterly values of the financial_indicator passed in. 
+    """
     return    {sector:[{'year': quarterly_dict['year'],
                         'quarter': quarterly_dict['quarter'],
-                        f'{financial_indicator}': quarterly_dict[financial_indicator]} for quarterly_dict in quarterly_records] 
-                                    for sector, quarterly_records in full_range_json.items()}
+                        f'{financial_indicator}': quarterly_dict[financial_indicator]} 
+                                                            for quarterly_dict in quarterly_records] 
+                                                                        for sector, quarterly_records in full_range_fiancial_indicators_json.items()}
 

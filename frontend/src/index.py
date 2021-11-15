@@ -1,16 +1,18 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
-from plot_sub_industry_financial_performance import plot_sub_industry_level_performance
+from plot_sub_sector_financial_performance import plot_sub_sectors_performance
 from plot_sector_financial_performance import plot_sector_level_performance
-from plot_company_performance import plot_companies_performance_within_sub_sector
-from frontend_utilities import welcome_message
+from plot_company_performance import plot_company_level_performance
 
-welcome_message()
+st.title("Welcome to the Economic Analysis api, through the prism of the S&P 500 stocks performance.")
+st.title(" ")
+st.write("                           by Boris Li, 2021")
 
-plot_sector_level_performance()
-sector_name = plot_sub_industry_level_performance()
-plot_companies_performance_within_sub_sector(sector_name)
+financial_indicator_selected = plot_sector_level_performance()
+sub_sector_name, sub_sector_financial_indicator = plot_sub_sectors_performance(financial_indicator_selected)
+plot_company_level_performance(sub_sector_name, sub_sector_financial_indicator)
+
 st.write("Data provided by Financial Modeling Prep:")
 st.write("https://financialmodelingprep.com/developer/docs/")
 st.stop()
