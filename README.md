@@ -49,5 +49,5 @@ $ cd frontend/
 frontend $ streamlit run src/index.py 
 
 
-### Click here to check out a few screenshots of the [Dashboard](https://docs.google.com/document/d/e/2PACX-1vR32tVoSvUYB9-jgy_jT3-YbqrjJxQw8pXt13lmcwcjT7hfUW-2L4C5LJG5-BooBSDPGmUDvryonoaL/pub).
+### Please check out a [recorded demo](https://www.youtube.com/watch?v=-OesaExIybA) of the dashboard.
 
