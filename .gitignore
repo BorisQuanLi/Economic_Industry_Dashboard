@@ -1,5 +1,38 @@
+# System files
 .DS_Store
-.ipynb_checkpoints
-backend/.env
 
-./api/src/adapters/api_calls/api_client_config.py
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.so
+.Python
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+.env
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints
+
+# Project specific
+api/src/adapters/api_calls/api_client_config.py
+docs/cloud_pipeline_architecture.md
+backend/.env
+frontend/.env
+
+# Build and dist
+*.egg-info/
+dist/
+build/
