@@ -13,7 +13,7 @@ Various plots based these data can be viewed in an interactive dashboard in a br
 - Data Warehouse: AWS Redshift
 - Orchestration: Apache Airflow
 - Transformations: dbt
-- Visualization: Metabase
+- Visualization: Streamlit (leveraging Python for custom interactive dashboards)
 
 ## Technologies
 
@@ -35,6 +35,7 @@ Frontend
 - Terraform
 - Apache Airflow
 - dbt
+- Streamlit (Python-based visualization)
 
 ## Getting Started
 
