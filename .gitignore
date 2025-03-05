@@ -36,3 +36,7 @@ frontend/.env
 *.egg-info/
 dist/
 build/
+
+# Stage 2 files (temporary, remove when starting Stage 2)
+.github/
+Makefile
