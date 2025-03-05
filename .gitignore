@@ -37,7 +37,14 @@ frontend/.env
 dist/
 build/
 
-# Stage 2 files (temporary, remove when starting Stage 2)
+###############################################
+#                                             #
+#            STAGE 2 FILES                    #
+#     REMOVE THESE ENTRIES WHEN STARTING      #
+#          STAGE 2 DEVELOPMENT                #
+#                                             #
+###############################################
+
 # Infrastructure
 .github/
 Makefile
@@ -47,5 +54,5 @@ frontend/src/hybrid_dashboard.py    # Dash integration
 frontend/src/nlq_interface.py      # Natural Language Queries
 frontend/src/insight_generator.py   # AI-powered insights
 
-# Note: Remove these entries when implementing Stage 2 features
-# Location of Stage 2 planning docs: docs/stage2_planning/
+# Stage 2 Planning Documentation Location:
+# docs/stage2_planning/
