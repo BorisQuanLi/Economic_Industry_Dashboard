@@ -38,5 +38,14 @@ dist/
 build/
 
 # Stage 2 files (temporary, remove when starting Stage 2)
+# Infrastructure
 .github/
 Makefile
+
+# Advanced Dashboard Features
+frontend/src/hybrid_dashboard.py    # Dash integration
+frontend/src/nlq_interface.py      # Natural Language Queries
+frontend/src/insight_generator.py   # AI-powered insights
+
+# Note: Remove these entries when implementing Stage 2 features
+# Location of Stage 2 planning docs: docs/stage2_planning/
