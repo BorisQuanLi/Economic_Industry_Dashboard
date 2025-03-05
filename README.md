@@ -1,5 +1,6 @@
+# Economic Industry Dashboard
 
-### Description
+## Problem Description
 
 This Project makes API calls to ingest the most recent 8 quarters of financial statements filed by the S&P 500 publicly listed companies, then stores the data on a Postgres DB, utilizing the Adapter and Model-View-Controller (MVC) design patterns along the way.
 
@@ -7,7 +8,14 @@ A Flask API app allows the user to query both aggregate and company-level data s
 
 Various plots based these data can be viewed in an interactive dashboard in a broswer, where a user can select different economic sectors and sub-sectors, companies, and financial-performance indicators.  For example, cross-sector comparison of average quarterly earnings over the last 8 quarters.
 
-### Prerequisite Technologies
+## Architecture
+- Data Lake: AWS S3
+- Data Warehouse: AWS Redshift
+- Orchestration: Apache Airflow
+- Transformations: dbt
+- Visualization: Metabase
+
+## Technologies
 
 Backend:
 
@@ -22,7 +30,13 @@ Frontend
 
 - Streamlit 0.73.1 (a Python library)
 
-### Getting Started
+### Cloud Infrastructure
+- AWS (S3, Redshift, EKS)
+- Terraform
+- Apache Airflow
+- dbt
+
+## Getting Started
 
 Once all the technologies are installed, clone this project's repo in your local machine.
 
@@ -48,6 +62,18 @@ $ cd frontend/
 
 frontend $ streamlit run src/index.py 
 
+## Development Roadmap
+### Stage 1: Core Implementation
+- Cloud infrastructure setup
+- Data pipeline development
+- Warehouse optimization
+- Dashboard migration
+
+### Stage 2: Advanced Features (Future)
+- CI/CD pipeline
+- Automated testing
+- Infrastructure as Code
+- Monitoring and alerting
 
 ### Please check out a [recorded demo](https://www.youtube.com/watch?v=-OesaExIybA) of the dashboard.
 
