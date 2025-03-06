@@ -1,61 +1,88 @@
-import sys
-from flask.cli import FlaskGroup
-from api.src import create_app
-from api.src.db import db
-from api.src.adapters.run_adapters import (BuildSP500Companies, 
-                                           BuildQuarterlyReportsPricesPE)
+#!/usr/bin/env python3
 import click
+import logging
+from typing import Optional
+from api.src import create_app
+from api.src.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from api.src.db import get_db
+from api.src.adapters.data_ingestion_adapters import BuildSP500Companies, BuildQuarterlyReportsPricesPE
 
-app = create_app()
-cli = FlaskGroup(create_app=create_app)
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# sp500_companies_info_runner = BuildSP500Companies() 
-# sp500_companies_info_runner.run()
+def get_config(env: str):
+    configs = {
+        'dev': DevelopmentConfig,
+        'prod': ProductionConfig,
+        'test': TestingConfig
+    }
+    return configs.get(env, DevelopmentConfig)
 
-conn = db.conn
-cursor = conn.cursor()
-quarterly_reports_runner = BuildQuarterlyReportsPricesPE(conn, cursor)
-
-quarterly_reports_runner.run('Energy') # 23 companies
-quarterly_reports_runner.run('Consumer Staples') # 32 companies
-quarterly_reports_runner.run('Real Estate') # 29 companies
-quarterly_reports_runner.run('Health Care') # 63 companies 
-
-
-# instead of flask.cli, implement Airflow. 
-breakpoint()
-
-"""
-Next step: use for-loop iteration over all the sectors/sub_industries to write all the
-companies' rows.
-
-Understand how cli = FlaskGroup(create_app=create_app) works.
-"""
-
-@cli.command("build_company")
-@cli.argument("ticker")
-def build_company(ticker):
+@click.group()
+def cli():
+    """Management script for the S&P 500 Financial Analytics application."""
     pass
 
-# build objects of all the sub_industries within a given economic sector, based on S&P 500 classifcations
-@cli.command('build_sub_industries')
-@cli.argument('sector_name')
-def build_sub_industries(sector_name):
-    runner = RequestAndBuildSubIndustries()
-    runner.run(sector_name)
-    print(sector_name)
-breakpoint()
+@cli.command()
+@click.option('--env', default='dev', help='Environment (dev/prod/test)')
+def run(env: str):
+    """Run the Flask application server."""
+    config = get_config(env)
+    app = create_app(config)
+    logger.info(f'Starting application in {env} mode')
+    app.run(debug=config.DEBUG)
 
-# change to 'build_companies'
-@cli.command('build_venues')
-@click.argument('ll')
-@click.argument('category')
-def build_venues(ll, category):
-    # "40.7,-74", "query": "tacos"
-    runner = RequestAndBuild()
-    runner.run(ll, category)
-    print(ll, category)
+@cli.command()
+@click.option('--sector', help='Specific sector to build data for')
+def build_data(sector: Optional[str] = None):
+    """Build or update the database with S&P 500 company data."""
+    try:
+        logger.info('Starting data build process')
+        
+        # Initialize database connection
+        conn = get_db()
+        cursor = conn.cursor()
 
+        # Build company data
+        logger.info('Building S&P 500 companies data')
+        builder = BuildSP500Companies()
+        builder.run()
 
-if __name__ == "__main__":
+        # Build financial reports and price data
+        if sector:
+            logger.info(f'Building quarterly data for sector: {sector}')
+            reports_builder = BuildQuarterlyReportsPricesPE(conn, cursor)
+            reports_builder.run(sector)
+        
+        logger.info('Data build process completed successfully')
+        
+    except Exception as e:
+        logger.error(f'Error during data build: {str(e)}')
+        raise click.ClickException(str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+@cli.command()
+@click.option('--env', default='dev', help='Environment (dev/prod/test)')
+def init_db(env: str):
+    """Initialize the database."""
+    try:
+        logger.info(f'Initializing database for {env} environment')
+        config = get_config(env)
+        app = create_app(config)
+        with app.app_context():
+            # Import and run database initialization code
+            from api.src.db import init_db
+            init_db(app)
+        logger.info('Database initialization completed')
+    except Exception as e:
+        logger.error(f'Database initialization failed: {str(e)}')
+        raise click.ClickException(str(e))
+
+if __name__ == '__main__':
     cli()

@@ -9,11 +9,15 @@ __pycache__/
 *.so
 .Python
 
-# Virtual Environment
+# Virtual Environment - consolidated rules
 venv/
 .venv/
 env/
 ENV/
+sp500-dashboard-venv/
+*venv*/
+
+# Environment files
 .env
 *.env
 
@@ -37,22 +41,8 @@ frontend/.env
 dist/
 build/
 
-###############################################
-#                                             #
-#            STAGE 2 FILES                    #
-#     REMOVE THESE ENTRIES WHEN STARTING      #
-#          STAGE 2 DEVELOPMENT                #
-#                                             #
-###############################################
-
-# Infrastructure
+# Stage 2 files
 .github/
-Makefile
-
-# Advanced Dashboard Features
-frontend/src/hybrid_dashboard.py    # Dash integration
-frontend/src/nlq_interface.py      # Natural Language Queries
-frontend/src/insight_generator.py   # AI-powered insights
-
-# Stage 2 Planning Documentation Location:
-# docs/stage2_planning/
+frontend/src/hybrid_dashboard.py
+frontend/src/nlq_interface.py
+frontend/src/insight_generator.py
