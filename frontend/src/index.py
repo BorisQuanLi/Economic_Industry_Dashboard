@@ -10,7 +10,7 @@ def main():
         <h3>Advanced Financial Analytics Pipeline</h3>
         <p style='color: #666; font-size: 1.1em; margin-top: 0.5rem;'>
             Enterprise-grade financial insights powered by sophisticated data engineering:<br>
-            Automated batch processing of quarterly SEC filings • Cloud-native ETL pipeline<br>
+            Automated quarterly SEC filings processing • Cloud-native ETL pipeline<br>
             Distributed data persistence • Advanced analytics • Interactive visualization
         </p>
         <p style='color: #666; font-size: 1.1em; margin-top: 0.5rem;'>
