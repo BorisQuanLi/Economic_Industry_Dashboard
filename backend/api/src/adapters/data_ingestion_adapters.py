@@ -6,6 +6,36 @@ from api.src.adapters.wiki_page_client import get_sp500_wiki_data
 from api.src.adapters.companies_builder import CompanyBuilder
 from api.src.adapters.quarterly_financials_builder import QuarterlyFinancialsBuilder
 from api.src.adapters.quarterly_price_pe_builder import QuarterlyPricePEBuilder
+from abc import ABC, abstractmethod
+from typing import Dict, Any
+
+class FinancialDataAdapter(ABC):
+    @abstractmethod
+    def adapt(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert raw data to standardized format"""
+        pass
+
+class SECFilingAdapter(FinancialDataAdapter):
+    def adapt(self, sec_filing: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            'company_id': sec_filing.get('cik'),
+            'quarter': sec_filing.get('fiscalQuarter'),
+            'year': sec_filing.get('fiscalYear'),
+            'revenue': sec_filing.get('revenues'),
+            'costs': sec_filing.get('operatingCosts'),
+            'net_income': sec_filing.get('netIncome')
+        }
+
+class AlternativeDataAdapter(FinancialDataAdapter):
+    def adapt(self, alt_data: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            'company_id': alt_data.get('identifier'),
+            'quarter': alt_data.get('period').get('quarter'),
+            'year': alt_data.get('period').get('year'),
+            'revenue': alt_data.get('metrics').get('revenue'),
+            'costs': alt_data.get('metrics').get('costs'),
+            'net_income': alt_data.get('metrics').get('profit')
+        }
 
 class BuildSP500Companies:
     def __init__(self):

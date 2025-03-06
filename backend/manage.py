@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 from api.src import create_app
 from api.src.config import DevelopmentConfig, ProductionConfig, TestingConfig
-from api.src.db import get_db
+from api.src.db import get_db, init_db
 from api.src.adapters.data_ingestion_adapters import BuildSP500Companies, BuildQuarterlyReportsPricesPE
 
 # Configure logging
@@ -24,7 +24,7 @@ def get_config(env: str):
 
 @click.group()
 def cli():
-    """Management script for the S&P 500 Financial Analytics application."""
+    """SP500 Dashboard management CLI"""
     pass
 
 @cli.command()
@@ -37,7 +37,7 @@ def run(env: str):
     app.run(debug=config.DEBUG)
 
 @cli.command()
-@click.option('--sector', help='Specific sector to build data for')
+@click.option('--sector', help='Optional: Process specific sector only')
 def build_data(sector: Optional[str] = None):
     """Build or update the database with S&P 500 company data."""
     try:

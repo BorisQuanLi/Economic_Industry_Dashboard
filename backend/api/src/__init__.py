@@ -1,22 +1,16 @@
 from flask import Flask
-from api.src.config import DevelopmentConfig, TestingConfig, ProductionConfig
+from .config import load_config
+from .routes.sectors import sectors_bp
 
-def create_app(config_class=DevelopmentConfig):
-    """Create and configure an instance of the Flask application."""
+def create_app(env: str = 'dev') -> Flask:
+    """Create Flask application"""
     app = Flask(__name__)
-    app.config.from_object(config_class)
-
-    # Initialize extensions
-    from api.src.db import init_db
-    init_db(app)
-
+    
+    # Load configuration
+    config = load_config(env)
+    app.config.from_object(config)
+    
     # Register blueprints
-    from api.src.routes import sector_bp, sub_sector_bp
-    app.register_blueprint(sector_bp)
-    app.register_blueprint(sub_sector_bp)
-
-    @app.route('/')
-    def root_url():
-        return 'Welcome to the S&P 500 Financial Analytics API'
-
+    app.register_blueprint(sectors_bp, url_prefix='/api/v1')
+    
     return app

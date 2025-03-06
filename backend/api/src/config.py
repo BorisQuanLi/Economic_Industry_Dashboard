@@ -1,19 +1,23 @@
 import os
+from dataclasses import dataclass
 
+@dataclass
 class Config:
-    DB_USER = os.getenv('DB_USER', 'postgres')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
-    DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
-    DEBUG = os.getenv('DEBUG', True)
-    TESTING = os.getenv('TESTING', False)
+    """Application configuration"""
+    DB_URI: str
+    AWS_ACCESS_KEY: str
+    AWS_SECRET_KEY: str
+    REDSHIFT_URI: str
+    S3_BUCKET: str
+    ENV: str
 
-class DevelopmentConfig(Config):
-    DB_NAME = 'sp500_financial_analytics_dev'
-
-class TestingConfig(Config):
-    DB_NAME = 'sp500_financial_analytics_test'
-    TESTING = True
-
-class ProductionConfig(Config):
-    DEBUG = False
-    DB_NAME = 'sp500_financial_analytics'
+def load_config(env: str = 'dev') -> Config:
+    """Load configuration based on environment"""
+    return Config(
+        DB_URI=os.getenv('DB_URI', 'postgresql://localhost/sp500'),
+        AWS_ACCESS_KEY=os.getenv('AWS_ACCESS_KEY'),
+        AWS_SECRET_KEY=os.getenv('AWS_SECRET_KEY'),
+        REDSHIFT_URI=os.getenv('REDSHIFT_URI'),
+        S3_BUCKET=os.getenv('S3_BUCKET', 'sp500-financial-data'),
+        ENV=env
+    )
