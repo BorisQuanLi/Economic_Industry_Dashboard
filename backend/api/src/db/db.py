@@ -4,10 +4,6 @@ import psycopg2
 from datetime import datetime, timedelta
 from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
 
-# Connecting to Postgres on local Mac (parameters hard-coded):
-conn = psycopg2.connect(database = 'investment_analysis', user = 'postgres', password = 'postgres')
-cursor = conn.cursor()
-
 def get_db():
     if "db" not in g:
         # connect to postgres on the local computer
@@ -154,5 +150,14 @@ def save(obj, conn, cursor):
     except psycopg2.errors.UniqueViolation as e:
         print(e)
         pass
+
+import psycopg2
+from flask import current_app
+
+def get_db_connection():
+    """Get database connection using app config"""
+    if current_app:
+        return psycopg2.connect(current_app.config['DATABASE'])
+    return None
 
 

@@ -8,6 +8,8 @@ __pycache__/
 .pytest_cache/
 *.so
 .Python
+.coverage
+htmlcov/
 
 # Virtual Environment - consolidated rules
 venv/
@@ -26,6 +28,8 @@ sp500-dashboard-venv/
 .vscode/
 *.swp
 *.swo
+*.code-workspace
+economic_dashboard.code-workspace  # Add specific workspace file
 
 # Jupyter
 .ipynb_checkpoints

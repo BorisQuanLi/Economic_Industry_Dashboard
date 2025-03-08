@@ -1,5 +1,54 @@
 # Economic Industry Dashboard
 
+## Installation
+
+```bash
+# Create and activate virtual environment
+python3 -m venv sp500-dashboard-venv
+source sp500-dashboard-venv/bin/activate
+
+# Install dependencies
+python3 -m pip3 install -r requirements.txt
+```
+
+## Setup
+
+1. Create virtual environment:
+```bash
+python3 -m venv sp500-dashboard-venv
+source sp500-dashboard-venv/bin/activate
+```
+
+2. Sync dependencies:
+```bash
+python3 scripts/package_manager.py --sync
+```
+
+3. Start services:
+```bash
+# Backend API
+python3 -m backend.api.src
+
+# Frontend Dashboard
+streamlit run frontend/dashboard/app.py
+```
+
+## Development
+
+```bash
+# Run tests with coverage
+python3 -m pytest backend/tests/
+
+# Install new dependencies
+python3 -m pip3 install <package-name>
+```
+
+### Managing Dependencies
+
+- Add new packages to root `requirements.txt`
+- Run `python3 scripts/package_manager.py --sync` to update component requirements
+- The sync script maintains consistent versions across all requirements files
+
 ## Problem Description
 
 This Project makes API calls to ingest the most recent 8 quarters of financial statements filed by the S&P 500 publicly listed companies, then stores the data on a Postgres DB, utilizing the Adapter and Model-View-Controller (MVC) design patterns along the way.
@@ -93,7 +142,7 @@ source sp500-dashboard-venv/bin/activate  # On Unix/macOS
 
 2. Install all dependencies (may take 5-10 minutes):
 ```bash
-pip install -r requirements.txt  # Single command to install all packages
+python3 -m pip3 install -r requirements.txt  # Single command to install all packages
 ```
 
 3. Navigate to the backend folder:
@@ -158,7 +207,7 @@ After initial setup, you only need these commands:
 ```bash
 source sp500-dashboard-venv/bin/activate  # Step 1: Activate the environment
 cd frontend                               # Step 2: Go to frontend directory
-streamlit run src/index.py                # Step 3: Launch the dashboard
+python3 -m streamlit run src/index.py     # Step 3: Launch the dashboard
 ```
 
 The dashboard will open automatically in your default web browser.

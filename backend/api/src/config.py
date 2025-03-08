@@ -11,6 +11,10 @@ class Config:
     S3_BUCKET: str
     ENV: str
 
+class TestingConfig:
+    TESTING = True
+    DATABASE = 'postgresql://test_user:test_pass@localhost:5432/test_db'
+
 def load_config(env: str = 'dev') -> Config:
     """Load configuration based on environment"""
     return Config(

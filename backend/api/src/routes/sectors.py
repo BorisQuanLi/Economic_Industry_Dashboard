@@ -45,3 +45,12 @@ def get_sector_metrics(sector: str) -> Dict[str, Any]:
     })
 
 # ... move other sector-related routes here ...
+
+from flask import Blueprint, jsonify
+
+sectors_bp = Blueprint('sectors', __name__)
+
+@sectors_bp.route('/sectors', methods=['GET'])
+def get_sectors():
+    # Placeholder implementation
+    return jsonify(['Technology', 'Healthcare', 'Finance'])
