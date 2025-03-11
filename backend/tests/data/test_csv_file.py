@@ -1,9 +1,9 @@
 import pytest
 import csv
-from api.data.ingest_sp500_info import ingest_sp500_stocks_info
+from api.src.adapters.wiki_page_client import ingest_sp500_stocks_info
 
 def read_csv_file():
-    file_path = ingest_sp500_stocks_info()
+    file_path = './backend/api/data/sp500/raw_data/sp500_stocks_wiki_info.csv'
     with open(file_path, 'r') as f:
         csv_reader = csv.reader(f)
         return list(csv_reader)

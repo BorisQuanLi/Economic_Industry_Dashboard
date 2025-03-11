@@ -1,5 +1,5 @@
 import pytest
-from dashboard.components import SectorOverview, CompanyList
+from ..dashboard.components import SectorOverview, CompanyList
 
 def test_sector_overview_successful_load(mock_api_client, streamlit_test_container):
     overview = SectorOverview(mock_api_client)
@@ -11,8 +11,9 @@ def test_sector_overview_successful_load(mock_api_client, streamlit_test_contain
 
 def test_sector_overview_error_handling(mock_error_api_client, streamlit_test_container):
     overview = SectorOverview(mock_error_api_client)
-    with pytest.raises(Exception):
+    with pytest.raises(Exception) as exc_info:
         overview.render(streamlit_test_container)
+    assert str(exc_info.value) == "API Error"
 
 def test_company_list_display(mock_api_client, mock_sector_companies):
     mock_api_client.get_sector_companies.return_value = mock_sector_companies

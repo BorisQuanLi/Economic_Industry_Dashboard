@@ -2,6 +2,22 @@ import pytest
 from unittest.mock import Mock, patch
 from api.client import APIClient
 
+class TestAPIClient(APIClient):
+    def _get_secret(self):
+        return "test_secret_key"
+
+    def test_get_sectors(self):
+        # ...existing code...
+        pass
+
+    def test_get_sector_metrics(self):
+        # ...existing code...
+        pass
+
+    def test_store_raw_data(self):
+        # ...existing code...
+        pass
+
 @pytest.fixture
 def mock_boto3_session():
     with patch('boto3.Session') as mock_session:

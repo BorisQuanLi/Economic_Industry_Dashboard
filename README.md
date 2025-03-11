@@ -8,7 +8,7 @@ python3 -m venv sp500-dashboard-venv
 source sp500-dashboard-venv/bin/activate
 
 # Install dependencies
-python3 -m pip3 install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ## Setup
@@ -40,7 +40,7 @@ streamlit run frontend/dashboard/app.py
 python3 -m pytest backend/tests/
 
 # Install new dependencies
-python3 -m pip3 install <package-name>
+python3 -m pip install <package-name>
 ```
 
 ### Managing Dependencies
@@ -142,7 +142,7 @@ source sp500-dashboard-venv/bin/activate  # On Unix/macOS
 
 2. Install all dependencies (may take 5-10 minutes):
 ```bash
-python3 -m pip3 install -r requirements.txt  # Single command to install all packages
+python3 -m pip install -r requirements.txt  # Single command to install all packages
 ```
 
 3. Navigate to the backend folder:
@@ -226,4 +226,17 @@ The dashboard will open automatically in your default web browser.
 - Monitoring and alerting
 
 ### Please check out a [recorded demo](https://www.youtube.com/watch?v=-OesaExIybA) of the dashboard.
+
+## Development Setup
+
+Make sure you have Python 3.10+ installed. Then:
+
+```bash
+# Create and activate virtual environment
+python3 -m venv sp500-dashboard-venv
+source sp500-dashboard-venv/bin/activate  # On Windows use: sp500-dashboard-venv\Scripts\activate
+
+# Install dependencies
+python3 -m pip install -r requirements.txt
+```
 

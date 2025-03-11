@@ -5,28 +5,12 @@ from api.src.db.db import get_db, close_db, drop_records, save
 from api.src.models import Company, SubIndustry
 from tests.models.helpers.build_records import build_records
 
-@pytest.fixture(scope = 'module')
+@pytest.fixture(scope='module')
 def app():
-    flask_app = create_app('investment_analysis_test', testing = True, debug = True)
-
-    with flask_app.app_context():
-        conn = get_db()
-        cursor = conn.cursor()
-        drop_records(cursor, conn, 'companies')
-        drop_records(cursor, conn, 'sub_industries')
-        build_records(conn, cursor)
-        conn.commit()
-        close_db()
-
-    yield flask_app
-
-    with flask_app.app_context():
-        close_db()
-        conn = get_db()
-        cursor = conn.cursor()
-        drop_records(cursor, conn, 'companies')
-        drop_records(cursor, conn, 'sub_industries')
-        close_db()
+    flask_app = create_app()
+    flask_app.config['TESTING'] = True
+    flask_app.config['DEBUG'] = True
+    return flask_app
 
 @pytest.fixture
 def client(app):

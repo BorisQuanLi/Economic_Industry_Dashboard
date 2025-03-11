@@ -7,6 +7,7 @@ pandas==2.2.3
 numpy==2.2.3
 python-dateutil==2.9.0.post0
 requests==2.32.3
+boto3==1.34.69  # Required for AWS integration
 
 # Database
 psycopg2-binary==2.9.10
@@ -16,6 +17,8 @@ pandas_market_calendars==4.6.1
 pytz==2025.1
 simplejson==3.20.1
 exchange_calendars==4.9
+beautifulsoup4==4.12.3  # Required for web scraping
+lxml>=4.9.0
 
 # Frontend
 streamlit==1.42.0
@@ -33,3 +36,4 @@ python-dotenv==1.0.1
 # Development Tools
 Werkzeug==3.1.3
 Jinja2==3.1.6
+chardet==5.2.0  # Required for file integrity checks

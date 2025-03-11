@@ -5,3 +5,6 @@ def get_test_db():
                 password= 'postgres',
                 dbname= 'investment_analysis_test')
     return conn
+
+# Initialize tests package
+# This file can be empty

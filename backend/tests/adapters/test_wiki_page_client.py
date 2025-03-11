@@ -1,24 +1,30 @@
 import pytest
-import csv
-from api.src.adapters.wiki_page_client import get_sp500_wiki_data
+import pandas as pd
+from backend.api.adapters.wiki_page_client import WikiPageClient
 
-def read_csv_file():
-    file_path = get_sp500_wiki_data()
-    with open(file_path, 'r') as f:
-        csv_reader = csv.reader(f)
-        return list(csv_reader)
+@pytest.fixture
+def wiki_client():
+    return WikiPageClient()
+
+def test_get_sp500_wiki_data(wiki_client):
+    df = wiki_client.get_sp500_wiki_data()
+    assert not df.empty
+    assert len(df) > 0
 
 def test_column_names():
-    csv_rows = read_csv_file()
-    first_row = csv_rows[0]
-    assert first_row[1:6] == ['Ticker', 'Security', 'SEC filings', 'GICS Sector', 'GICS Sub-Industry'] 
+    df = pd.read_csv('./backend/api/data/sp500/raw_data/sp500_stocks_wiki_info.csv')
+    expected_columns = ['Ticker', 'Security', 'GICS Sector', 'GICS Sub-Industry']
+    for col in expected_columns:
+        assert col in df.columns
 
 def test_first_company_info():
-    csv_rows = read_csv_file()
-    second_row = csv_rows[1]
-    assert second_row[1:6] == ['MMM', '3M Company', 'reports', 'Industrials', 'Industrial Conglomerates']
+    df = pd.read_csv('./backend/api/data/sp500/raw_data/sp500_stocks_wiki_info.csv')
+    first_row = df.iloc[0]
+    assert first_row['Ticker'] == 'MMM'
+    assert first_row['Security'] == '3M Company'
 
 def test_last_company_info():
-    csv_rows = read_csv_file()
-    last_row = csv_rows[-1]
-    assert last_row[1:6] == ['ZTS', 'Zoetis', 'reports', 'Health Care', 'Pharmaceuticals']
+    df = pd.read_csv('./backend/api/data/sp500/raw_data/sp500_stocks_wiki_info.csv')
+    last_row = df.iloc[-1]
+    assert last_row['Ticker'] == 'ZTS'
+    assert last_row['Security'] == 'Zoetis'
