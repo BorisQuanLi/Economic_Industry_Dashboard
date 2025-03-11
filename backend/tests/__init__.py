@@ -6,5 +6,10 @@ def get_test_db():
                 dbname= 'investment_analysis_test')
     return conn
 
-# Initialize tests package
-# This file can be empty
+"""
+Test suite for the backend application.
+Follows the same structure as the main application:
+- api/: Tests for API components
+- app/: Tests for application logic
+- common/: Shared test utilities
+"""
