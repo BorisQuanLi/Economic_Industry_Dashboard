@@ -1,5 +1,36 @@
 # Economic Industry Dashboard
 
+## Overview
+
+This project provides a comprehensive financial analytics dashboard for S&P 500 companies, featuring:
+
+- Real-time financial data ingestion via API
+- PostgreSQL storage with ORM integration
+- Interactive visualizations through Streamlit
+- Cloud-native architecture on AWS
+
+[View Demo](https://www.youtube.com/watch?v=-OesaExIybA)
+
+## Quick Start
+
+1. Set up environment:
+
+```bash
+python3 -m venv sp500-dashboard-venv
+source sp500-dashboard-venv/bin/activate  # Windows: .\sp500-dashboard-venv\Scripts\activate
+python3 -m pip install -r requirements.txt
+```
+
+2. Start services:
+
+```bash
+# Backend Service
+python3 -m backend.data_sources.src
+
+# Frontend Dashboard
+streamlit run frontend/dashboard/app.py
+```
+
 ## Installation
 
 ```bash
@@ -14,20 +45,23 @@ python3 -m pip install -r requirements.txt
 ## Setup
 
 1. Create virtual environment:
+
 ```bash
 python3 -m venv sp500-dashboard-venv
 source sp500-dashboard-venv/bin/activate
 ```
 
 2. Sync dependencies:
+
 ```bash
 python3 scripts/package_manager.py --sync
 ```
 
 3. Start services:
+
 ```bash
-# Backend API
-python3 -m backend.api.src
+# Backend Service
+python3 -m backend.data_sources.src
 
 # Frontend Dashboard
 streamlit run frontend/dashboard/app.py
@@ -57,41 +91,29 @@ A Flask API app allows the user to query aggregate and company-level data such a
 
 Various plots based on these data can be viewed in an interactive dashboard in a browser, where a user can select different economic sectors and sub-sectors, companies, and financial performance indicators — for example, a cross-sector comparison of average quarterly earnings over the last 8 quarters.
 
-## Design Patterns & Architecture
+## Architecture Overview
 
-This project demonstrates several enterprise-grade design patterns and architectural choices:
+### Core Components
+
+- **Data Storage**: AWS S3 (Data Lake), AWS Redshift (Data Warehouse)
+- **Processing**: Apache Airflow (Orchestration), dbt (Transformations)
+- **Visualization**: Streamlit Dashboard
+- **API**: Flask REST endpoints
+- **Database**: PostgreSQL with SQLAlchemy ORM
 
 ### Design Patterns
-- **Adapter Pattern**: Standardizes diverse financial data sources into a consistent format
-- **ORM (Object-Relational Mapping)**: Manages database operations through SQLAlchemy
-- **MVC (Model-View-Controller)**: Separates concerns in both backend and frontend
-- **Object-Process Methodology (OPM)**:
-  - Objects: Financial statements, Companies, Sectors, User queries
-  - Processes: Data ingestion, Transformation, Analysis
-  - States: Raw data, Processed data, Analyzed results
 
-### Architecture Patterns
-- **ETL Pipeline**: Extract (API) → Transform (Adapters) → Load (PostgreSQL)
-- **Event-Driven**: Real-time data updates trigger dashboard refreshes
-- **Microservices**: Separate services for data ingestion, processing, and visualization
-- **Domain-Driven Design**: Financial domain concepts guide the codebase structure
+- Adapter Pattern for data standardization
+- MVC architecture
+- Event-driven updates
+- Domain-driven design
+- Microservices architecture
 
-### Containerization & Cloud Deployment
-- Complete Dockerization of all components
-- Multi-container orchestration with Kubernetes
-- AWS service integration:
-  - Compute: EC2/ECS
-  - Database: RDS PostgreSQL
-  - Data Warehouse: Redshift
-  - Storage: S3
-  - Container Orchestration: EKS
+### Cloud Infrastructure
 
-## Architecture
-- Data Lake: AWS S3
-- Data Warehouse: AWS Redshift
-- Orchestration: Apache Airflow
-- Transformations: dbt
-- Visualization: Streamlit (leveraging Python for custom interactive dashboards)
+- AWS Services: EC2/ECS, RDS, Redshift, S3, EKS
+- Container orchestration with Kubernetes
+- Infrastructure as Code with Terraform
 
 ## Technologies
 
@@ -117,6 +139,7 @@ Build and Development Tools:
 - git (Version control)
 
 ### Cloud Infrastructure
+
 - AWS (S3, Redshift, EKS)
 - Terraform
 - Apache Airflow
@@ -130,6 +153,7 @@ Once all the technologies are installed, clone this project's repo in your local
 ### Backend Setup
 
 1. Create and activate virtual environment:
+
 ```bash
 # Create virtual environment
 python3 -m venv sp500-dashboard-venv
@@ -141,29 +165,38 @@ source sp500-dashboard-venv/bin/activate  # On Unix/macOS
 ```
 
 2. Install all dependencies (may take 5-10 minutes):
+
 ```bash
 python3 -m pip install -r requirements.txt  # Single command to install all packages
 ```
 
 3. Navigate to the backend folder:
+
 ```bash
 cd backend/
 ```
 
 4. Initialize the database (for development environment):
+
 ```bash
 python3 manage.py init_db --env dev  # 'dev' selects development configuration
 ```
 
 5. Build initial data (optional: specify a sector):
+
 ```bash
 python3 manage.py build_data  # Build all sectors
 python3 manage.py build_data --sector "Technology"  # Build specific sector
 ```
 
-6. Run the Flask application:
+6. Run the Flask application (choose one method):
+
 ```bash
-python3 manage.py run --env dev
+# Method 1: Using manage.py with environment selection
+python3 manage.py run --env dev  # Supports dev/prod/test environments
+
+# Method 2: Using run.py (development mode only)
+python3 run.py  # Runs with DevelopmentConfig and debug=True
 ```
 
 The API will be available at: http://127.0.0.1:5000/
@@ -174,11 +207,12 @@ To experience the frontend dashboard, navigate to the frontend folder from the p
 
 $ cd frontend/
 
-frontend $ streamlit run src/index.py 
+frontend $ streamlit run src/index.py
 
 ## Build System
 
 This project uses Make as its build system. Make is a platform-agnostic build automation tool that comes pre-installed on most Unix-like systems (Linux, macOS). For Windows users, Make is available through:
+
 - Windows Subsystem for Linux (WSL)
 - MinGW
 - Cygwin
@@ -188,12 +222,14 @@ This project uses Make as its build system. Make is a platform-agnostic build au
 ### Quick Start with Make Commands
 
 For first-time setup, run these commands in order:
+
 ```bash
 make setup-venv            # Step 1: Set up Python virtual environment
 make install-requirements  # Step 2: Install all required packages
 ```
 
 #### For Data Professionals & Developers
+
 ```bash
 make test                # Run all tests
 make setup              # Initialize cloud infrastructure
@@ -203,7 +239,9 @@ make clean-venv        # Remove virtual environment if needed
 ```
 
 #### For Business Users & Analysts
+
 After initial setup, you only need these commands:
+
 ```bash
 source sp500-dashboard-venv/bin/activate  # Step 1: Activate the environment
 cd frontend                               # Step 2: Go to frontend directory
@@ -213,13 +251,16 @@ python3 -m streamlit run src/index.py     # Step 3: Launch the dashboard
 The dashboard will open automatically in your default web browser.
 
 ## Development Roadmap
+
 ### Stage 1: Core Implementation
+
 - Cloud infrastructure setup
 - Data pipeline development
 - Warehouse optimization
 - Dashboard migration
 
 ### Stage 2: Advanced Features (Future)
+
 - CI/CD pipeline
 - Automated testing
 - Infrastructure as Code
@@ -240,3 +281,37 @@ source sp500-dashboard-venv/bin/activate  # On Windows use: sp500-dashboard-venv
 python3 -m pip install -r requirements.txt
 ```
 
+### Common Tasks
+
+```bash
+# Development setup
+make setup-venv            # Create virtual environment
+make install-requirements  # Install dependencies
+make test                 # Run test suite
+
+# Infrastructure
+make setup               # Initialize cloud resources
+make deploy             # Deploy to Kubernetes
+make clean              # Teardown infrastructure
+```
+
+### Dependency Management
+
+1. Add packages to root `requirements.txt`
+2. Run sync: `python3 scripts/package_manager.py --sync`
+3. Commit updated requirements files
+
+## Roadmap
+
+### Current Development
+
+- Cloud infrastructure setup
+- Data pipeline optimization
+- Dashboard enhancements
+
+### Future Features
+
+- CI/CD pipeline integration
+- Extended test coverage
+- Monitoring system
+- Real-time alerts

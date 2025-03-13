@@ -1,30 +1,19 @@
 """
-Core business logic and domain models for the Economic Industry Dashboard.
-
-This module contains:
-- Data processing logic
-- Business rules and validations
-- Domain models (Company, Industry, Financial statements)
-- Service layer implementations
+Core business logic and web service for the Economic Industry Dashboard.
 """
-
 from flask import Flask
 from flask_cors import CORS
-from .models import Company, Industry, FinancialStatement
+from etl.transform.models import Company, SectorMetrics, SubSectorMetrics
 from .services import DataProcessor, AnalysisService
+from .routes import web
 
-def create_app(database_name=None, testing=False, debug=False):
+def create_app(config=None, services=None):
+    """Create Flask application with all routes and services."""
     app = Flask(__name__)
     CORS(app)
     
-    app.config['TESTING'] = testing
-    app.config['DEBUG'] = debug
+    if config:
+        app.config.from_object(config)
     
-    if database_name:
-        app.config['DATABASE_NAME'] = database_name
-    else:
-        app.config['DATABASE_NAME'] = 'investment_analysis'
-    
-    # ...existing database setup code...
-    
+    app.register_blueprint(web, url_prefix='/api')
     return app

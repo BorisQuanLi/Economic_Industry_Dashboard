@@ -1,6 +1,7 @@
 import psycopg2
 from typing import Dict, List, Any
-from .base import DataRepository
+from sqlalchemy import create_engine
+from .base import DataRepository, DatabaseRepository
 
 class LocalPostgresRepository(DataRepository):
     def __init__(self, connection_params: Dict[str, str]):
@@ -32,3 +33,10 @@ class LocalPostgresRepository(DataRepository):
         except Exception:
             self.conn.rollback()
             return False
+
+class PostgresRepository(DatabaseRepository):
+    def _create_engine(self):
+        return create_engine(
+            f'postgresql://{self.config["username"]}:{self.config["password"]}@'
+            f'{self.config["host"]}:{self.config["port"]}/{self.config["database"]}'
+        )

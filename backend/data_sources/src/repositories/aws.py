@@ -1,8 +1,9 @@
 import boto3
 from typing import Dict, List, Any
-from .base import DataRepository
+from sqlalchemy import create_engine
+from .base import DatabaseRepository
 
-class AWSRepository(DataRepository):
+class AWSRepository(DatabaseRepository):
     def __init__(self):
         self.client = boto3.client('s3')
         
@@ -17,3 +18,10 @@ class AWSRepository(DataRepository):
     def store_raw_data(self, data: Dict[str, Any], dataset_name: str) -> bool:
         # Implementation for AWS
         pass
+
+    def _create_engine(self):
+        return create_engine(
+            f'postgresql://{self.config["username"]}:{self.config["password"]}@'
+            f'{self.config["host"]}:{self.config["port"]}/{self.config["database"]}',
+            connect_args={'sslmode': 'require'}
+        )
