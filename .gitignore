@@ -50,3 +50,7 @@ build/
 frontend/src/hybrid_dashboard.py
 frontend/src/nlq_interface.py
 frontend/src/insight_generator.py
+
+# Devcontainer
+.devcontainer/*
+!.devcontainer/devcontainer.json
