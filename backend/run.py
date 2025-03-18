@@ -1,7 +1,7 @@
 """Main entry point for the Economic Industry Dashboard web service."""
 import logging
-from app import create_app
-from app.industry_analysis import IndustryAnalyzer
+from webservice.factory import create_app
+from webservice.services.industry_analysis import IndustryAnalyzer
 from data_sources.config import DevelopmentConfig
 
 logger = logging.getLogger(__name__)
