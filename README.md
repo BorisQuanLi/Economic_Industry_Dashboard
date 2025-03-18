@@ -105,6 +105,8 @@ Various plots based on these data can be viewed in an interactive dashboard in a
 
 - Adapter Pattern for data standardization
 - MVC architecture
+- Repository Pattern for data access abstraction
+- Factory Pattern for object creation and configuration
 - Event-driven updates
 - Domain-driven design
 - Microservices architecture
