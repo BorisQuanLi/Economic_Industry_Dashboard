@@ -1,135 +1,129 @@
-import psycopg2
+import logging
 import pandas as pd
-from backend.common.repositories import LoadRepository
+from io import StringIO
+from typing import Dict, List, Any
+import psycopg2
+from .base_database_repository import DatabaseRepository
 
-class LocalPostgresRepository(LoadRepository):
-    """Repository for PostgreSQL database operations"""
-    
-    def __init__(self, connection_string=None, **kwargs):
-        """
-        Initialize the repository with connection parameters
+logger = logging.getLogger(__name__)
+
+class LocalPostgresRepository(DatabaseRepository):
+    """Repository for storing data in a local PostgreSQL database."""
+
+    def __init__(self, connection_string: str):
+        """Initialize the repository with connection details.
         
         Args:
-            connection_string: PostgreSQL connection string in the format
-                               postgresql://user:password@host:port/dbname
-            **kwargs: Alternative connection parameters (db_name, username, password, port)
+            connection_string (str): Database connection string
         """
-        self.connection_string = connection_string
-        self.connection_params = kwargs
-        self.connection = None
+        self._connection_string = connection_string
+        self._connection = None
         self.cursor = None
-    
-    def connect(self):
-        """Establish connection to the database"""
+        self.connect()
+
+    def connect(self) -> bool:
+        """Connect to the database."""
         try:
-            if self.connection_string:
-                self.connection = psycopg2.connect(self.connection_string)
-            else:
-                # Use individual parameters if no connection string provided
-                self.connection = psycopg2.connect(**self.connection_params)
-            
-            self.cursor = self.connection.cursor()
+            self._connection = psycopg2.connect(self._connection_string)
+            self.cursor = self._connection.cursor()
             return True
-        except Exception as e:
-            print(f"Error connecting to PostgreSQL: {e}")
-            return False
-    
-    def is_connected(self):
-        """Check if connection is established"""
-        return self.connection is not None and self.cursor is not None
-    
-    def save_dataframe(self, df, table_name):
-        """Save DataFrame to database table"""
-        if not self.is_connected():
-            self.connect()
-            
+        except psycopg2.Error as e:
+            print(f"Error connecting to database: {e}")
+            raise ConnectionError(f"Failed to connect to database: {e}")
+
+    def save_dataframe(self, data: pd.DataFrame, table_name: str, if_exists="replace") -> bool:
+        """Save a pandas DataFrame to the database."""
         try:
-            # Implementation for saving dataframe to postgres table
-            # (simplified for this example)
-            self.connection.commit()
+            # Insert data logic here
+            # For example:
+            columns = ', '.join(data.keys())
+            values = ', '.join([f"'{v}'" for v in data.values()])
+            query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+            self.cursor.execute(query)
+            self._connection.commit()
             return True
         except Exception as e:
             print(f"Error saving data: {e}")
+            self._connection.rollback()
             return False
-    
-    def query(self, query_string):
-        """Execute query and return results as DataFrame"""
-        if not self.is_connected():
-            self.connect()
-            
-        try:
-            self.cursor.execute(query_string)
-            results = self.cursor.fetchall()
-            
-            # Get column names from cursor description
-            columns = [desc[0] for desc in self.cursor.description]
-            
-            # Create DataFrame from results
-            return pd.DataFrame(results, columns=columns)
-        except Exception as e:
-            print(f"Error executing query: {e}")
-            return pd.DataFrame()
-    
-    def close(self):
-        """Close database connection"""
-        if self.connection:
-            self.connection.close()
-            self.connection = None
-            self.cursor = None
-    
-    # Implement LoadRepository methods
-    def save_companies(self, companies):
-        """Save company data to PostgreSQL."""
-        if not companies:
-            return False
-            
-        if not self.is_connected():
-            self.connect()
-            
-        # Convert list of dicts to DataFrame
-        df = pd.DataFrame(companies)
-        return self.save_dataframe(df, 'companies')
-    
-    def save_sectors(self, sectors):
-        """Save sector data to PostgreSQL."""
-        if not sectors:
-            return False
-            
-        if not self.is_connected():
-            self.connect()
-            
-        # Convert list of dicts to DataFrame
-        df = pd.DataFrame(sectors)
-        return self.save_dataframe(df, 'sectors')
-    
-    def save_sub_sectors(self, sub_sectors):
-        """Save sub-sector data to PostgreSQL."""
-        if not sub_sectors:
-            return False
-            
-        if not self.is_connected():
-            self.connect()
-            
-        # Convert list of dicts to DataFrame
-        df = pd.DataFrame(sub_sectors)
-        return self.save_dataframe(df, 'sub_sectors')
-    
-    def save_metrics(self, entity_type, entity_id, metrics):
-        """Save metrics for a specific entity to PostgreSQL."""
-        if not metrics:
-            return False
-            
-        if not self.is_connected():
-            self.connect()
-            
-        # Flatten metrics and add entity identifiers
-        flat_metrics = {**metrics, 'entity_type': entity_type, 'entity_id': entity_id}
-        df = pd.DataFrame([flat_metrics])
-        return self.save_dataframe(df, f'{entity_type}_metrics')
 
-class PostgresRepository(DatabaseRepository):
-    def _create_engine(self):
-        return create_engine(
-            f'postgresql://{self.config["username"]}:{self.config["password"]}@'
-            f'{self.config["host"]}:{self.config["port"]}/{self.config["database"]}'
-        )
+    def read_data(self, query: str) -> List[Dict[str, Any]]:
+        """Read data from the database using a SQL query."""
+        try:
+            if self._connection is None:
+                self.connect()
+            
+            self.cursor.execute(query)
+            columns = [desc[0] for desc in self.cursor.description]
+            result = []
+            
+            for row in self.cursor.fetchall():
+                result.append(dict(zip(columns, row)))
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error reading data: {e}")
+            return []
+
+    def close(self) -> None:
+        """Close the database connection."""
+        if self._connection is not None:
+            if self.cursor is not None:
+                self.cursor.close()
+                self.cursor = None
+            self._connection.close()
+            self._connection = None
+            
+    def is_connected(self) -> bool:
+        """Check if database is connected."""
+        return self._connection is not None and self._connection.closed == 0
+
+    def save(self, data):
+        """Implement abstract save method."""
+        try:
+            if isinstance(data, dict):
+                df = pd.DataFrame([data])
+            elif isinstance(data, pd.DataFrame):
+                df = data
+            else:
+                return False
+            
+            if len(df) == 0:
+                return False
+                
+            # Convert values to strings and escape quotes
+            values = [str(v).replace("'", "''") for v in df.iloc[0]]
+            columns = df.columns.tolist()
+            columns_str = ', '.join(columns)
+            values_str = ', '.join([f"'{v}'" for v in values])
+            
+            query = f"INSERT INTO default_table ({columns_str}) VALUES ({values_str})"
+            self.cursor.execute(query)
+            self._connection.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error in save: {e}")
+            if self._connection:
+                self._connection.rollback()
+            return False
+
+    def get(self, query):
+        """Implement abstract get method."""
+        try:
+            return self.read_data(query)
+        except Exception as e:
+            logger.error(f"Error in get: {e}")
+            return []
+
+    def delete(self, query):
+        """Implement abstract delete method."""
+        try:
+            if self._connection is None:
+                self.connect()
+            self.cursor.execute(query)
+            self._connection.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error in delete: {e}")
+            self._connection.rollback()
+            return False

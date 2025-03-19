@@ -95,3 +95,31 @@ class BaseRepository(ABC):
     def query(self, query_string, **kwargs):
         """Execute a query against the data source and return results"""
         pass
+
+class DataPersistenceBase(ABC):
+    """Base class for data persistence implementations."""
+    
+    @abstractmethod
+    def connect(self) -> bool:
+        """Connect to the data store."""
+        pass
+    
+    @abstractmethod
+    def close(self) -> None:
+        """Close the connection to the data store."""
+        pass
+    
+    @abstractmethod
+    def is_connected(self) -> bool:
+        """Check if connected to the data store."""
+        pass
+    
+    @abstractmethod
+    def save_dataframe(self, data: Any, location: str) -> bool:
+        """Save data to the specified location."""
+        pass
+    
+    @abstractmethod
+    def read_data(self, query: str) -> List[Dict[str, Any]]:
+        """Read data using the specified query."""
+        pass
