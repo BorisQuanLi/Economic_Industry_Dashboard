@@ -6,6 +6,14 @@ logger = logging.getLogger(__name__)
 
 def register_routes(app, services):
     """Register routes with the Flask application."""
+    # Initialize services if None
+    if services is None:
+        # Import here to avoid circular imports
+        from webservice.services.industry_analysis import IndustryAnalyzer
+        services = {
+            "industry_analyzer": IndustryAnalyzer()
+        }
+    
     industry_analyzer = services["industry_analyzer"]
 
     @app.route('/health', methods=['GET'])

@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 import simplejson as json
 from typing import Dict, List, Any
-from api.src.models import SubIndustry
-from api.src.adapters.backend_utilities import financial_performance_query_tools
+from etl.transform.models.industry.sector import SubIndustry
+from etl.transform.adapters.imports import financial_performance_query_tools
 
 sector_bp = Blueprint('sectors', __name__, url_prefix='/sectors')
 
