@@ -2,7 +2,7 @@
 import pytest
 from backend.etl.load.builders.financial import FinancialDataBuilder
 from backend.etl.load.builders.financial_metrics import FinancialMetrics
-from backend.etl.load.data_persistence.base import DatabaseRepository
+from backend.etl.load.data_persistence.base_database_repository import DatabaseRepository
 
 def test_financial_data_loading():
     """Test financial data loading process"""

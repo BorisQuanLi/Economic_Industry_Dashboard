@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from backend.etl.load.data_persistence.base import DatabaseRepository  # Updated import path
+from backend.etl.load.data_persistence.base_database_repository import DatabaseRepository  # Updated import path
 
 class DatabaseLoader(DatabaseRepository):
     """Database loader with session management."""

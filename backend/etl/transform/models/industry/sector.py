@@ -1,16 +1,16 @@
-from api.src.db import db
-import api.src.models as models
+"""Industry sector models and related functionality."""
+from etl.load.db import connection as db
+from etl.transform import models
 from psycopg2 import sql
-from api.src.models.queries.query_sector_quarterly_financials import MixinSectorQuarterlyFinancials
-from api.src.models.queries.query_sector_price_pe import MixinSectorPricePE
-from api.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
-from api.src.models.queries.query_sub_sector_quarterly_financials import Mixin as MixinSubSectorQuarterlyFinancials
-from api.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str
+from etl.load.db.query_sector_quarterly_financials import MixinSectorQuarterlyFinancials
+from etl.load.db.query_sector_price_pe import MixinSectorPricePE
+from etl.load.db.query_sub_sector_price_pe import MixinSubSectorPricePE
+from etl.load.db.query_sub_sector_quarterly_financials import Mixin as MixinSubSectorQuarterlyFinancials
+from etl.load.db.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str
 
-class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-Sector, or Quarterly Financials and Prices PE
-                  MixinSectorQuarterlyFinancials, # do the above in models/aggregation_by_quarter.py?
-                  MixinSubSectorPricePE,
-                  MixinSubSectorQuarterlyFinancials):
+class SubIndustry(MixinSectorPricePE, MixinSectorQuarterlyFinancials, 
+                  MixinSubSectorPricePE, MixinSubSectorQuarterlyFinancials):
+    """Represents an industry sub-sector with aggregation capabilities."""
 
     __table__ = "sub_industries"
     columns = ['id', 'sub_industry_GICS', 'sector_GICS']
@@ -100,3 +100,34 @@ class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-
             avg_quarterly_price_pe_dict[sub_industry_name] = (MixinSubSectorPricePE.
                                                                         to_sub_sector_avg_quarterly_price_pe_json(self, sub_industry_name, cursor))
         return avg_quarterly_price_pe_dict
+
+class Sector:
+    """Class representing an industry sector."""
+    __table__ = 'sectors'
+    columns = ['id', 'name']
+
+    def __init__(self, **kwargs):
+        for key in kwargs.keys():
+            if key not in self.columns:
+                raise ValueError(f"{key} not in {self.columns}")
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    @classmethod
+    def find_by_id(cls, sector_id, cursor):
+        """Find a sector by ID."""
+        sql_str = f"""SELECT * FROM {cls.__table__} 
+                      WHERE id = %s;"""
+        cursor.execute(sql_str, (sector_id,))
+        record = cursor.fetchone()
+        if record:
+            return cls(**record)
+        return None
+
+    @classmethod
+    def find_all(cls, cursor):
+        """Find all sectors."""
+        sql_str = f"""SELECT * FROM {cls.__table__};"""
+        cursor.execute(sql_str)
+        records = cursor.fetchall()
+        return db.build_from_records(cls, records)
