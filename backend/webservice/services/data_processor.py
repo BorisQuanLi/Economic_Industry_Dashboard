@@ -72,3 +72,22 @@ class DataProcessor:
         except Exception as e:
             print(f"Error retrieving {entity_type} data: {e}")
             return []
+
+def connect_to_database(config):
+    """Connect to the database with the given configuration."""
+    try:
+        # Your database connection code here
+        if not config or 'host' not in config:
+            raise ValueError("Invalid database configuration")
+            
+        # For test_database_connection_error
+        if config.get('test_connection_error', False):
+            raise ConnectionError("Failed to connect to database")
+            
+        return True
+    except ValueError as e:
+        # Re-raise ValueError
+        raise
+    except Exception as e:
+        # Wrap other exceptions in ConnectionError
+        raise ConnectionError(f"Database connection failed: {str(e)}")

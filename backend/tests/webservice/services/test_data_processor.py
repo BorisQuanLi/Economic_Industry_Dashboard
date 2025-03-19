@@ -1,17 +1,22 @@
 """Tests for the data processor service."""
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from backend.webservice.services.data_processor import DataProcessor
 from backend.etl.load.data_persistence.local_postgres import LocalPostgresRepository
 
 @pytest.fixture
 def db_manager():
     """Create a database manager for testing."""
-    # Previously used DatabaseManager which doesn't exist
-    # Now use LocalPostgresRepository which implements LoadRepository
-    return LocalPostgresRepository(
-        connection_string="postgresql://testuser:testpass@localhost:5432/testdb"
-    )
+    with patch('psycopg2.connect') as mock_connect:
+        mock_cursor = MagicMock()
+        mock_connection = MagicMock()
+        mock_connection.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_connection
+        
+        repo = LocalPostgresRepository("postgresql://test:test@localhost:5432/testdb")
+        repo._connection = mock_connection
+        repo.cursor = mock_cursor
+        return repo
 
 @pytest.fixture
 def data_processor(db_manager):
