@@ -1,7 +1,16 @@
-from api.src.db import db
-from api.src import models
+"""Quarterly report models and related functionality."""
+from etl.load.db import connection as db
+from etl.transform import models
+
+class Quarterly:
+    """Base class for quarterly data models."""
+    
+    def __init__(self):
+        """Initialize a quarterly data object."""
+        pass
 
 class QuarterlyReport:
+    """Represents a quarterly financial report for a company."""
     __table__ = 'quarterly_reports'
     columns = ['id', 'date', 'company_id', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin']
 

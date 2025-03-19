@@ -1,7 +1,9 @@
-from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyReportResult
-from api.src.models.queries.sql_query_strings import sub_industry_avg_quarterly_financial_query_str
+"""Queries for sub-sector quarterly financial data."""
+from etl.transform.models.analytics.aggregation_by_quarter import QuarterlyReportResult
+from etl.load.db.sql_query_strings import sub_industry_avg_quarterly_financial_query_str
 
 class Mixin:
+    """Mixin that provides methods for querying sub-sector quarterly financial data."""
     def to_sub_industry_avg_quarterly_financials_json(self, sub_industry_name, cursor):
         sql_str = sub_industry_avg_quarterly_financial_query_str(self)
         cursor.execute(sql_str, (sub_industry_name,))

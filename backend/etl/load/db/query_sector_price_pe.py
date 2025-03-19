@@ -1,10 +1,12 @@
-from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyPricePE
-from api.src.models.queries.sql_query_strings import (query_all_sector_names_in_quarterly_reports_table, 
-                                                      sector_avg_price_pe_history_query_str)
-                                                      
+"""Queries for sector price and PE ratio data."""
+from etl.transform.models.analytics.aggregation_by_quarter import QuarterlyPricePE
+from etl.load.db.sql_query_strings import (select_avg_price_pe_quarterly_by_sector, 
+                                          select_distinct_sectors,
+                                          query_all_sector_names_in_quarterly_reports_table,
+                                          sector_avg_price_pe_history_query_str)
 
 class MixinSectorPricePE:
-    """mixin with class SubIndustry"""
+    """Mixin that provides methods for querying sector price and PE ratio data."""
     def get_all_sector_names(self, cursor):
         # self: class SubIndustry
         sql_str = query_all_sector_names_in_quarterly_reports_table(self)

@@ -136,3 +136,60 @@ def extract_single_financial_indicator(financial_indicator, full_range_fiancial_
                                                             for quarterly_dict in quarterly_records] 
                                                                         for sector, quarterly_records in full_range_fiancial_indicators_json.items()}
 
+select_avg_financials_quarterly_by_sector = """
+    SELECT 
+        AVG(revenue) as avg_revenue,
+        AVG(gross_profit) as avg_gross_profit,
+        AVG(net_income) as avg_net_income,
+        AVG(eps) as avg_eps,
+        AVG(ebitda) as avg_ebitda,
+        sector,
+        fiscal_year,
+        fiscal_quarter
+    FROM company_financials_quarterly
+    WHERE sector = %s
+    GROUP BY sector, fiscal_year, fiscal_quarter
+    ORDER BY fiscal_year DESC, fiscal_quarter DESC
+"""
+
+select_avg_price_pe_quarterly_by_sector = """
+    SELECT 
+        AVG(closing_price) as avg_price,
+        AVG(price_earnings_ratio) as avg_pe_ratio,
+        sector,
+        EXTRACT(year from date::DATE) as fiscal_year,
+        EXTRACT(quarter from date::DATE) as fiscal_quarter
+    FROM prices_pe
+    JOIN companies 
+    ON companies.id = prices_pe.company_id
+    JOIN sub_industries
+    ON companies.sub_industry_id::INT = sub_industries.id
+    WHERE sub_industries.sector_gics = %s
+    GROUP BY sector, fiscal_year, fiscal_quarter
+    ORDER BY fiscal_year DESC, fiscal_quarter DESC
+"""
+
+select_distinct_sectors = """
+    SELECT DISTINCT(sector_gics) as sector
+    FROM sub_industries
+    ORDER BY sector
+"""
+
+def sub_sector_avg_quarterly_price_pe_history_query_str():
+    sql_str = f"""
+                SELECT  sub_industry_gics,
+                        EXTRACT(year from date::DATE) as fiscal_year,
+                        EXTRACT(quarter from date::DATE) as fiscal_quarter,
+                        ROUND(AVG(closing_price)::NUMERIC, 2) as avg_price,
+                        ROUND(AVG(price_earnings_ratio)::NUMERIC, 2) as avg_pe_ratio
+                FROM prices_pe
+                JOIN companies 
+                ON companies.id = prices_pe.company_id
+                JOIN sub_industries
+                ON companies.sub_industry_id::INT = sub_industries.id
+                WHERE sub_industries.sub_industry_gics = %s
+                GROUP BY sub_industries.sub_industry_gics, fiscal_year, fiscal_quarter
+                ORDER BY fiscal_year DESC, fiscal_quarter DESC;
+                """
+    return sql_str
+

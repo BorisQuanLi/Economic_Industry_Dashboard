@@ -1,6 +1,4 @@
-# from api.src.db import db # Old import
-# from api.src import models # Old import
-
+# Updated imports from legacy structure
 from etl.load.db import connection as db
 from etl.transform import models
 
