@@ -17,10 +17,10 @@ import pandas as pd
 from unittest.mock import MagicMock
 
 # Update imports to use the correct modules that exist in the project structure
-from webservice.factory import create_app
-from webservice.services.industry_analysis import IndustryAnalyzer
-from etl.load.data_persistence.local_postgres import LocalPostgresRepository
-from etl.load.data_persistence.aws import AWSRepository
+from backend.webservice.factory import create_app
+from backend.webservice.services.industry_analysis import IndustryAnalyzer
+from backend.etl.load.data_persistence.local_postgres import LocalPostgresRepository
+from backend.etl.load.data_persistence.aws import AWSRepository
 
 # Define mock classes if needed
 class MockLocalPostgresRepository:
