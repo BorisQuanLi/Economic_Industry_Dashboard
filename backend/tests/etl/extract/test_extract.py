@@ -2,8 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 
 # Update imports to match actual class names
-from etl.extract.wiki_client import WikiPageClient
-from etl.extract.companies_extractor import CompaniesExtractor, CompaniesBuilder
+from backend.etl.extract.wiki_client import WikiPageClient
+from backend.etl.extract.companies_extractor import CompaniesExtractor, CompaniesBuilder  # Updated import
 
 # Remove the non-existent WikiExtractor class import
 # from backend.etl.extract.wiki_client import WikiExtractor

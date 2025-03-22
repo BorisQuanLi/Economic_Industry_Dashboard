@@ -1,0 +1,1 @@
+"""Industry models test package."""

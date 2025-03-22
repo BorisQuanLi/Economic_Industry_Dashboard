@@ -1,7 +1,9 @@
-import pytest
 import os
 import sys
 from pathlib import Path
+import pytest
+import pandas as pd
+from unittest.mock import MagicMock
 
 # Setup proper Python path for imports
 backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -13,12 +15,8 @@ if backend_dir not in sys.path:
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import pandas as pd
-from unittest.mock import MagicMock
-
-# Update imports to use the correct modules that exist in the project structure
+# Project imports
 from backend.webservice.factory import create_app
-from backend.webservice.services.industry_analysis import IndustryAnalyzer
 from backend.etl.load.data_persistence.local_postgres import LocalPostgresRepository
 from backend.etl.load.data_persistence.aws import AWSRepository
 
@@ -90,3 +88,20 @@ def sample_company_data():
         'profit': [10, 20, 30],
         'market_cap': [1000, 2000, 300]
     })
+
+@pytest.fixture
+def mock_db_cursor():
+    """Mock database cursor for model tests."""
+    cursor = MagicMock()
+    cursor.fetchall.return_value = []
+    cursor.fetchone.return_value = None
+    return cursor
+
+@pytest.fixture
+def sample_sector_data():
+    """Sample sector data for tests."""
+    return {
+        'sector_gics': 'TEST001',
+        'sector_name': 'Test Sector',
+        'description': 'Test sector description'
+    }

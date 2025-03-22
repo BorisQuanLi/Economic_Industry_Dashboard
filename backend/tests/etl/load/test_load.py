@@ -1,6 +1,6 @@
 """Tests for ETL load functionality."""
 import pytest
-from backend.etl.load.builders.financial import FinancialDataBuilder
+from backend.etl.load.financial_data import FinancialDataBuilder  # Updated import
 from backend.etl.load.builders.financial_metrics import FinancialMetrics
 from backend.etl.load.data_persistence.base_database_repository import DatabaseRepository
 

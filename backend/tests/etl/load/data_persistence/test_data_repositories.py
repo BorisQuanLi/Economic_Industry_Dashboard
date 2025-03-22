@@ -6,7 +6,7 @@ Note: This file should import from the core implementation rather than duplicate
 from backend.etl.load.data_persistence.data_repositories import (
     CompanyRepository,
     SectorRepository,
-    SubSectorRepository
+    SubIndustryRepository # Updated this line
 )
 
 # Import interfaces from the core implementation
@@ -21,7 +21,7 @@ from backend.core.repository_interfaces import (
 __all__ = [
     'CompanyRepository',
     'SectorRepository', 
-    'SubSectorRepository',
+    'SubIndustryRepository', # Updated this line
     'DataRepository',
     'ExtractRepository',
     'TransformRepository',
