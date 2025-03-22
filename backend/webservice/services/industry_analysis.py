@@ -1,140 +1,303 @@
-from typing import Dict, List, Any, Optional
+"""Industry analysis service for analyzing sectors and companies."""
+import logging
+from typing import List, Dict, Any, Optional
 from backend.etl.transform.models.industry.sector_financial_average_model import SectorQuarterlyAverageFinancials
 from backend.etl.transform.models.industry.subindustry_financial_average_model import SubIndustryQuarterlyAverageFinancials
 from backend.etl.transform.models.company.company_info_model import CompanyInfo
 
-class IndustryAnalysisService:
-    """Service for analyzing industry and sector data."""
-    
-    def __init__(self, cursor):
-        self.cursor = cursor
-
-    def get_all_sectors(self) -> List[Dict[str, str]]:
-        """Get all distinct sectors from sub_industries table."""
-        sql_query = """
-            SELECT DISTINCT sector_gics as gics, 
-                   sector_name as name
-            FROM sub_industries
-            ORDER BY sector_name;
-        """
-        self.cursor.execute(sql_query)
-        return [{'gics': row['gics'], 'name': row['name']} for row in self.cursor.fetchall()]
-
-    def get_sector_metrics(self, sector_gics: str) -> Dict[str, Any]:
-        """Get financial metrics for a sector."""
-        financials = SectorQuarterlyAverageFinancials.calculate_sector_average_quarterly_financials(
-            sector_gics, self.cursor
-        )
-        return financials.to_dict() if financials else {}
-
-    def get_sector_pe_metrics(self, sector_gics: str) -> Dict[str, float]:
-        """Get P/E ratio metrics for a sector by its GICS name."""
-        return SectorQuarterlyAverageFinancials.calculate_quarter_end_sector_average_pe_ratio(
-            sector_gics, self.cursor
-        )
-
-    def get_subsectors_by_sector(self, sector_gics: str) -> List[Dict[str, str]]:
-        """Get all sub-industries in a sector by the sector's GICS name."""
-        return SubIndustryQuarterlyAverageFinancials.get_sub_industries_in_sector(
-            sector_gics, self.cursor
-        )
-
-    def get_subsector_analytics(self, subsector_gics: str) -> Dict[str, Any]:
-        """Get comprehensive analytics for a sub-industry by its GICS name."""
-        # Get detailed financial metrics with quarterly history
-        financial_avg = SubIndustryQuarterlyAverageFinancials.calculate_subindustry_average_quarterly_financials(
-            subsector_gics, self.cursor
-        )
-        
-        if not financial_avg:
-            return {}
-            
-        companies = CompanyInfo.get_companies_in_sub_industry(subsector_gics, self.cursor)
-        concentration = SubIndustryQuarterlyAverageFinancials.calculate_industry_concentration(
-            subsector_gics, "revenue", self.cursor
-        )
-        
-        top_revenue = SubIndustryQuarterlyAverageFinancials.get_top_performers(
-            subsector_gics, "revenue", self.cursor
-        )
-        top_profit_margin = SubIndustryQuarterlyAverageFinancials.get_top_performers(
-            subsector_gics, "profit_margin", self.cursor
-        )
-
-        quarters, revenues, net_incomes = [], [], []
-        eps_values, profit_margins, pe_ratios = [], [], []
-        
-        if financial_avg.quarterly_averages:
-            for q_avg in financial_avg.quarterly_averages:
-                quarters.append(q_avg.quarter)
-                revenues.append(q_avg.quarterly_avg_revenue)
-                net_incomes.append(q_avg.quarterly_avg_net_income)
-                eps_values.append(q_avg.quarterly_avg_earnings_per_share)
-                profit_margins.append(q_avg.quarterly_avg_profit_margin if q_avg.quarterly_avg_profit_margin else 0)
-                pe_ratios.append(q_avg.quarterly_avg_price_earnings_ratio if q_avg.quarterly_avg_price_earnings_ratio else 0)
-        
-        return {
-            'sub_industry': subsector_gics,
-            'quarterly_avg_revenue': financial_avg.quarterly_avg_revenue,
-            'quarterly_avg_net_income': financial_avg.quarterly_avg_net_income,
-            'quarterly_avg_price_earnings_ratio': financial_avg.quarterly_avg_price_earnings_ratio,
-            'concentration_index': concentration,
-            'company_count': len(companies),
-            'top_performers': {
-                'revenue': top_revenue,
-                'profit_margin': top_profit_margin
-            },
-            'quarterly_history': {
-                'quarters': quarters,
-                'revenues': revenues,
-                'net_incomes': net_incomes,
-                'eps_values': eps_values,
-                'profit_margins': profit_margins,
-                'pe_ratios': pe_ratios
-            }
-        }
-
-    def get_quarterly_analysis(self, data: List[Dict[str, Any]], metric: str) -> List[Dict[str, Any]]:
-        """Calculate growth rates for quarterly data."""
-        if not data or len(data) < 2:
-            return []
-            
-        results = []
-        for i in range(1, len(data)):
-            current = data[i].get(metric, 0)
-            previous = data[i-1].get(metric, 0)
-            
-            growth = ((current - previous) / previous) * 100 if previous and previous != 0 else 0
-                
-            results.append({
-                'period': data[i].get('period', ''),
-                'growth_rate': round(growth, 2)
-            })
-            
-        return results
-    
-    def get_pe_analysis(self, sector_id: int) -> Dict[str, Any]:
-        """Get P/E analysis for a sector."""
-        return SectorQuarterlyAverageFinancials.calculate_quarter_end_sector_average_pe_ratio(
-            sector_id, self.cursor
-        )
+logger = logging.getLogger(__name__)
 
 class IndustryAnalyzer:
-    """Industry data analysis service."""
+    """Service for analyzing industry and company data."""
     
     def __init__(self, db_connection):
-        self.cursor = db_connection.cursor()
-
-    def get_sector_metrics(self, sector_gics: str) -> Dict[str, Any]:
+        """Initialize the analyzer with a database connection."""
+        self.db_connection = db_connection
+        self.cursor = db_connection.cursor if db_connection else None
+        
+    def get_sectors(self) -> List[Dict[str, Any]]:
+        """Get all sectors."""
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return []
+                
+            self.cursor.execute("SELECT id, name, gics_code, description FROM sectors ORDER BY name")
+            return self.cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error getting sectors: {str(e)}")
+            return []
+            
+    def get_sector_data(self, sector_id: int) -> Optional[Dict[str, Any]]:
+        """Get detailed data for a specific sector."""
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return None
+                
+            # Get basic sector information
+            self.cursor.execute(
+                "SELECT id, name, gics_code, description FROM sectors WHERE id = %s", 
+                (sector_id,)
+            )
+            sector = self.cursor.fetchone()
+            if not sector:
+                return None
+                
+            # Get financial metrics for this sector
+            metrics = self.get_sector_metrics(sector_id)
+            
+            # Get sub-industries in this sector
+            sub_industries = self.get_sub_industries_by_sector(sector_id)
+            
+            # Combine all data
+            return {
+                'sector': sector,
+                'metrics': metrics,
+                'sub_industries': sub_industries
+            }
+        except Exception as e:
+            logger.error(f"Error getting sector data: {str(e)}")
+            return None
+            
+    def get_sector_metrics(self, sector_id: int, time_period: str = 'quarterly', 
+                          metrics: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
         """Get financial metrics for a sector."""
-        financials = SectorQuarterlyAverageFinancials.calculate_sector_average_quarterly_financials(
-            sector_gics, self.cursor
-        )
-        return financials.to_dict() if financials else {}
-
-    def get_subsector_metrics(self, subsector_gics: str) -> Dict[str, Any]:
-        """Get financial metrics for a subsector."""
-        financials = SubIndustryQuarterlyAverageFinancials.calculate_subindustry_average_quarterly_financials(
-            subsector_gics, self.cursor
-        )
-        return financials.to_dict() if financials else {}
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return None
+                
+            # Verify sector exists
+            self.cursor.execute("SELECT gics_code FROM sectors WHERE id = %s", (sector_id,))
+            sector_record = self.cursor.fetchone()
+            if not sector_record:
+                return None
+                
+            sector_gics = sector_record['gics_code']
+            
+            # Define metrics to retrieve if not specified
+            if not metrics:
+                metrics = ['revenue', 'net_income', 'profit_margin', 'pe_ratio']
+                
+            # Build query based on time period
+            time_filter = ""
+            if time_period == 'quarterly':
+                time_filter = "AND qr.date >= NOW() - INTERVAL '4 quarters'"
+            elif time_period == 'annual':
+                time_filter = "AND qr.date >= NOW() - INTERVAL '4 years'"
+                
+            # Query for each metric
+            results = {}
+            
+            if 'revenue' in metrics or 'net_income' in metrics or 'profit_margin' in metrics:
+                query = f"""
+                    SELECT 
+                        TO_CHAR(DATE_TRUNC('quarter', qr.date), 'YYYY-"Q"Q') as quarter,
+                        AVG(qr.revenue) as avg_revenue,
+                        AVG(qr.net_income) as avg_net_income,
+                        AVG(qr.profit_margin) as avg_profit_margin
+                    FROM quarterly_reports qr
+                    JOIN companies c ON c.id = qr.company_id
+                    JOIN sub_industries si ON c.sub_industry_id = si.id
+                    WHERE si.sector_gics = %s
+                    {time_filter}
+                    GROUP BY quarter
+                    ORDER BY MIN(qr.date) DESC
+                """
+                self.cursor.execute(query, (sector_gics,))
+                financial_data = self.cursor.fetchall()
+                
+                # Extract requested metrics
+                for metric in ['revenue', 'net_income', 'profit_margin']:
+                    if metric in metrics:
+                        metric_key = f'avg_{metric}'
+                        results[metric] = [
+                            {'period': row['quarter'], 'value': row[metric_key]}
+                            for row in financial_data
+                        ]
+            
+            if 'pe_ratio' in metrics:
+                # Query for PE ratios
+                pe_query = f"""
+                    SELECT 
+                        TO_CHAR(DATE_TRUNC('quarter', pe.date), 'YYYY-"Q"Q') as quarter,
+                        AVG(pe.pe_ratio) as avg_pe_ratio
+                    FROM prices_pe pe
+                    JOIN companies c ON c.id = pe.company_id
+                    JOIN sub_industries si ON c.sub_industry_id = si.id
+                    WHERE si.sector_gics = %s
+                    {time_filter}
+                    GROUP BY quarter
+                    ORDER BY MIN(pe.date) DESC
+                """
+                self.cursor.execute(pe_query, (sector_gics,))
+                pe_data = self.cursor.fetchall()
+                
+                results['pe_ratio'] = [
+                    {'period': row['quarter'], 'value': row['avg_pe_ratio']}
+                    for row in pe_data
+                ]
+                
+            return results
+        except Exception as e:
+            logger.error(f"Error getting sector metrics: {str(e)}")
+            return None
+            
+    def get_sub_industries_by_sector(self, sector_id: int) -> Optional[List[Dict[str, Any]]]:
+        """Get all sub-industries in a sector."""
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return None
+                
+            # Verify sector exists
+            self.cursor.execute("SELECT gics_code FROM sectors WHERE id = %s", (sector_id,))
+            sector_record = self.cursor.fetchone()
+            if not sector_record:
+                return None
+                
+            sector_gics = sector_record['gics_code']
+            
+            # Get sub-industries
+            query = """
+                SELECT id, sub_industry_gics, description 
+                FROM sub_industries 
+                WHERE sector_gics = %s
+                ORDER BY sub_industry_gics
+            """
+            self.cursor.execute(query, (sector_gics,))
+            return self.cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error getting sub-industries: {str(e)}")
+            return None
+    
+    def get_company_data(self, company_id: int) -> Optional[Dict[str, Any]]:
+        """Get detailed data for a specific company."""
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return None
+                
+            # Get basic company information
+            query = """
+                SELECT c.id, c.name, c.ticker, c.year_founded, c.number_of_employees, c.HQ_state,
+                       si.id as sub_industry_id, si.sub_industry_gics, 
+                       si.sector_gics
+                FROM companies c
+                JOIN sub_industries si ON c.sub_industry_id = si.id
+                WHERE c.id = %s
+            """
+            self.cursor.execute(query, (company_id,))
+            company = self.cursor.fetchone()
+            if not company:
+                return None
+                
+            # Get latest financial data
+            latest_financials_query = """
+                SELECT * FROM quarterly_reports
+                WHERE company_id = %s
+                ORDER BY date DESC
+                LIMIT 1
+            """
+            self.cursor.execute(latest_financials_query, (company_id,))
+            latest_financials = self.cursor.fetchone()
+            
+            # Get latest P/E data
+            latest_pe_query = """
+                SELECT * FROM prices_pe
+                WHERE company_id = %s
+                ORDER BY date DESC
+                LIMIT 1
+            """
+            self.cursor.execute(latest_pe_query, (company_id,))
+            latest_pe = self.cursor.fetchone()
+            
+            # Combine all data
+            return {
+                'company': company,
+                'latest_financials': latest_financials,
+                'latest_pe': latest_pe
+            }
+        except Exception as e:
+            logger.error(f"Error getting company data: {str(e)}")
+            return None
+    
+    def get_company_financials(self, company_id: int, time_period: str = 'quarterly') -> Optional[Dict[str, Any]]:
+        """Get financial data for a company."""
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return None
+                
+            # Verify company exists
+            self.cursor.execute("SELECT id FROM companies WHERE id = %s", (company_id,))
+            if not self.cursor.fetchone():
+                return None
+                
+            # Build query based on time period
+            time_filter = ""
+            if time_period == 'quarterly':
+                time_filter = "AND date >= NOW() - INTERVAL '4 quarters'"
+            elif time_period == 'annual':
+                time_filter = "AND date >= NOW() - INTERVAL '4 years'"
+                
+            # Get financial data
+            query = f"""
+                SELECT 
+                    TO_CHAR(DATE_TRUNC('quarter', date), 'YYYY-"Q"Q') as quarter,
+                    date,
+                    revenue,
+                    net_income,
+                    earnings_per_share,
+                    profit_margin
+                FROM quarterly_reports
+                WHERE company_id = %s
+                {time_filter}
+                ORDER BY date DESC
+            """
+            self.cursor.execute(query, (company_id,))
+            financial_data = self.cursor.fetchall()
+            
+            return {
+                'company_id': company_id,
+                'financials': financial_data
+            }
+        except Exception as e:
+            logger.error(f"Error getting company financials: {str(e)}")
+            return None
+    
+    def get_company_pe_history(self, company_id: int, months: int = 12) -> Optional[Dict[str, Any]]:
+        """Get historical P/E ratio data for a company."""
+        try:
+            if not self.cursor:
+                logger.error("Database cursor not available")
+                return None
+                
+            # Verify company exists
+            self.cursor.execute("SELECT id FROM companies WHERE id = %s", (company_id,))
+            if not self.cursor.fetchone():
+                return None
+                
+            # Get P/E history
+            query = """
+                SELECT 
+                    date,
+                    pe_ratio,
+                    earnings_per_share,
+                    closing_price
+                FROM prices_pe
+                WHERE company_id = %s
+                AND date >= NOW() - INTERVAL '%s months'
+                ORDER BY date DESC
+            """
+            self.cursor.execute(query, (company_id, months))
+            pe_data = self.cursor.fetchall()
+            
+            return {
+                'company_id': company_id,
+                'pe_history': pe_data
+            }
+        except Exception as e:
+            logger.error(f"Error getting company P/E history: {str(e)}")
+            return None

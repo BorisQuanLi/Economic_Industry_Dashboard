@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request
+"""Sector-related endpoints."""
+from flask import Blueprint, jsonify, current_app, request, abort
 import simplejson as json
 from typing import Dict, List, Any
 from etl.transform.models.industry.sector import SubIndustry
@@ -19,38 +20,68 @@ def sector_avg_financial_performance():
         
     return json.dumps(data, default=str)
 
-@sector_bp.route('/sectors', methods=['GET'])
-def get_sectors() -> Dict[str, List[str]]:
-    """Get all sectors"""
-    sectors = [
-        'Technology',
-        'Healthcare',
-        'Finance',
-        'Consumer Discretionary',
-        'Industrial'
-    ]
+@sector_bp.route('', methods=['GET'])
+def get_sectors():
+    """Get all sectors."""
+    analyzer = current_app.config.get('services', {}).get('industry_analyzer')
+    if not analyzer:
+        return jsonify({'error': 'Service not available'}), 503
+        
+    sectors = analyzer.get_sectors()
     return jsonify({'sectors': sectors})
 
-@sector_bp.route('/sectors/<sector>/metrics', methods=['GET'])
-def get_sector_metrics(sector: str) -> Dict[str, Any]:
-    """Get financial metrics for a sector"""
-    # Implementation will use the adapters to get and transform data
-    return jsonify({
-        'sector': sector,
-        'metrics': {
-            'avg_revenue': 0,
-            'avg_profit_margin': 0,
-            'total_market_cap': 0
-        }
-    })
+@sector_bp.route('/<int:sector_id>', methods=['GET'])
+def get_sector(sector_id):
+    """Get sector by ID with detailed metrics."""
+    analyzer = current_app.config.get('services', {}).get('industry_analyzer')
+    if not analyzer:
+        return jsonify({'error': 'Service not available'}), 503
+    
+    try:
+        sector_data = analyzer.get_sector_data(sector_id)
+        if not sector_data:
+            return jsonify({'error': 'Sector not found'}), 404
+            
+        return jsonify(sector_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-# ... move other sector-related routes here ...
+@sector_bp.route('/<int:sector_id>/metrics', methods=['GET'])
+def get_sector_metrics(sector_id):
+    """Get financial metrics for a sector."""
+    analyzer = current_app.config.get('services', {}).get('industry_analyzer')
+    if not analyzer:
+        return jsonify({'error': 'Service not available'}), 503
+    
+    # Get optional query parameters
+    time_period = request.args.get('period', 'quarterly')  # quarterly, annual
+    metrics = request.args.get('metrics', 'all')  # revenue, profit, pe_ratio, all
+    
+    try:
+        metrics_data = analyzer.get_sector_metrics(
+            sector_id, 
+            time_period=time_period,
+            metrics=metrics.split(',') if metrics != 'all' else None
+        )
+        if not metrics_data:
+            return jsonify({'error': 'Sector metrics not found'}), 404
+            
+        return jsonify(metrics_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-from flask import Blueprint, jsonify
-
-sectors_bp = Blueprint('sectors', __name__)
-
-@sectors_bp.route('/sectors', methods=['GET'])
-def get_sectors():
-    # Placeholder implementation
-    return jsonify(['Technology', 'Healthcare', 'Finance'])
+@sector_bp.route('/<int:sector_id>/sub_industries', methods=['GET'])
+def get_sector_sub_industries(sector_id):
+    """Get all sub-industries in a sector."""
+    analyzer = current_app.config.get('services', {}).get('industry_analyzer')
+    if not analyzer:
+        return jsonify({'error': 'Service not available'}), 503
+    
+    try:
+        sub_industries = analyzer.get_sub_industries_by_sector(sector_id)
+        if sub_industries is None:
+            return jsonify({'error': 'Sector not found'}), 404
+            
+        return jsonify({'sub_industries': sub_industries})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
