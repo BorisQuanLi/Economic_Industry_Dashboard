@@ -3,6 +3,7 @@ import pandas as pd
 from io import StringIO
 from typing import Dict, List, Any
 import psycopg2
+from psycopg2.extras import RealDictCursor  # Add this import
 from .base_database_repository import DatabaseRepository
 
 logger = logging.getLogger(__name__)
@@ -21,15 +22,28 @@ class LocalPostgresRepository(DatabaseRepository):
         self.cursor = None
         self.connect()
 
-    def connect(self) -> bool:
-        """Connect to the database."""
+    def connect(self):
+        """Connect to database."""
         try:
-            self._connection = psycopg2.connect(self._connection_string)
-            self.cursor = self._connection.cursor()
-            return True
-        except psycopg2.Error as e:
-            print(f"Error connecting to database: {e}")
-            raise ConnectionError(f"Failed to connect to database: {e}")
+            if isinstance(self._connection_string, dict):
+                # Convert dict to connection string
+                conn_params = {
+                    'host': self._connection_string.get('host', 'localhost'),
+                    'port': self._connection_string.get('port', 5432),
+                    'database': self._connection_string.get('database', 'postgres'),
+                    'user': self._connection_string.get('user', 'postgres'),
+                    'password': self._connection_string.get('password', '')
+                }
+                self._connection = psycopg2.connect(**conn_params)
+            else:
+                self._connection = psycopg2.connect(self._connection_string)
+            
+            # Set cursorclass
+            self._connection.cursor_factory = RealDictCursor
+            return self._connection
+        except Exception as e:
+            logger.error(f"Error connecting to database: {str(e)}")
+            raise
 
     def save_dataframe(self, data: pd.DataFrame, table_name: str, if_exists="replace") -> bool:
         """Save a pandas DataFrame to the database."""

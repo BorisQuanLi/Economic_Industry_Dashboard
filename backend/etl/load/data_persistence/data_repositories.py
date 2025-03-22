@@ -1,5 +1,5 @@
 from .base_database_repository import DatabaseRepository
-from backend.etl.transform.models.sub_sector.sub_sector import SubSector
+from backend.etl.transform.models.industry.subindustry_model import SubIndustry  # Updated import
 
 class CompanyRepository(DatabaseRepository):
     def __init__(self, db_connection):
@@ -33,7 +33,7 @@ class SectorRepository(DatabaseRepository):
         # Implementation
         pass
 
-class SubSectorRepository(DatabaseRepository):
+class SubIndustryRepository(DatabaseRepository):
     def __init__(self, db_connection):
         self.db_connection = db_connection
     

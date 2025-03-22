@@ -2,7 +2,7 @@ from flask import current_app
 from flask import g
 import psycopg2
 from datetime import datetime, timedelta
-from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
+from backend.settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
 
 def get_db():
     if "db" not in g:
