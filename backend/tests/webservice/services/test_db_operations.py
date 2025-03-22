@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
+from backend.webservice.services.db_operations import DBOperations
 
 @pytest.fixture
 def db_manager():

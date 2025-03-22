@@ -10,7 +10,11 @@ def create_app(config=None, services=None):
         app.config.update(config.__dict__)
 
     # Register routes
-    from webservice.routes import routes
-    routes.register_routes(app, services)
+    from webservice.routes import routes as routes_blueprint
+    app.register_blueprint(routes_blueprint)
+
+    # Store services in app config
+    if services:
+        app.config['services'] = services
 
     return app
