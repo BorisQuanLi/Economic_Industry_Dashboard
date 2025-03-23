@@ -1,4 +1,8 @@
-"""Routes module for the API."""
+"""
+Routes module
+
+This module provides centralized route registration.
+"""
 
 from flask import Blueprint, jsonify, current_app
 
@@ -22,3 +26,10 @@ def get_sectors():
         
     sectors = analyzer.get_sectors()
     return jsonify({'sectors': sectors})
+
+def register_routes(app):
+    """Register all routes with the Flask application."""
+    from .routes import routes as api_routes
+    
+    # Register the combined API blueprint
+    app.register_blueprint(api_routes)
