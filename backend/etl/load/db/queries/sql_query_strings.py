@@ -1,195 +1,83 @@
-def query_all_sector_names_in_quarterly_reports_table(self):
-    # self: SubIndustry class
-    sql_str = f"""  SELECT DISTINCT({self.__table__}.sector_gics)
-                    FROM {self.__table__} JOIN companies 
-                    ON companies.sub_industry_id = {self.__table__}.id                    
-                    JOIN quarterly_reports
-                    ON quarterly_reports.company_id = companies.id;
-                    """
-    return sql_str
-
-def sub_sector_names_in_sector_query_str():
-    # returns all the sub_industries of a Sector that a sub_industry belongs to
-    sql_str =  f"""
-                SELECT DISTINCT(sub_industries.sub_industry_gics)
-                FROM sub_industries
-                WHERE sub_industries.sector_gics = %s;
-                """
-    return sql_str
-
-def companies_within_sub_sector_str():
-    # self: class Company
-    sql_str = f"""
-                SELECT companies.* FROM companies
-                JOIN sub_industries
-                ON sub_industries.id = companies.sub_industry_id
-                WHERE sub_industries.sub_industry_gics = %s;
-                """
-    return sql_str
-
-def sub_sector_avg_price_pe_history_query_str(self):
-    sql_str = f"""  SELECT  sub_industry_gics,
-                            EXTRACT(year from date::DATE) as year,
-                            EXTRACT(quarter from date::DATE) as quarter,
-                            ROUND(AVG(closing_price)::NUMERIC, 2) as avg_closing_price,
-                            ROUND(AVG(price_earnings_ratio)::NUMERIC, 2) as avg_price_earnings_ratio
-                    FROM prices_pe
-                    JOIN companies 
-                    ON companies.id = prices_pe.company_id
-                    JOIN sub_industries
-                    ON companies.sub_industry_id::INT = sub_industries.id
-                    WHERE sub_industries.sub_industry_gics = %s
-                    GROUP BY sub_industries.sub_industry_gics, year, quarter
-                    ORDER BY year, quarter;
-                """
-    return sql_str
-
-def sub_industry_avg_quarterly_financial_query_str(self):
-    sql_str = f"""  SELECT  sub_industry_gics,
-                            EXTRACT(year from date::DATE) as year,
-                            EXTRACT(quarter from date::DATE) as quarter,
-                            ROUND(AVG(revenue)::NUMERIC, 2) as avg_revenue,
-                            ROUND(AVG(net_income)::NUMERIC, 2) as avg_net_income,
-                            ROUND(AVG(earnings_per_share)::NUMERIC, 2) as avg_earnings_per_share,
-                            ROUND(AVG(profit_margin)::NUMERIC, 2) as avg_profit_margin              
-                    FROM quarterly_reports
-                    JOIN companies 
-                    ON companies.id = quarterly_reports.company_id
-                    JOIN sub_industries
-                    ON companies.sub_industry_id::INT = sub_industries.id
-                    WHERE sub_industries.sub_industry_gics = %s
-                    GROUP BY sub_industries.sub_industry_gics, year, quarter
-                    ORDER BY year, quarter;
-                """
-    return sql_str
-
-def sector_avg_price_pe_history_query_str(self):
-    sql_str = f"""  SELECT  EXTRACT(year from date::DATE) as year,
-                            EXTRACT(quarter from date::DATE) as quarter,
-                            ROUND(AVG(closing_price), 2) as avg_closing_price,
-                            ROUND(AVG(price_earnings_ratio), 2) as avg_quarterly_average         
-                    FROM prices_pe
-                    JOIN companies 
-                    ON companies.id = prices_pe.company_id
-                    JOIN sub_industries
-                    ON companies.sub_industry_id::INT = sub_industries.id
-                    WHERE sector_gics = %s
-                    GROUP BY sub_industries.sector_gics, year, quarter
-                    ORDER BY year, quarter;
-                """
-    return sql_str
-
-def per_sector_avg_quarterly_financials_query_str(self): 
-        sql_str = f"""  SELECT  sector_gics,
-                                EXTRACT(year from date::DATE) as year,
-                                EXTRACT(quarter from date::DATE) as quarter,
-                                ROUND(AVG(revenue)::NUMERIC, 2) as avg_revenue,
-                                ROUND(AVG(net_income)::NUMERIC, 2) as avg_net_income,
-                                ROUND(AVG(earnings_per_share)::NUMERIC, 2) as avg_earnings_per_share,
-                                ROUND(AVG(profit_margin)::NUMERIC, 2) as avg_profit_margin              
-                        FROM quarterly_reports
-                        JOIN companies 
-                        ON companies.id = quarterly_reports.company_id
-                        JOIN sub_industries
-                        ON companies.sub_industry_id::INT = sub_industries.id
-                        WHERE sector_gics = %s
-                        GROUP BY sub_industries.sector_gics, year, quarter
-                        ORDER BY year, quarter;
-                    """
-        return sql_str
-
-def company_price_pe_history_query_str(self):
-    sql_str = f"""  SELECT  companies.name,
-                            EXTRACT(year from date::DATE) as year,
-                            EXTRACT(quarter from date::DATE) as quarter,
-                            closing_price,
-                            price_earnings_ratio         
-                    FROM prices_pe
-                    JOIN companies 
-                    ON companies.id = prices_pe.company_id
-                    WHERE companies.name = %s;
-                """
-    return sql_str
-
-def company_quarterly_financials_query_str(self): 
-        sql_str = f"""  SELECT  companies.name,
-                                EXTRACT(year from date::DATE) as year,
-                                EXTRACT(quarter from date::DATE) as quarter,
-                                revenue,
-                                net_income,
-                                earnings_per_share,
-                                profit_margin            
-                        FROM quarterly_reports
-                        JOIN companies 
-                        ON companies.id = quarterly_reports.company_id
-                        WHERE companies.name = %s;
-                    """
-        return sql_str
-
-def extract_single_financial_indicator(financial_indicator, full_range_fiancial_indicators_json):
-    """
-    returns in JSON format each sector's quarterly values of the financial_indicator passed in. 
-    """
-    return    {sector:[{'year': quarterly_dict['year'],
-                        'quarter': quarterly_dict['quarter'],
-                        f'{financial_indicator}': quarterly_dict[financial_indicator]} 
-                                                            for quarterly_dict in quarterly_records] 
-                                                                        for sector, quarterly_records in full_range_fiancial_indicators_json.items()}
-
-select_avg_financials_quarterly_by_sector = """
-    SELECT 
-        AVG(revenue) as avg_revenue,
-        AVG(gross_profit) as avg_gross_profit,
-        AVG(net_income) as avg_net_income,
-        AVG(eps) as avg_eps,
-        AVG(ebitda) as avg_ebitda,
-        sector,
-        fiscal_year,
-        fiscal_quarter
-    FROM company_financials_quarterly
-    WHERE sector = %s
-    GROUP BY sector, fiscal_year, fiscal_quarter
-    ORDER BY fiscal_year DESC, fiscal_quarter DESC
+"""
+SQL query strings for database operations
 """
 
-select_avg_price_pe_quarterly_by_sector = """
-    SELECT 
-        AVG(closing_price) as avg_price,
-        AVG(price_earnings_ratio) as avg_pe_ratio,
-        sector,
-        EXTRACT(year from date::DATE) as fiscal_year,
-        EXTRACT(quarter from date::DATE) as fiscal_quarter
-    FROM prices_pe
-    JOIN companies 
-    ON companies.id = prices_pe.company_id
-    JOIN sub_industries
-    ON companies.sub_industry_id::INT = sub_industries.id
-    WHERE sub_industries.sector_gics = %s
-    GROUP BY sector, fiscal_year, fiscal_quarter
-    ORDER BY fiscal_year DESC, fiscal_quarter DESC
+# Default query strings - These will be replaced with your actual queries
+SECTOR_QUARTERLY_FINANCIALS = """
+SELECT * FROM sector_quarterly_financials
+WHERE sector_name = %s
+ORDER BY date DESC
+LIMIT %s
 """
 
-select_distinct_sectors = """
-    SELECT DISTINCT(sector_gics) as sector
-    FROM sub_industries
-    ORDER BY sector
+SUB_SECTOR_QUARTERLY_FINANCIALS = """
+SELECT * FROM sub_sector_quarterly_financials
+WHERE sub_sector_name = %s
+ORDER BY date DESC
+LIMIT %s
 """
 
-def sub_sector_avg_quarterly_price_pe_history_query_str():
-    sql_str = f"""
-                SELECT  sub_industry_gics,
-                        EXTRACT(year from date::DATE) as fiscal_year,
-                        EXTRACT(quarter from date::DATE) as fiscal_quarter,
-                        ROUND(AVG(closing_price)::NUMERIC, 2) as avg_price,
-                        ROUND(AVG(price_earnings_ratio)::NUMERIC, 2) as avg_pe_ratio
-                FROM prices_pe
-                JOIN companies 
-                ON companies.id = prices_pe.company_id
-                JOIN sub_industries
-                ON companies.sub_industry_id::INT = sub_industries.id
-                WHERE sub_industries.sub_industry_gics = %s
-                GROUP BY sub_industries.sub_industry_gics, fiscal_year, fiscal_quarter
-                ORDER BY fiscal_year DESC, fiscal_quarter DESC;
-                """
-    return sql_str
+SECTOR_PRICE_PE = """
+SELECT * FROM sector_price_pe
+WHERE sector_name = %s
+ORDER BY date DESC
+LIMIT %s
+"""
+
+SUB_SECTOR_PRICE_PE = """
+SELECT * FROM sub_sector_price_pe
+WHERE sub_sector_name = %s
+ORDER BY date DESC
+LIMIT %s
+"""
+
+COMPANY_FINANCIALS = """
+SELECT * FROM company_financials
+WHERE ticker = %s
+ORDER BY date DESC
+LIMIT %s
+"""
+
+COMPANY_PRICE_HISTORY = """
+SELECT * FROM company_price_history
+WHERE ticker = %s {where_clause}
+ORDER BY date DESC
+LIMIT %s
+"""
+
+ECONOMIC_INDICATORS = """
+SELECT * FROM economic_indicators
+{where_clause}
+ORDER BY date DESC
+LIMIT %s
+"""
+
+GDP_GROWTH = """
+SELECT * FROM gdp_growth
+ORDER BY date DESC
+LIMIT %s
+"""
+
+UNEMPLOYMENT_RATE = """
+SELECT * FROM unemployment_rate
+ORDER BY date DESC
+LIMIT %s
+"""
+
+SECTOR_COMPARISON = """
+SELECT date, sector_name, {metric} 
+FROM sector_metrics
+WHERE sector_name IN ({}) {where_clause}
+ORDER BY date DESC
+"""
+
+METRIC_CORRELATION = """
+SELECT 
+    CORR(m1.value, m2.value) AS correlation
+FROM
+    (SELECT date, value FROM metrics WHERE name = %s AND period = %s {entity_clause}) m1
+JOIN
+    (SELECT date, value FROM metrics WHERE name = %s AND period = %s {entity_clause}) m2
+ON m1.date = m2.date
+"""
 

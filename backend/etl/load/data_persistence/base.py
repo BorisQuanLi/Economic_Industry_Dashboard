@@ -123,21 +123,3 @@ class DataPersistenceBase(ABC):
     def read_data(self, query: str) -> List[Dict[str, Any]]:
         """Read data using the specified query."""
         pass
-
-class DevelopmentConfig:
-    """Development configuration settings."""
-    DEBUG = True
-    TESTING = False
-    DATABASE_URI = "sqlite:///dev.db"
-    
-    def __init__(self):
-        """Initialize development configuration."""
-        self.env = "development"
-        
-    @property
-    def database_settings(self):
-        """Get database connection settings."""
-        return {
-            "uri": self.DATABASE_URI,
-            "echo": self.DEBUG
-        }

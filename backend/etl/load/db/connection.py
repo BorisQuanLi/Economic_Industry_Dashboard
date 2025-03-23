@@ -1,40 +1,63 @@
-from flask import current_app
-from flask import g
+"""
+Flask Database Connection Adapter
+
+This module serves as an adapter between Flask application context
+and the LocalPostgresRepository implementation. It:
+
+1. Manages database connections within Flask's application context
+2. Provides utility functions for domain object construction
+3. Exposes helper methods for common database operations
+
+Design Note:
+-----------
+This adapter delegates actual database operations to the repository classes in
+etl/load/data_persistence/ to avoid duplication of database connection logic.
+"""
+
+from flask import current_app, g
 import psycopg2
 from datetime import datetime, timedelta
-from backend.settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
+from backend.etl.config import get_config
+from backend.etl.load.data_persistence.local_postgres import LocalPostgresRepository
 
 def get_db():
+    """
+    Get or create database connection in Flask application context.
+    
+    Returns:
+        psycopg2.connection: Database connection
+    """
     if "db" not in g:
-        # connect to postgres on the local computer
-        g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
-            dbname = current_app.config['DB_NAME']) # apply this to user, password in __init__.py (at the top of this script, already imported from SETTINGS)
-
-        """
-        # connect to postgres on the AWS RDS instance
-        g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
-            dbname = current_app.config['DATABASE'])
-        """
+        config = get_config()
+        # Create repository
+        repo = LocalPostgresRepository(db_config=config.db)
+        # Store both the repository and its connection
+        g.db_repo = repo
+        g.db = repo._connection
     return g.db
 
-"""
-# Connecting to the AWS RDS instance
-conn = psycopg2.connect(host = DB_HOST, database = DB_NAME, 
-                        user = DB_USER, password = DB_PASSWORD)  
-
-def get_db():
-    if "db" not in g:
-        g.db = psycopg2.connect(host = DB_HOST, database = DB_NAME, 
-                    user = DB_USER, password = DB_PASSWORD) 
-    return g.db
-"""
+def get_db_repo():
+    """
+    Get or create LocalPostgresRepository in Flask application context.
+    
+    Returns:
+        LocalPostgresRepository: Repository for database operations
+    """
+    if "db_repo" not in g:
+        get_db()  # This will create both db and db_repo
+    return g.db_repo
 
 def close_db(e=None):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
+    """Close database connection when Flask application context ends."""
+    db_repo = g.pop("db_repo", None)
+    if db_repo is not None:
+        db_repo.close()
+    # The connection will be closed by the repository, but we'll also remove it from g
+    g.pop("db", None)
 
+# Domain object utilities
 def build_from_record(Class, record):
+    """Build a domain object from a database record."""
     if not record: return None
     attr = dict(zip(Class.columns, record))
     obj = Class()
@@ -42,21 +65,29 @@ def build_from_record(Class, record):
     return obj
 
 def build_from_records(Class, records):
-   return [build_from_record(Class, record) for record in records]
+    """Build multiple domain objects from database records."""
+    return [build_from_record(Class, record) for record in records]
 
+# Delegate repository operations
 def find_all(Class, cursor):
+    """Find all records for a domain class."""
     sql_str = f"SELECT * FROM {Class.__table__}"
     cursor.execute(sql_str)
     records = cursor.fetchall()
     return [build_from_record(Class, record) for record in records]
 
 def find(Class, id, cursor):
+    """Find a record by ID."""
     sql_str = f"SELECT * FROM {Class.__table__} WHERE id = %s"
     cursor.execute(sql_str, (id,))
     record = cursor.fetchone()
     return build_from_record(Class, record)
 
+# Business domain queries 
+# These should eventually move to specialized query repositories
+
 def find_company_objs_by_sector(Class, sector_name, cursor):
+    """Find companies by sector name."""
     sql_str = f"""SELECT * FROM companies
                     JOIN sub_industries 
                     ON companies.sub_industry_id::INT = sub_industries.id
@@ -151,13 +182,44 @@ def save(obj, conn, cursor):
         print(e)
         pass
 
-import psycopg2
-from flask import current_app
-
 def get_db_connection():
-    """Get database connection using app config"""
-    if current_app:
-        return psycopg2.connect(current_app.config['DATABASE'])
+    """Get standalone database connection (non-Flask context)."""
+    config = get_config()
+    repo = LocalPostgresRepository(db_config=config.db)
+    return repo._connection
+
+"""
+Database connection module for ETL processes.
+"""
+import logging
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+logger = logging.getLogger(__name__)
+
+def get_connection():
+    """Get a database connection."""
+    try:
+        conn = psycopg2.connect(
+            host="localhost",
+            database="economic_dashboard",
+            user="postgres",
+            password="postgres"
+        )
+        return conn
+    except Exception as e:
+        logger.error(f"Error connecting to database: {str(e)}")
+        return None
+
+def get_cursor(conn, cursor_factory=RealDictCursor):
+    """Get a database cursor from a connection."""
+    if conn:
+        return conn.cursor(cursor_factory=cursor_factory)
     return None
+
+def close_connection(conn):
+    """Close a database connection."""
+    if conn:
+        conn.close()
 
 
