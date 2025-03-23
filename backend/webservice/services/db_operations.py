@@ -1,2 +1,0 @@
-class DBOperations:
-    pass
