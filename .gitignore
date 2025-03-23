@@ -1,5 +1,6 @@
 # System files
 .DS_Store
+Thumbs.db
 
 # Python
 __pycache__/
@@ -10,6 +11,21 @@ __pycache__/
 .Python
 .coverage
 htmlcov/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual Environment - consolidated rules
 venv/
@@ -22,6 +38,7 @@ sp500-dashboard-venv/
 # Environment files
 .env
 *.env
+.env.local
 
 # IDE
 .idea/
@@ -54,3 +71,26 @@ frontend/src/insight_generator.py
 # Devcontainer
 .devcontainer/*
 !.devcontainer/devcontainer.json
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Data files
+data/raw/
+data/processed/
+*.csv
+*.xlsx
+*.json
+# Except those in version control
+!**/etl/extract/data/raw/sp500/sp500_stocks_wiki_info.csv
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/

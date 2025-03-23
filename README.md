@@ -1,5 +1,9 @@
 # Economic Industry Dashboard
 
+## Project Structure
+
+The project has been restructured for better organization and maintainability:
+
 ## Overview
 
 This project provides a comprehensive financial analytics dashboard for S&P 500 companies, featuring:

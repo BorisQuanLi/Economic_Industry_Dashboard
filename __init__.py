@@ -1,0 +1,3 @@
+"""
+Economic Industry Dashboard package
+"""
