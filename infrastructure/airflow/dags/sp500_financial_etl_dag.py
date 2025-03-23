@@ -15,7 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 # Import ETL pipeline
 from backend.etl.load.data_persistence.base import DevelopmentConfig
-from backend.etl.pipeline import ETLPipeline
+from backend.etl.sp500_financial_etl_pipeline import SP500ETLPipeline
 
 default_args = {
     'owner': 'airflow',
@@ -28,7 +28,7 @@ default_args = {
 }
 
 dag = DAG(
-    'sp500_financial_etl',  # Updated DAG ID to match new file name
+    'sp500_financial_etl',
     default_args=default_args,
     description='Pipeline for S&P 500 financial data ETL process',
     schedule_interval=timedelta(days=1),
@@ -40,7 +40,7 @@ def run_full_pipeline(**kwargs):
     """Run the complete ETL pipeline."""
     logging.info("Starting ETL pipeline")
     config = DevelopmentConfig()
-    pipeline = ETLPipeline(config)
+    pipeline = SP500ETLPipeline(config)
     results = pipeline.run_full_pipeline()
     logging.info(f"ETL pipeline completed with status: {results['status']}")
     return results
@@ -51,7 +51,7 @@ def run_incremental_update(**kwargs):
     logging.info(f"Running incremental update from: {execution_date}")
     
     config = DevelopmentConfig()
-    pipeline = ETLPipeline(config)
+    pipeline = SP500ETLPipeline(config)
     # Use execution_date as the starting point for data updates
     results = pipeline.run_incremental_update(since_date=execution_date)
     
