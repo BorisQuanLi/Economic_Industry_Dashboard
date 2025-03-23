@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import json
 import logging
+from backend.etl.load.db import connection
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -20,3 +21,20 @@ def setup_project_path():
 def get_environment() -> str:
     """Get current environment"""
     return os.getenv('APP_ENV', 'local')
+
+def financial_performance_query_tools():
+    """
+    Get connection, cursor, and financial indicator for querying
+    
+    Returns:
+        tuple: (connection, cursor, financial_indicator)
+    """
+    try:
+        conn = connection.get_connection()
+        cursor = connection.get_cursor(conn) if conn else None
+        financial_indicator = 'revenue'  # Default value
+        
+        return conn, cursor, financial_indicator
+    except Exception as e:
+        logger.error(f"Error in financial_performance_query_tools: {str(e)}")
+        return None, None, 'revenue'

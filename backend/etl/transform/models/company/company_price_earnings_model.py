@@ -1,7 +1,7 @@
 """Model for company stock price and price-to-earnings ratio data."""
 from dataclasses import dataclass
 from typing import Optional
-from etl.load.db import connection as db
+from backend.etl.load.db import connection as db
 
 @dataclass
 class PriceEarningsRatio:
