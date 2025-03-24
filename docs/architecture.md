@@ -1,57 +1,93 @@
-# Detailed Architecture Documentation
+# Economic Industry Dashboard - Architecture
 
-## Object-Process Methodology (OPM)
+## Overview
+The Economic Industry Dashboard is a data-driven application that provides insights into S&P 500 companies, economic indicators, and industry trends. The application follows a modern web architecture with separated backend and frontend components.
 
-### Objects
-1. **Financial Statements**
-   - Properties: quarter, year, company_id, revenue, costs
-   - States: raw, processed, analyzed
-   
-2. **Companies**
-   - Properties: id, name, sector, subsector
-   - States: active, inactive
+## Key Architectural Components
 
-3. **Financial Metrics**
-   - Properties: metric_type, value, timestamp
-   - States: calculated, validated
+- **Repository Pattern** - For data access abstraction
+- **Object-Process Methodology (OPM)** - Modeling objects and processes
+- **Design Patterns** - Including Adapter, MVC, and Event-Driven Architecture
 
-### Processes
-1. **Data Ingestion**
-   - Input: API responses
-   - Output: Raw financial data
-   - States: running, completed, failed
+## System Components
 
-2. **Data Transformation**
-   - Input: Raw financial data
-   - Output: Normalized data
-   - States: processing, validated
+### Backend
+- **ETL Pipeline**: Extracts, transforms, and loads data from various sources
+  - **Extract**: Obtains raw data from Wikipedia, APIs, and other sources
+  - **Transform**: Cleans and structures data for analysis
+  - **Load**: Inserts processed data into the database
+- **API Layer**: RESTful services exposing data to the frontend
+- **Database**: Stores structured data for companies, industries, and economic indicators
 
-3. **Analysis Engine**
-   - Input: Processed data
-   - Output: Financial metrics
-   - States: analyzing, complete
+### Frontend 
+- **Dashboard UI**: Interactive visualizations and data exploration tools
+- **User Management**: Authentication and authorization
+- **Analytics Components**: Charts, tables, and filters for data analysis
 
-## Design Patterns Implementation
-
-### Adapter Pattern
-```python
-class FinancialDataAdapter:
-    def adapt(self, raw_data):
-        # Standardize various data sources
-        pass
-
-class SECFilingAdapter(FinancialDataAdapter):
-    def adapt(self, sec_filing):
-        # Convert SEC filing format
-        pass
+## Directory Structure
+```
+Economic_Industry_Dashboard/
+├── backend/
+│   ├── app/              # Main application code
+│   ├── etl/              # ETL pipeline
+│   │   ├── extract/      # Data extraction modules
+│   │   ├── transform/    # Data transformation logic
+│   │   └── load/         # Database loading components
+│   ├── models/           # Data models and schemas
+│   ├── services/         # Business logic services
+│   └── tests/            # Test suite
+├── frontend/
+│   ├── src/              # Source code
+│   ├── public/           # Static assets
+│   └── tests/            # Frontend tests
+├── database/
+│   └── migrations/       # DB migrations
+└── docs/                 # Documentation
 ```
 
-### MVC Pattern
-- Models: Database schemas
-- Views: Streamlit dashboards
-- Controllers: Flask API endpoints
+## Data Flow
+1. ETL pipeline extracts data from Wikipedia and other sources
+2. Data is transformed into standardized formats
+3. Processed data is loaded into the database
+4. API endpoints expose data to the frontend
+5. Frontend components visualize data through interactive dashboards
 
-### Event-Driven Architecture
-- Data updates trigger ETL processes
-- Real-time dashboard updates
-- Asynchronous processing where applicable
+## Technologies
+- **Backend**: Python, Pandas, SQLAlchemy
+- **Database**: PostgreSQL
+- **API**: Flask/FastAPI
+- **Frontend**: React, D3.js
+- **DevOps**: Docker, CI/CD pipeline
+
+## Repository Pattern Implementation
+
+### Current Status
+
+The repository interfaces are currently maintained in:
+- `backend/common/repositories.py` (current implementation)
+- `backend/core/repository_interfaces.py` (future implementation)
+
+### Migration Plan
+
+1. **Phase 1 (Current)**: 
+   - All new code should import from `backend.core.repository_interfaces`
+   - `core.repository_interfaces` re-exports from `common.repositories`
+
+2. **Phase 2 (Next Release)**:
+   - Move all interfaces to `core.repository_interfaces` 
+   - Add deprecation warnings to `common.repositories`
+   - Update existing imports
+
+3. **Phase 3 (Future Release)**:
+   - Remove `common.repositories`
+   - All code should import directly from `core.repository_interfaces`
+
+### Rationale
+
+This phased approach allows gradual migration without breaking changes, while moving toward a cleaner architecture that places core interfaces in the `core` package.
+
+## Future Enhancements
+- Real-time data updates
+- Machine learning for predictive analytics
+- Enhanced visualization capabilities
+- Mobile application support
