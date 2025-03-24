@@ -12,6 +12,9 @@ import os
 import sys
 import logging
 
+# Disable bytecode generation
+sys.dont_write_bytecode = True
+
 # Add the current directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
