@@ -45,6 +45,10 @@ def create_app(database='investment_analysis', testing=False, debug=True):
         return 'Welcome to the Economic Analysis api, through the prism of the S&P 500 stocks performance.'
 
     from .routes.sector_routes import sector_bp
+    from .routes.sub_sector_routes import sub_sector_bp
+    from .routes.company_routes import company_bp
     app.register_blueprint(sector_bp)
+    app.register_blueprint(sub_sector_bp)
+    app.register_blueprint(company_bp)
 
     return app
