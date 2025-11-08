@@ -1,11 +1,20 @@
-venv_sp500
-.vscode/
+# Operating System / Editor specific
 .DS_Store
-__pycache__
+.vscode/
+__pycache__/
 *.pyc
-.env
-venv
 .ipynb_checkpoints
+
+# Environment variables
+*.env
+frontend/.env
 backend/.env
 
+# Configuration files
 ./api/src/adapters/api_calls/api_client_config.py
+
+#Virtual environments
+.venv/
+venv/
+frontend/.venv/
+backend/.venv/
