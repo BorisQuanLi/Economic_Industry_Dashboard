@@ -4,7 +4,7 @@ import api.src.models as models
 import api.src.db as db
 from api.src.adapters.backend_utilities import company_performance_query_tools, financial_performance_query_tools
 from api.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
-from api.src.models.queries.query_company_price_pe_history import MixinCompanyFinancialsPricePE
+from api.src.models.queries.query_company_price_pe_history import MixinCompanyPricePE
 
 company_bp = Blueprint('company_bp', __name__)
 

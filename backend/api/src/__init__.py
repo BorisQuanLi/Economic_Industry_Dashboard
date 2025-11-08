@@ -14,15 +14,15 @@ from api.src.models.queries.query_company_price_pe_history import MixinCompanyPr
 from api.src.models.queries.sql_query_strings import companies_within_sub_sector_str, sub_sector_names_in_sector_query_str
 from settings import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, DEBUG, TESTING
 
-def create_app(database='investment_analysis', testing=False, debug=True):
+def create_app(db_name='investment_analysis', db_user='postgres', db_password='postgres', testing=False):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
     
     # connect to the local computer's Postgres
     app.config.from_mapping(
-        DB_USER = 'postgres',
-        DB_NAME = database,
-        DB_PASSWORD = 'postgres',
+        DB_USER = db_user,
+        DB_NAME = db_name,
+        DB_PASSWORD = db_password,
         DB_HOST = '127.0.0.1',
         DEBUG = DEBUG,
         TESTING = TESTING
@@ -42,7 +42,7 @@ def create_app(database='investment_analysis', testing=False, debug=True):
 
     @app.route('/')
     def root_url():
-        return 'Welcome to the Economic Analysis api, through the prism of the S&P 500 stocks performance.'
+        return {'message': 'API is running.'}
 
     from .routes.sector_routes import sector_bp
     from .routes.sub_sector_routes import sub_sector_bp
