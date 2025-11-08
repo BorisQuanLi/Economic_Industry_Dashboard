@@ -126,6 +126,10 @@ def company_quarterly_financials_query_str(self):
                     """
         return sql_str
 
+def find_sub_industry_by_name_str():
+    """SQL query to find sub industry by name"""
+    return """SELECT * FROM sub_industries WHERE sub_industry_gics = %s;"""
+
 def extract_single_financial_indicator(financial_indicator, full_range_fiancial_indicators_json):
     """
     returns in JSON format each sector's quarterly values of the financial_indicator passed in. 

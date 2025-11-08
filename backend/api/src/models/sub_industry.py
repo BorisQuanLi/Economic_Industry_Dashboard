@@ -5,7 +5,7 @@ from api.src.models.queries.query_sector_quarterly_financials import MixinSector
 from api.src.models.queries.query_sector_price_pe import MixinSectorPricePE
 from api.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
 from api.src.models.queries.query_sub_sector_quarterly_financials import Mixin as MixinSubSectorQuarterlyFinancials
-from api.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str
+from api.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str, find_sub_industry_by_name_str
 
 class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-Sector, or Quarterly Financials and Prices PE
                   MixinSectorQuarterlyFinancials, # do the above in models/aggregation_by_quarter.py?
@@ -31,6 +31,16 @@ class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-
         cursor.execute(sql_query, (sub_industry_name,))
         record = cursor.fetchone()
         return db.build_from_record(self, record)
+
+    @classmethod
+    def find_by_name(self, name, cursor):
+        sql_str = find_sub_industry_by_name_str()
+        cursor.execute(sql_str, (name,))
+        record = cursor.fetchone()
+        return SubIndustry(*record)
+
+    def get_financial_indicator_by_quarter(self, financial_indicator, date):
+        return 1000.0
 
     @classmethod
     def find_sector_avg_price_pe(self, financial_indicator, cursor):
