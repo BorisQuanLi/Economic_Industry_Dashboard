@@ -1,26 +1,38 @@
 
 ### Description
 
-This Project makes API calls to ingest the most recent 8 quarters of financial statements filed by the S&P 500 publicly listed companies, then stores the data on a Postgres DB, utilizing the Adapter and Model-View-Controller (MVC) design patterns along the way.
+**Three-Stage Financial Data Modernization Platform**
 
-A Flask API app allows the user to query aggregate and company-level data such as average quarterly revenue, cost, and price/earnings ratios, returning the results in JSON format in a web browser.
+This project demonstrates enterprise-grade financial data processing through a complete modernization journey: Flask → Airflow → FastAPI, addressing real-world investment banking automation challenges.
 
-Various plots based on these data can be viewed in an interactive dashboard in a browser, where a user can select different economic sectors and sub-sectors, companies, and financial performance indicators — for example, a cross-sector comparison of average quarterly earnings over the last 8 quarters.
+**Stage 1: Flask Backend (Complete)**
+Modular S&P 500 financial data ingestion with PostgreSQL storage, MVC patterns, and comprehensive testing framework.
 
-### Prerequisite Technologies
+**Stage 2: Airflow Automation (Complete)**
+Enterprise ETL pipeline with rate-limited Financial Modeling Prep API integration, processing all 11 S&P sectors with automated data quality checks.
 
-Backend:
+**Stage 3: FastAPI Implementation (Complete)**
+High-performance async endpoints featuring sliding window algorithm that solves Apple Q4 (October) vs industry Q4 (December) filing disparities for accurate cross-sector investment analysis.
 
-- PostgreSQL 11.13
-- Flask 1.1.2
-- Python 3.8
-- Pandas 1.1.4
-- Docker 19.03.12
-- Kubernetes v1.20.2
+**Stage 4: MCP Multi-Agent System (Planned)**
+Model Context Protocol integration enabling AI agent consumption of financial data for automated investment analysis workflows.
 
-Frontend
+### Technology Stack
 
-- Streamlit 0.73.1 (a Python library)
+**Enterprise Backend Services:**
+- FastAPI 0.121.1 (async endpoints, sliding window analytics)
+- Flask 1.1.2 (legacy API, modular architecture)
+- Apache Airflow (ETL orchestration, rate-limited API processing)
+- PostgreSQL 11.13 (OLTP) → Amazon Redshift (OLAP migration planned)
+- Python 3.8+ (Pydantic validation, async processing)
+
+**Infrastructure & Integration:**
+- Docker 19.03.12 & Kubernetes v1.20.2
+- Neo4j (graph database preparation)
+- Model Context Protocol (AI agent integration - planned)
+
+**Frontend Dashboard:**
+- Streamlit 0.73.1 (interactive financial analytics)
 
 ### Getting Started
 
