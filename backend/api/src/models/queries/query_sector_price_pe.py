@@ -15,7 +15,7 @@ class MixinSectorPricePE:
     def to_avg_quarterly_price_pe_json_by_sector(self, sector_name, cursor):
         sql_str = sector_avg_price_pe_history_query_str(self)
         cursor.execute(sql_str, (sector_name,)) 
-        avg_quarterly_price_pe_objs = [self.build_avg_quarterly_price_pe_obj(self, record, cursor)
+        avg_quarterly_price_pe_objs = [self.build_avg_quarterly_price_pe_obj(record, cursor)
                                                                         for record in cursor.fetchall()]
         return avg_quarterly_price_pe_objs
 

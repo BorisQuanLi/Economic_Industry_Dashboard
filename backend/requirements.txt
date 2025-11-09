@@ -7,3 +7,5 @@ simplejson
 requests
 python-dotenv
 pytest
+requests-mock
+lxml
