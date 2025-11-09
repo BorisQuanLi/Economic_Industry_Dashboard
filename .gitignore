@@ -18,4 +18,5 @@ backend/.env
 venv/
 frontend/.venv/
 backend/.venv/
+fastapi_backend/.venv/
 pytest_output.txt
