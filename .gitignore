@@ -18,3 +18,4 @@ backend/.env
 venv/
 frontend/.venv/
 backend/.venv/
+pytest_output.txt
