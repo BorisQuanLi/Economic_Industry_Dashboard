@@ -134,9 +134,5 @@ def extract_single_financial_indicator(financial_indicator, full_range_fiancial_
     """
     returns in JSON format each sector's quarterly values of the financial_indicator passed in. 
     """
-    return    {sector:[{'year': quarterly_dict['year'],
-                        'quarter': quarterly_dict['quarter'],
-                        f'{financial_indicator}': quarterly_dict[financial_indicator]} 
-                                                            for quarterly_dict in quarterly_records] 
-                                                                        for sector, quarterly_records in full_range_fiancial_indicators_json.items()}
+    return full_range_fiancial_indicators_json
 

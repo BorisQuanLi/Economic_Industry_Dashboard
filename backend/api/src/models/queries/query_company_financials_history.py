@@ -6,7 +6,7 @@ class MixinCompanyFinancials:
     def to_quarterly_financials_json(self, company_name, cursor):
         sql_str = company_quarterly_financials_query_str(self)
         cursor.execute(sql_str, (company_name,))
-        objs_list = [self.create_quarterly_financials_objs(self, record[1:]) for record in cursor.fetchall()]
+        objs_list = [self.create_quarterly_financials_objs(record[1:]) for record in cursor.fetchall()]
         return objs_list
 
     def create_quarterly_financials_objs(self, record):
