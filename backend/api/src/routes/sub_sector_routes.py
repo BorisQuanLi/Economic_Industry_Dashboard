@@ -28,7 +28,7 @@ def sub_industries_within_sector():
             historical_financials_json_dicts = (models.SubIndustry.
                                                     find_sub_industry_avg_quarterly_price_pe(sector_name, financial_indicator, cursor))
         else:
-            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
+            historical_financials_json_dicts = {'message': 'Please enter the name of a financial indicator.'}
         return json.dumps(historical_financials_json_dicts, default = str)
 
 @sub_sector_bp.route('/sectors/<sector_name>/sub_sectors')

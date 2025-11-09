@@ -22,7 +22,7 @@ def search_companies():
         elif financial_indicator in ['closing_price', 'price_earnings_ratio']:
             historical_financials_json_dicts = (models.Company.find_company_quarterly_price_pe(sub_sector_name, financial_indicator, cursor))
         else:
-            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
+            historical_financials_json_dicts = {'message': 'Please enter the name of a financial indicator.'}
         return json.dumps(historical_financials_json_dicts, default = str)
 
 @company_bp.route('/sub_sectors/<sub_industry_name>/companies')
@@ -40,5 +40,5 @@ def company_financial_performance(sub_industry_name):
             historical_financials_json_dicts = (models.Company.
                                                     find_company_quarterly_price_pe(sub_industry_name, financial_indicator, cursor))
         else:
-            historical_financials_json_dicts = {'Please enter the name of a financial indicator.'}
+            historical_financials_json_dicts = {'message': 'Please enter the name of a financial indicator.'}
         return json.dumps(historical_financials_json_dicts, default = str)
