@@ -3,7 +3,7 @@ from api.src import models
 
 class QuarterlyReport:
     __table__ = 'quarterly_reports'
-    columns = ['id', 'date', 'company_id', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin']
+    columns = ['id', 'date', 'company_id', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin', 'year', 'quarter']
 
     def __init__(self, **kwargs):
         for key in kwargs.keys():
@@ -13,6 +13,9 @@ class QuarterlyReport:
                 raise f'{key} not in {self.columns}'
         for k,v in kwargs.items():
             setattr(self, k, v)
+        if hasattr(self, 'date'):
+            self.year = self.date.year
+            self.quarter = (self.date.month - 1) // 3 + 1
 
     @classmethod
     def find_by_company_id(self, company_id, cursor):

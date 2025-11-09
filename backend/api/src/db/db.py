@@ -1,24 +1,17 @@
-from flask import current_app
-from flask import g
+from flask import current_app, g
 import psycopg2
 from datetime import datetime, timedelta
-from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
+# from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
 
-# Connecting to Postgres on local Mac (parameters hard-coded):
-conn = psycopg2.connect(database = 'investment_analysis', user = 'postgres', password = 'postgres')
-cursor = conn.cursor()
-
-def get_db():
-    if "db" not in g:
-        # connect to postgres on the local computer
-        g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
-            dbname = current_app.config['DB_NAME']) # apply this to user, password in __init__.py (at the top of this script, already imported from SETTINGS)
-
-        """
-        # connect to postgres on the AWS RDS instance
-        g.db = psycopg2.connect(user = 'postgres', password = 'postgres',
-            dbname = current_app.config['DATABASE'])
-        """
+def get_db(db_name=None, db_user=None, db_password=None):
+    if 'db' not in g:
+        if db_name is None:
+            db_name = current_app.config.get('DB_NAME', 'investment_analysis')
+        if db_user is None:
+            db_user = current_app.config.get('DB_USER', 'postgres')
+        if db_password is None:
+            db_password = current_app.config.get('DB_PASSWORD', 'postgres')
+        g.db = psycopg2.connect(host='localhost', database=db_name, user=db_user, password=db_password)
     return g.db
 
 """
@@ -41,8 +34,7 @@ def close_db(e=None):
 def build_from_record(Class, record):
     if not record: return None
     attr = dict(zip(Class.columns, record))
-    obj = Class()
-    obj.__dict__ = attr
+    obj = Class(**attr)
     return obj
 
 def build_from_records(Class, records):

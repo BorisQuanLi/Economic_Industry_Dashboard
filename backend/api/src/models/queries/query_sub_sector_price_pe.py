@@ -12,7 +12,7 @@ class MixinSubSectorPricePE:
     def to_sub_sector_avg_quarterly_price_pe_json(self, sub_industry_name, cursor):
         sql_str = sub_sector_avg_price_pe_history_query_str(self)
         cursor.execute(sql_str, (sub_industry_name,))
-        objs_list = [self.create_objs(self, record[1:]) for record in cursor.fetchall()]
+        objs_list = [self.create_objs(record[1:]) for record in cursor.fetchall()]
         return objs_list
 
     def create_objs(self, record):
