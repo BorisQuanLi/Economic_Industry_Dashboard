@@ -1,26 +1,41 @@
 
 ### Description
 
-This Project makes API calls to ingest the most recent 8 quarters of financial statements filed by the S&P 500 publicly listed companies, then stores the data on a Postgres DB, utilizing the Adapter and Model-View-Controller (MVC) design patterns along the way.
+**Enterprise Financial Data Pipeline** - A three-stage modernization showcasing Wall Street-grade data engineering:
 
-A Flask API app allows the user to query aggregate and company-level data such as average quarterly revenue, cost, and price/earnings ratios, returning the results in JSON format in a web browser.
+🏗️ **STAGE 1 COMPLETE**: Flask Backend Refactoring with Blueprint Architecture  
+🚀 **STAGE 2 COMPLETE**: Airflow ETL Automation with Sliding Window Algorithm  
+🎯 **STAGE 3 IN PROGRESS**: FastAPI High-Performance API Layer  
+
+This project demonstrates enterprise-grade automation solving real investment banking challenges, including Apple's disparate Q4 filing dates vs industry peers. The system processes S&P 500 financial statements with rate-limited API integration, stores data in PostgreSQL, and provides both Flask and FastAPI endpoints for financial analytics.
+
+**Key Innovation**: Sliding window algorithm enabling accurate cross-sector analysis despite disparate corporate filing schedules.
 
 Various plots based on these data can be viewed in an interactive dashboard in a browser, where a user can select different economic sectors and sub-sectors, companies, and financial performance indicators — for example, a cross-sector comparison of average quarterly earnings over the last 8 quarters.
 
-### Prerequisite Technologies
+### Technology Stack
 
-Backend:
+**Backend (Multi-Framework Architecture):**
+- Flask 1.1.2 (Blueprint-based modular architecture)
+- FastAPI (High-performance async endpoints) - *IN DEVELOPMENT*
+- Apache Airflow (ETL orchestration with sliding window algorithm)
+- PostgreSQL 11.13 (OLTP) → Amazon Redshift (OLAP)
+- Python 3.8+ with Pandas 1.1.4
+- Docker 19.03.12 & Kubernetes v1.20.2
 
-- PostgreSQL 11.13
-- Flask 1.1.2
-- Python 3.8
-- Pandas 1.1.4
-- Docker 19.03.12
-- Kubernetes v1.20.2
+**Data Pipeline:**
+- Financial Modeling Prep (FMP) API integration
+- Rate-limited extraction (250 calls/day)
+- Sliding window temporal alignment
+- Enterprise error handling & retry mechanisms
 
-Frontend
+**Frontend:**
+- Streamlit 0.73.1 (Interactive dashboard)
 
-- Streamlit 0.73.1 (a Python library)
+**Enterprise Integration:**
+- Neo4j graph database preparation
+- Java Spring Boot compatibility
+- FINOS OpenBB Platform integration
 
 ### Getting Started
 
