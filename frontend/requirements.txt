@@ -1,6 +1,8 @@
-# 12/30/2020: pip install plotly successful only through the following command line (python3 = python3.8)
-# python3 -m pip install -r requirements.txt
+# Frontend Application Dependencies
+# Pinned versions for reproducible builds as of April 2024
 
-streamlit
-plotly
-pytest
+streamlit==1.33.0
+plotly==5.20.0
+
+# Testing Dependencies
+pytest==8.1.1
