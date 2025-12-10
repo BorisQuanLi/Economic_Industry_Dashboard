@@ -17,3 +17,6 @@ spec:
           image: ssbfc2001/investment_analysis_frontend:v2
           ports:
           - containerPort: 8501
+          envFrom:
+            - configMapRef:
+                name: streamlit-config
