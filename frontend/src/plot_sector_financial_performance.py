@@ -3,7 +3,7 @@ import requests
 import plotly.graph_objects as go
 from financial_performance_indicator import FinancialPerformanceIndicator
 
-AGGREGATION_BY_SECTOR_URL = "http://127.0.0.1:5000/sectors"
+AGGREGATION_BY_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors"
 
 def plot_sector_level_performance():
     st.header('Historical financial performance by economic sectors.')
@@ -27,6 +27,7 @@ def plot_selected_financial_indicator(financial_indicator, financial_performance
     st.plotly_chart(fig, use_container_width= True)
 
 def get_plotly_chart_data(fig, financial_indicator, financial_performance_indicators):
+    quarterly_financial_history_by_sector = None
     try:
         quarterly_financial_history_by_sector = find_sector_avg_financials(financial_indicator)
         for sector, quarterly_financials in quarterly_financial_history_by_sector.items():

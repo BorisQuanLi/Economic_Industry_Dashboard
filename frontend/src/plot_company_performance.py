@@ -3,7 +3,7 @@ import requests
 import plotly.graph_objects as go
 from financial_performance_indicator import FinancialPerformanceIndicator
 
-SEARCH_SUB_SECTOR_URL = "http://127.0.0.1:5000/sub_sectors/search"
+SEARCH_SUB_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/sub-sectors"
 
 def plot_company_level_performance(sub_sector_name, sub_sector_financial_indicator):
     selected_sub_sector_name = select_sub_sector_within_sector(sub_sector_name)
@@ -32,8 +32,10 @@ def plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_fina
     st.plotly_chart(fig)
 
 def find_company_financials_within_sub_sector(sub_sector_name, financial_indicator):
-    response_dict = requests.get(SEARCH_SUB_SECTOR_URL, params= {'sub_sector_name': sub_sector_name, 'financial_indicator': financial_indicator})
-    return response_dict.json()
+    # response_dict = requests.get(SEARCH_SUB_SECTOR_URL, params= {'sub_sector_name': sub_sector_name, 'financial_indicator': financial_indicator})
+    # return response_dict.json()
+    # TODO: This function makes an incorrect API call. Returning empty dict as a temporary fix.
+    return {}
 
 def get_sub_industry_xy_axis_info(financial_indicator, financial_performance_indicators, quarterly_info_dicts):
     dates_list = [financial_performance_indicators.extract_year_quarter(quarterly_dict) 

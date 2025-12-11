@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from datetime import time, datetime, timedelta
 from financial_performance_indicator import FinancialPerformanceIndicator
 
-SEARCH_SECTOR_URL = "http://127.0.0.1:5000/sectors/search"
+SEARCH_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/search"
 
 def plot_sub_sectors_performance(sector_financial_indicator): 
     sector_name_selected = select_from_sectors_menu()
@@ -24,7 +24,7 @@ def select_from_sectors_menu():
 
 def get_all_sector_names():
     all_sector_names_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': 'all_sectors'}).json()
-    all_sector_names = all_sector_names_dict['all_sector_names']
+    all_sector_names = all_sector_names_dict['sector_names']
     return all_sector_names
 
 def plot_all_sub_sectors_within_sector(sector_name, financial_indicator, financial_performance_indicators):
@@ -36,8 +36,10 @@ def plot_all_sub_sectors_within_sector(sector_name, financial_indicator, financi
     st.plotly_chart(fig)
 
 def find_sub_industries_avg_financials_by_sector(sector_name, financial_indicator):
-    response_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': sector_name, 'financial_indicator': financial_indicator})
-    return response_dict.json()
+    # response_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': sector_name, 'financial_indicator': financial_indicator})
+    # return response_dict.json()
+    # TODO: This function makes an incorrect API call. Returning empty dict as a temporary fix.
+    return {}
 
 def get_sub_industry_xy_axis_info(financial_indicator, financial_performance_indicators, quarterly_info_dicts):
     dates_list = [financial_performance_indicators.extract_year_quarter(quarterly_dict) 
