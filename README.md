@@ -40,7 +40,7 @@ High-performance async endpoints featuring sliding window algorithm that solves 
 - Flask 1.1.2 (legacy API, modular architecture)
 - Apache Airflow (ETL orchestration, rate-limited API processing)
 - PostgreSQL 11.13 (OLTP) → Amazon Redshift (OLAP migration planned)
-- Python 3.8+ (Pydantic validation, async processing)
+- Python 3.11+ (Pydantic validation, async processing)
 
 **Data Pipeline:**
 - Financial Modeling Prep (FMP) API integration
@@ -104,21 +104,219 @@ The following services will be available:
 - **Streamlit Frontend**: `http://localhost:8501`
 - **PostgreSQL Database**: `localhost:5432`
 
+---
+
+### 🐍 Local Python Development Setup (Non-Docker)
+
+If you prefer to run individual Python services directly on your local machine without Docker, it is **highly recommended** to use separate Python virtual environments (`venv`) for each service to manage dependencies and avoid conflicts.
+
+#### Backend (Flask) Service Setup
+
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd backend/
+    ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+3.  **Activate the virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+4.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  **Run the Flask backend:**
+    ```bash
+    python3 run.py
+    # Access: http://127.0.0.1:5000/
+    ```
+6.  **Deactivate the virtual environment:**
+    ```bash
+    deactivate
+    ```
+
+#### FastAPI Backend Service Setup
+
+1.  **Navigate to the FastAPI backend directory:**
+    ```bash
+    cd fastapi_backend/
+    ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+3.  **Activate the virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+4.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  **Run the FastAPI application (example):**
+    ```bash
+    uvicorn main:app --reload
+    # (Assuming main.py contains `app = FastAPI()`, adjust as needed)
+    # Access: http://127.0.0.1:8000/docs
+    ```
+6.  **Deactivate the virtual environment:**
+    ```bash
+    deactivate
+    ```
+
+#### Frontend (Streamlit) Service Setup
+
+1.  **Navigate to the frontend directory:**
+    ```bash
+    cd frontend/
+    ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+3.  **Activate the virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+4.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  **Run the Streamlit frontend:**
+    ```bash
+    streamlit run src/index.py
+    ```
+6.  **Deactivate the virtual environment:**
+    ```bash
+    deactivate
+    ```
+
+#### ETL Service Setup
+
+1.  **Navigate to the ETL service directory:**
+    ```bash
+    cd etl_service/
+    ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+3.  **Activate the virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+4.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  **Run the ETL script/service (placeholder - adjust as needed):**
+    ```bash
+    python3 <your_etl_script_name>.py
+    ```
+6.  **Deactivate the virtual environment:**
+    ```bash
+    deactivate
+    ```
+
+#### MCP Agent System Setup
+
+1.  **Navigate to the MCP Agent System directory:**
+    ```bash
+    cd mcp_agent_system/
+    ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+3.  **Activate the virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+4.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  **Run the MCP agent system (example from README):**
+    ```bash
+    python3 run_demo.py
+    ```
+6.  **Deactivate the virtual environment:**
+    ```bash
+    deactivate
+    ```
+
+#### Airflow Setup
+
+Running Apache Airflow locally typically involves specific installation methods, often via Docker or a dedicated setup script, and its configuration is complex. While a `venv` can be used, it's generally recommended for development purposes rather than production.
+
+1.  **Navigate to the Airflow directory:**
+    ```bash
+    cd airflow/
+    ```
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    ```
+3.  **Activate the virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+4.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+5.  **Initialize/Run Airflow (placeholder - refer to Airflow docs for full setup):**
+    ```bash
+    # This is a highly simplified example. Refer to Airflow documentation for proper initialization and running.
+    # For example:
+    # airflow db migrate
+    # airflow users create ...
+    # airflow webserver --port 8080
+    # airflow scheduler
+    ```
+6.  **Deactivate the virtual environment:**
+    ```bash
+    deactivate
+    ```
+
+**Note on `.venv` folders:**
+The `.gitignore` file is configured to ignore `venv/` directories, preventing them from being committed to the repository. If you wish to remove a virtual environment to save space or resolve issues, you can safely delete its directory (e.g., `rm -r backend/venv`) after deactivating it.
+
+---
+
 ### **Legacy System Access (Optional)**
 
-#### Flask Backend (Stage 1)
-```bash
-cd backend/
-python3 run.py
-# Access: http://127.0.0.1:5000/
-```
-
-#### Streamlit Dashboard (Visualization)
-```bash
-cd frontend/
-streamlit run src/index.py
-```
-
-### **Video Demonstration**
-[📹 Recorded Demo](https://www.youtube.com/watch?v=-OesaExIybA) - Legacy dashboard overview
 
