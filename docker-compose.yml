@@ -14,8 +14,8 @@ services:
 
   fastapi_backend:
     build:
-      context: .
-      dockerfile: fastapi_backend/Dockerfile
+      context: ./fastapi_backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     depends_on:
@@ -45,8 +45,8 @@ services:
 
   etl_service:
     build:
-      context: .
-      dockerfile: etl_service/Dockerfile
+      context: ./etl_service
+      dockerfile: Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,7 +58,7 @@ services:
       FMP_API_KEY: "${FMP_API_KEY}"
     volumes:
       - etl_data:/app/data
-    command: ["python", "-m", "etl_service.run_pipeline", "--init-db", "--companies-only"]
+    command: ["python", "run_pipeline.py", "--init-db", "--companies-only"]
 
 volumes:
   postgres_data:

@@ -1,25 +1,22 @@
-# ETL Service Dockerfile
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-WORKDIR /app
-
-# Install system dependencies for psycopg2 and pandas
+# Install Java (required for PySpark)
 RUN apt-get update && apt-get install -y \
-    libpq-dev \
+    openjdk-11-jre-headless \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install dependencies
-COPY etl_service/requirements.txt ./
+# Set Java environment
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the etl_service package
-COPY etl_service/ ./etl_service/
+# Copy application code
+COPY . .
 
-# Create data directory for CSV files
-RUN mkdir -p /app/data
-
-ENV PYTHONPATH=/app
-
-# Default command runs the full pipeline with DB init
-CMD ["python", "-m", "etl_service.run_pipeline", "--init-db"]
+# Default command (can be overridden)
+CMD ["python", "run_pipeline.py", "--companies-only"]
