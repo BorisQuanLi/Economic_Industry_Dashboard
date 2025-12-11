@@ -22,6 +22,10 @@ COPY --chown=appuser:appuser ./src ./src
 COPY --chown=appuser:appuser ./.env ./.env
 COPY --chown=appuser:appuser ./__init__.py ./__init__.py
 
+# Add the user's local bin directory to the PATH
+# This ensures that executables installed by pip (like streamlit) are found
+ENV PATH="/home/appuser/.local/bin:${PATH}"
+
 # Expose the port the app runs on
 EXPOSE 8501
 
