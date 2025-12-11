@@ -7,8 +7,13 @@ __pycache__/
 
 # Environment variables
 *.env
+.env
 frontend/.env
 backend/.env
+fastapi_backend/.env
+etl_service/.env
+mcp_agent_system/.env
+airflow/.env
 
 # Configuration files
 ./api/src/adapters/api_calls/api_client_config.py
@@ -17,6 +22,15 @@ backend/.env
 .venv/
 venv/
 frontend/.venv/
+frontend/venv/
 backend/.venv/
+backend/venv/
 fastapi_backend/.venv/
+fastapi_backend/venv/
+etl_service/.venv/
+etl_service/venv/
+mcp_agent_system/.venv/
+mcp_agent_system/venv/
+airflow/.venv/
+airflow/venv/
 pytest_output.txt
