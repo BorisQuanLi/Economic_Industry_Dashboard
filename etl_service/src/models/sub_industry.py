@@ -1,11 +1,11 @@
-from api.src.db import db
-import api.src.models as models
+from etl_service.src.db import db
+import etl_service.src.models as models
 from psycopg2 import sql
-from api.src.models.queries.query_sector_quarterly_financials import MixinSectorQuarterlyFinancials
-from api.src.models.queries.query_sector_price_pe import MixinSectorPricePE
-from api.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
-from api.src.models.queries.query_sub_sector_quarterly_financials import MixinSubSectorQuarterlyFinancials
-from api.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str, find_sub_industry_by_name_str
+from etl_service.src.models.queries.query_sector_quarterly_financials import MixinSectorQuarterlyFinancials
+from etl_service.src.models.queries.query_sector_price_pe import MixinSectorPricePE
+from etl_service.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
+from etl_service.src.models.queries.query_sub_sector_quarterly_financials import MixinSubSectorQuarterlyFinancials
+from etl_service.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str, find_sub_industry_by_name_str
 
 class SubIndustry(MixinSectorPricePE,  # create new class called Sector and sub-Sector, or Quarterly Financials and Prices PE
                   MixinSectorQuarterlyFinancials, # do the above in models/aggregation_by_quarter.py?

@@ -1,6 +1,6 @@
-import api.src.models as models
-import api.src.db as db
-import api.src.adapters as adapters
+import etl_service.src.models as models
+import etl_service.src.db as db
+import etl_service.src.adapters as adapters
 import psycopg2
 import datetime
 import csv

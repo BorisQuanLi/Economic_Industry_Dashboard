@@ -1,10 +1,11 @@
 from flask import Blueprint, request
 import simplejson as json
-import api.src.models as models
-import api.src.db as db
-from api.src.adapters.backend_utilities import company_performance_query_tools, financial_performance_query_tools
-from api.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
-from api.src.models.queries.query_company_price_pe_history import MixinCompanyPricePE
+import etl_service.src.models as models
+import etl_service.src.db as db
+from backend.api.src.adapters.backend_utilities import company_performance_query_tools, financial_performance_query_tools
+from etl_service.src.models.queries.query_sub_sector_price_pe import MixinSubSectorPricePE
+from etl_service.src.models.queries.query_company_price_pe_history import MixinCompanyPricePE
+from etl_service.src.models.queries.query_company_financials_history import MixinCompanyFinancialsPricePE # assuming this is correct
 
 company_bp = Blueprint('company_bp', __name__)
 

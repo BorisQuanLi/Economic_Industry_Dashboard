@@ -3,9 +3,9 @@ import json
 from datetime import datetime, timedelta
 import pytz
 import pandas as pd
-import api.src.models as models
-import api.src.db as db
-from settings import API_KEY
+import etl_service.src.models as models
+import etl_service.src.db as db
+from etl_service.settings import API_KEY
 
 class QuarterlyPricePEBuilder:
     prices_pe_attributes = ['date', 'company_id', 'closing_price', 'price_earnings_ratio']

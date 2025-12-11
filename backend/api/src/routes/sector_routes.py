@@ -1,8 +1,8 @@
 from flask import Blueprint, request
 import simplejson as json
-import api.src.models as models
-import api.src.db as db
-from api.src.adapters.backend_utilities import financial_performance_query_tools
+import etl_service.src.models as models
+import etl_service.src.db as db
+from backend.api.src.adapters.backend_utilities import financial_performance_query_tools
 
 sector_bp = Blueprint('sector_bp', __name__)
 

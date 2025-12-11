@@ -1,5 +1,5 @@
-from api.src.db import db
-from api.src import models
+from etl_service.src.db import db
+from etl_service.src import models
 
 class PricePE:
     __table__ = 'prices_pe' 

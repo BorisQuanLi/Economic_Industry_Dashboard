@@ -1,35 +1,20 @@
-from flask import current_app, g
 import psycopg2
 from datetime import datetime, timedelta
-# from settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD, DEBUG, TESTING # backend/settings.py
+from etl_service.settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD
 
-def get_db(db_name=None, db_user=None, db_password=None):
-    if 'db' not in g:
-        if db_name is None:
-            db_name = current_app.config.get('DB_NAME', 'investment_analysis')
-        if db_user is None:
-            db_user = current_app.config.get('DB_USER', 'postgres')
-        if db_password is None:
-            db_password = current_app.config.get('DB_PASSWORD', 'postgres')
-        g.db = psycopg2.connect(host='localhost', database=db_name, user=db_user, password=db_password)
-    return g.db
-
-"""
-# Connecting to the AWS RDS instance
-conn = psycopg2.connect(host = DB_HOST, database = DB_NAME, 
-                        user = DB_USER, password = DB_PASSWORD)  
+conn = None # Global connection for simple script-based execution
 
 def get_db():
-    if "db" not in g:
-        g.db = psycopg2.connect(host = DB_HOST, database = DB_NAME, 
-                    user = DB_USER, password = DB_PASSWORD) 
-    return g.db
-"""
+    global conn
+    if conn is None:
+        conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    return conn
 
 def close_db(e=None):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
+    global conn
+    if conn is not None:
+        conn.close()
+        conn = None
 
 def build_from_record(Class, record):
     if not record: return None

@@ -1,8 +1,8 @@
 from urllib.request import urlopen
 import json
-import api.src.models as models
-import api.src.db as db
-from settings import API_KEY
+import etl_service.src.models as models
+import etl_service.src.db as db
+from etl_service.settings import API_KEY
 
 class QuarterlyFinancialsBuilder:
     financials_attributes = ['date', 'company_id', 'revenue', 'net_income', 'earnings_per_share', 'profit_margin'] 

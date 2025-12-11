@@ -1,11 +1,11 @@
 import csv
 import pandas as pd
-import api.src.models as models
-import api.src.db as db
-from api.src.adapters.wiki_page_client import get_sp500_wiki_data
-from api.src.adapters.companies_builder import CompanyBuilder
-from api.src.adapters.quarterly_financials_builder import QuarterlyFinancialsBuilder
-from ap.src.adapters.quarterly_price_pe_builder import QuarterlyPricePEBuilder
+import etl_service.src.models as models
+import etl_service.src.db as db
+from etl_service.src.adapters.wiki_page_client import get_sp500_wiki_data
+from etl_service.src.adapters.companies_builder import CompanyBuilder
+from etl_service.src.adapters.quarterly_financials_builder import QuarterlyFinancialsBuilder
+from etl_service.src.adapters.quarterly_price_pe_builder import QuarterlyPricePEBuilder
 
 class BuildSP500Companies: 
     def __init__(self):

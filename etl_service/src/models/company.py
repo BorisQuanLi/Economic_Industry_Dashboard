@@ -1,9 +1,8 @@
-from api.src.db import db
-import api.src.models as models
-from api.src.models.queries.sql_query_strings import companies_within_sub_sector_str
-from api.src.models.queries.query_company_price_pe_history import MixinCompanyPricePE
-from api.src.models.queries.query_company_financials_history import MixinCompanyFinancials
-from api.src.models.queries.sql_query_strings import extract_single_financial_indicator, companies_within_sub_sector_str
+from etl_service.src.db import db
+import etl_service.src.models as models
+from etl_service.src.models.queries.sql_query_strings import companies_within_sub_sector_str, extract_single_financial_indicator
+from etl_service.src.models.queries.query_company_price_pe_history import MixinCompanyPricePE
+from etl_service.src.models.queries.query_company_financials_history import MixinCompanyFinancials
 
 
 class Company(MixinCompanyPricePE, MixinCompanyFinancials): 
