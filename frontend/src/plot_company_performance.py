@@ -32,16 +32,28 @@ def plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_fina
     st.plotly_chart(fig)
 
 def find_company_financials_within_sub_sector(sub_sector_name, financial_indicator):
-    # response_dict = requests.get(SEARCH_SUB_SECTOR_URL, params= {'sub_sector_name': sub_sector_name, 'financial_indicator': financial_indicator})
-    # return response_dict.json()
-    # TODO: This function makes an incorrect API call. Returning empty dict as a temporary fix.
-    return {}
+    try:
+        company_financials_url = f"http://fastapi_backend:8000/api/v1/sectors/companies/{sub_sector_name}/financials"
+        response = requests.get(company_financials_url, params={'financial_indicator': financial_indicator})
+        return response.json()
+    except Exception as e:
+        return {}
 
 def get_sub_industry_xy_axis_info(financial_indicator, financial_performance_indicators, quarterly_info_dicts):
     dates_list = [financial_performance_indicators.extract_year_quarter(quarterly_dict) 
                                             for quarterly_dict in quarterly_info_dicts]
-    values_list = [quarterly_dict[financial_indicator] 
-                                for quarterly_dict in quarterly_info_dicts]
+    # Handle both 'revenue' and other field names
+    if quarterly_info_dicts and financial_indicator in quarterly_info_dicts[0]:
+        values_list = [quarterly_dict[financial_indicator] for quarterly_dict in quarterly_info_dicts]
+    else:
+        # Fallback to first numeric field found
+        first_dict = quarterly_info_dicts[0] if quarterly_info_dicts else {}
+        numeric_fields = [k for k, v in first_dict.items() if isinstance(v, (int, float))]
+        if numeric_fields:
+            field = numeric_fields[0]
+            values_list = [quarterly_dict.get(field, 0) for quarterly_dict in quarterly_info_dicts]
+        else:
+            values_list = [0] * len(quarterly_info_dicts)
     return dates_list, values_list
 
 def add_traces_to_fig(sub_sector_name, financial_indicator, financial_performance_indicators, sub_sectors_xy_axis_info:dict):

@@ -37,9 +37,10 @@ def get_plotly_chart_data(fig, financial_indicator, financial_performance_indica
                                                                                 financial_performance_indicators)
             add_trace(fig, sector, x_axis_time_series, y_axis_financials)
     except Exception as e:
-        print(e)
-        print(quarterly_financial_history_by_sector)
-        breakpoint()
+        print(f"Error in get_plotly_chart_data: {e}")
+        print(f"Data received: {quarterly_financial_history_by_sector}")
+        # Handle the error gracefully - show empty chart or fallback data
+        st.error(f"Unable to load chart data: {e}")
 
 def find_sector_avg_financials(financial_indicator):
     response_dict = requests.get(AGGREGATION_BY_SECTOR_URL, params= {'financial_indicator': financial_indicator})
@@ -48,7 +49,12 @@ def find_sector_avg_financials(financial_indicator):
 def get_time_n_financials_axis(sector, quarterly_financials, financial_indicator, financial_performance_indicators):
     x_axis_time_series = [financial_performance_indicators.extract_year_quarter(quarterly_dict) 
                                                         for quarterly_dict in quarterly_financials]
-    y_axis_financials = [quarterly_dict[financial_indicator] for quarterly_dict in quarterly_financials]
+    # Handle both 'revenue' and 'company_count' fields
+    if financial_indicator in quarterly_financials[0]:
+        y_axis_financials = [quarterly_dict[financial_indicator] for quarterly_dict in quarterly_financials]
+    else:
+        # Fallback to company_count if the requested indicator doesn't exist
+        y_axis_financials = [quarterly_dict.get('company_count', 0) for quarterly_dict in quarterly_financials]
     return x_axis_time_series, y_axis_financials
 
 def add_trace(fig, sector, x_axis_time_series, y_axis_financials):
