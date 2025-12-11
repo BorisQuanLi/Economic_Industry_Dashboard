@@ -24,7 +24,7 @@ class BuildSP500Companies:
         
         self.sp500_wiki_data_filepath = get_sp500_wiki_data()
         self.company_builder = CompanyBuilder()
-        self.conn = db.conn
+        self.conn = db.get_db()
         self.cursor = self.conn.cursor()
         
     def run(self): 

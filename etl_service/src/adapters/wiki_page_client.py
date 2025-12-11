@@ -1,52 +1,84 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 import os
+import time
+import logging
+from io import StringIO
+
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-def ingest_sp500_stocks_info():
+logger = logging.getLogger(__name__)
+
+def get_session_with_retries():
+    """Create a requests session with retry logic."""
+    session = requests.Session()
+    retries = Retry(total=3, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+    session.mount('https://', HTTPAdapter(max_retries=retries))
+    session.mount('http://', HTTPAdapter(max_retries=retries))
+    return session
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+}
+
+def get_sp500_wiki_data():
     """
-    Extracts from two web sites the S&P 500 companies' basic information. such as name, ticker symbol.
-    
+    Extracts S&P 500 companies' basic information from Wikipedia.
     Save the combined info in a csv file. 
-
-    Returns the csv file's absolute file path from the root level of the backend folder.
-
-    To be executed from the root level of the /backend directory:
-
-    backend$ python3 api/data/ingest_process_data/ingest_sp500_wiki_info_employees_total.py
+    Returns the csv file's absolute file path.
     """
-
-    sp500_wiki_data_filepath = "./api/data/sp500/raw_data/sp500_stocks_wiki_info.csv"
-    import os
+    sp500_wiki_data_filepath = "/app/data/sp500_stocks_wiki_info.csv"
     if not os.path.exists(sp500_wiki_data_filepath):
+        os.makedirs(os.path.dirname(sp500_wiki_data_filepath), exist_ok=True)
         sp500_df = get_sp500_wiki_info()
-        employees_total_df = get_employees_total()
-        sp500_incl_employees_df = merge_df(sp500_df, employees_total_df)
+        
+        # Try to get employees data, but continue without it if it fails
+        try:
+            employees_total_df = get_employees_total()
+            sp500_incl_employees_df = merge_df(sp500_df, employees_total_df)
+        except Exception as e:
+            logger.warning(f"Could not fetch employees data: {e}. Continuing without it.")
+            sp500_incl_employees_df = sp500_df
+            sp500_incl_employees_df['Employees'] = -1
+            
         sp500_wiki_data_filepath = save_csv(sp500_incl_employees_df, sp500_wiki_data_filepath)
     return sp500_wiki_data_filepath
 
-import requests
+
+# Alias for backward compatibility
+ingest_sp500_stocks_info = get_sp500_wiki_data
+
 
 def get_sp500_wiki_info():
-    """ingest each and every S&P 500 company's basic info from the Wikipedia web page"""
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    """Ingest S&P 500 company basic info from Wikipedia."""
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-    response = requests.get(url, headers=headers)
-    sp500_df = pd.read_html(response.text)[0]
-    column_names = list(sp500_df.columns)
-    column_names[0] = 'Ticker'
-    sp500_df.columns = column_names
+    session = get_session_with_retries()
+    response = session.get(url, headers=HEADERS, timeout=30)
+    response.raise_for_status()
+    
+    # Use StringIO to avoid FutureWarning
+    tables = pd.read_html(StringIO(response.text))
+    if not tables:
+        raise ValueError("No tables found on Wikipedia S&P 500 page")
+    
+    sp500_df = tables[0]
+    # Rename 'Symbol' column to 'Ticker' for consistency
+    sp500_df = sp500_df.rename(columns={'Symbol': 'Ticker'})
     return sp500_df
 
+
 def get_employees_total():
-    """ ingest each company's total number of employees """
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    """Ingest each company's total number of employees."""
     url = 'https://www.liberatedstocktrader.com/sp-500-companies-list-by-number-of-employees/'
-    response = requests.get(url, headers=headers)
-    returned_dataframes = pd.read_html(response.text)
+    session = get_session_with_retries()
+    response = session.get(url, headers=HEADERS, timeout=30)
+    response.raise_for_status()
+    
+    returned_dataframes = pd.read_html(StringIO(response.text))
     employees_total = returned_dataframes[0]
     employees_total_df = employees_total.iloc[1:, 1:].copy()
     employees_total_df.columns = employees_total.iloc[0, 1:]

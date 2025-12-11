@@ -1,5 +1,5 @@
-from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyPricePE
-from api.src.models.queries.sql_query_strings import (query_all_sector_names_in_quarterly_reports_table, 
+from etl_service.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyPricePE
+from etl_service.src.models.queries.sql_query_strings import (query_all_sector_names_in_quarterly_reports_table, 
                                                       sector_avg_price_pe_history_query_str)
                                                       
 

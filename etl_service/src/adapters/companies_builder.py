@@ -27,7 +27,12 @@ class CompanyBuilder:
         name = info_row['Security']
         ticker = info_row['Ticker']
         year_founded = info_row['Founded']
-        number_of_employees = info_row['Employees']
-        hq_state = info_row['Headquarters Location'].split(', ')[1]
+        number_of_employees = info_row.get('Employees', -1)
+        
+        # Handle headquarters location parsing safely
+        hq_location = info_row['Headquarters Location']
+        hq_parts = hq_location.split(', ')
+        hq_state = hq_parts[1] if len(hq_parts) > 1 else hq_location
+        
         values_vector = [name, ticker, sub_industry_id, year_founded, number_of_employees, hq_state]
         return values_vector

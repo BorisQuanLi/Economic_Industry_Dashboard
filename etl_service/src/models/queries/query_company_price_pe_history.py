@@ -1,5 +1,5 @@
-from api.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyPricePE
-from api.src.models.queries.sql_query_strings import companies_within_sub_sector_str, company_price_pe_history_query_str
+from etl_service.src.models.quarterly_aggregation_models.aggregation_by_quarter import QuarterlyPricePE
+from etl_service.src.models.queries.sql_query_strings import companies_within_sub_sector_str, company_price_pe_history_query_str
 
 class MixinCompanyPricePE:
     """mixin with class Company"""
