@@ -43,6 +43,8 @@ High-performance async endpoints featuring sliding window algorithm that solves 
 - Python 3.11+ (Pydantic validation, async processing)
 
 **Data Pipeline:**
+- Apache PySpark 3.5.0 (distributed data processing)
+- AWS Glue (serverless ETL, PySpark job orchestration)
 - Financial Modeling Prep (FMP) API integration
 - Rate-limited extraction (250 calls/day)
 - Sliding window temporal alignment
@@ -209,7 +211,7 @@ If you prefer to run individual Python services directly on your local machine w
     deactivate
     ```
 
-#### ETL Service Setup
+#### ETL Service Setup (with PySpark)
 
 1.  **Navigate to the ETL service directory:**
     ```bash
@@ -228,15 +230,19 @@ If you prefer to run individual Python services directly on your local machine w
         ```bash
         .\venv\Scripts\activate
         ```
-4.  **Install dependencies:**
+4.  **Install dependencies (includes PySpark 3.5.0):**
     ```bash
     pip install -r requirements.txt
     ```
-5.  **Run the ETL script/service (placeholder - adjust as needed):**
+5.  **Run the ETL pipeline:**
     ```bash
-    python3 <your_etl_script_name>.py
+    python3 run_pipeline.py
     ```
-6.  **Deactivate the virtual environment:**
+6.  **For PySpark jobs (local mode):**
+    ```bash
+    python3 run_pipeline.py --spark-mode local
+    ```
+7.  **Deactivate the virtual environment:**
     ```bash
     deactivate
     ```
