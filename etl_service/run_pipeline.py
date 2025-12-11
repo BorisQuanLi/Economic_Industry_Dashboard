@@ -149,6 +149,11 @@ def main():
         action='store_true',
         help='Only load companies (skip financial data)'
     )
+    parser.add_argument(
+        '--spark-mode',
+        type=str,
+        help='Use PySpark for processing (local, local[*], or cluster URL)'
+    )
     
     args = parser.parse_args()
     
@@ -156,7 +161,28 @@ def main():
     if args.sectors:
         sectors = [s.strip() for s in args.sectors.split(',')]
     
-    if args.companies_only:
+    # Check if PySpark mode is requested
+    if args.spark_mode:
+        logger.info(f"Running in PySpark mode: {args.spark_mode}")
+        try:
+            from etl_service.run_pipeline_spark import SparkETLPipeline
+            pipeline = SparkETLPipeline(spark_mode=args.spark_mode)
+            
+            if args.init_db:
+                pipeline.init_database()
+            
+            if args.companies_only:
+                pipeline.run_companies_pipeline()
+            else:
+                # Future: Add financial data processing
+                pipeline.run_companies_pipeline()
+                
+            pipeline.stop()
+        except ImportError as e:
+            logger.error(f"PySpark dependencies not available: {e}")
+            logger.error("Please install PySpark: pip install pyspark")
+            sys.exit(1)
+    elif args.companies_only:
         if args.init_db:
             init_database()
         load_companies()
