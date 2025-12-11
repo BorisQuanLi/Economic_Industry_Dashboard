@@ -14,8 +14,8 @@ services:
 
   fastapi_backend:
     build:
-      context: ./fastapi_backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: fastapi_backend/Dockerfile
     ports:
       - "8000:8000"
     depends_on:
@@ -37,6 +37,29 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  etl_service:
+    build:
+      context: .
+      dockerfile: etl_service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: "postgres"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PASS: "${DB_PASS}"
+      FMP_API_KEY: "${FMP_API_KEY}"
+    volumes:
+      - etl_data:/app/data
+    command: ["python", "-m", "etl_service.run_pipeline", "--init-db", "--companies-only"]
 
 volumes:
   postgres_data:
+  etl_data:
