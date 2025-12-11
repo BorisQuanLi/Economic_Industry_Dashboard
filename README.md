@@ -79,6 +79,31 @@ python3 run_demo.py
 - **Enterprise ROI** - 95% automation, sub-500ms processing
 - **Scalable Architecture** - 5-agent system, Kubernetes-ready
 
+### 🐳 Docker Compose Setup (Recommended for Local Development)
+
+This project is configured to run with Docker Compose, which simplifies the setup of the frontend, backend, and database services.
+
+**1. Set up the Environment:**
+
+First, create a local environment file by copying the provided template. The default values are set for a streamlined local setup.
+
+```bash
+cp .env.example .env
+```
+
+**2. Launch the Services:**
+
+Use Docker Compose to build the images and start all the services.
+
+```bash
+docker-compose up --build
+```
+
+The following services will be available:
+- **FastAPI Backend**: `http://localhost:8000`
+- **Streamlit Frontend**: `http://localhost:8501`
+- **PostgreSQL Database**: `localhost:5432`
+
 ### **Legacy System Access (Optional)**
 
 #### Flask Backend (Stage 1)

@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   frontend:
     build:
@@ -6,3 +7,36 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8501:8501"
+    depends_on:
+      - fastapi_backend
+    environment:
+      FRONTEND_ENV_VAR: "example_value"
+
+  fastapi_backend:
+    build:
+      context: ./fastapi_backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: "postgres"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PASS: "${DB_PASS}"
+      DB_PORT: "5432"
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASS}"
+      POSTGRES_DB: "${DB_NAME}"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
