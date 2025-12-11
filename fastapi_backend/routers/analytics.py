@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import List
-from ..models.financial import SlidingWindowAnalytics
-from ..services.sliding_window import SlidingWindowService
+from models.financial import SlidingWindowAnalytics
+from services.sliding_window import SlidingWindowService
 
 router = APIRouter()
 

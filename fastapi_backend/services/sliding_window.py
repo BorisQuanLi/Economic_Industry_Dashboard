@@ -1,5 +1,5 @@
 from typing import List
-from ..models.financial import SlidingWindowAnalytics
+from models.financial import SlidingWindowAnalytics
 
 class SlidingWindowService:
     async def get_aligned_sector_performance(self) -> List[SlidingWindowAnalytics]:

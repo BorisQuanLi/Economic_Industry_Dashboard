@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import analytics, sectors
+from routers import analytics, sectors
 
 app = FastAPI(
     title="S&P 500 Financial Analytics API",
