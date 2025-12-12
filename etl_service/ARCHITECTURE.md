@@ -2,7 +2,7 @@
 
 ## Overview
 
-The ETL service is modularized by AWS service and functional responsibility to support enterprise-scale data pipeline operations. This architecture aligns with JPMC's tech stack requirements: **PySpark**, **AWS ECS**, **AWS Glue**, **Lake Formation**, and **Snowflake**.
+The ETL service is modularized by AWS service and functional responsibility to support enterprise-scale data pipeline operations. This architecture demonstrates proficiency in modern data engineering technologies: **PySpark**, **AWS ECS**, **AWS Glue**, **Lake Formation**, and **Snowflake**.
 
 ## Directory Structure
 
@@ -121,9 +121,9 @@ from etl_service.aws.lake_formation import LakeFormationSetup
 from etl_service.pipelines import SparkETLPipeline, PySparkLakeFormationETL
 ```
 
-## JPMC Tech Stack Alignment
+## Enterprise Tech Stack Demonstration
 
-This architecture demonstrates proficiency in the required technologies:
+This architecture demonstrates proficiency in modern data engineering technologies:
 
 ### ✅ Python/PySpark
 - `pipelines/spark_pipeline.py`: Distributed data processing
