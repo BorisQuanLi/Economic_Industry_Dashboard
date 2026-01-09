@@ -4,8 +4,7 @@ import plotly.graph_objects as go
 import math
 from chart_layout import apply_standard_chart_layout
 from financial_performance_indicator import FinancialPerformanceIndicator
-
-SEARCH_SUB_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/sub-sectors"
+from config import BACKEND_BASE_URL
 
 def select_sub_sector_within_sector(sub_sector_name):
     st.header('Historical financial performance by companies within a sub-Sector.')
@@ -38,7 +37,7 @@ def plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_fina
 
 def find_company_financials_within_sub_sector(sub_sector_name, financial_indicator):
     try:
-        company_financials_url = f"http://fastapi_backend:8000/api/v1/sectors/companies/{sub_sector_name}/financials"
+        company_financials_url = f"{BACKEND_BASE_URL}/api/v1/sectors/companies/{sub_sector_name}/financials"
         response = requests.get(company_financials_url, params={'financial_indicator': financial_indicator})
         companies = response.json()
         if not companies:

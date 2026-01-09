@@ -25,9 +25,14 @@ def select_from_sectors_menu():
     return sector_choice
 
 def get_all_sector_names():
-    all_sector_names_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': 'all_sectors'}).json()
-    all_sector_names = all_sector_names_dict['sector_names']
-    return all_sector_names
+    try:
+        all_sector_names_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': 'all_sectors'}).json()
+        all_sector_names = all_sector_names_dict['sector_names']
+        return all_sector_names
+    except Exception as e:
+        # Fallback to mock data when backend is not available
+        st.warning("Backend not available, using mock data")
+        return ['Information Technology', 'Health Care', 'Financials', 'Consumer Discretionary', 'Communication Services']
 
 def plot_all_sub_sectors_within_sector(sector_name, financial_indicator, financial_performance_indicators):
     avg_financials = find_sub_industries_avg_financials_by_sector(sector_name, financial_indicator)
