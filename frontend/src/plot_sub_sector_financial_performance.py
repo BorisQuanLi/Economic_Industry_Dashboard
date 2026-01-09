@@ -3,8 +3,7 @@ import requests
 import plotly.graph_objects as go
 from datetime import time, datetime, timedelta
 from financial_performance_indicator import FinancialPerformanceIndicator
-
-SEARCH_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/search"
+from config import SEARCH_SECTOR_URL, BACKEND_BASE_URL
 
 def plot_sub_sectors_performance(sector_financial_indicator): 
     sector_name_selected = select_from_sectors_menu()
@@ -23,9 +22,14 @@ def select_from_sectors_menu():
     return sector_choice
 
 def get_all_sector_names():
-    all_sector_names_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': 'all_sectors'}).json()
-    all_sector_names = all_sector_names_dict['sector_names']
-    return all_sector_names
+    try:
+        all_sector_names_dict = requests.get(SEARCH_SECTOR_URL, params= {'sector_name': 'all_sectors'}).json()
+        all_sector_names = all_sector_names_dict['sector_names']
+        return all_sector_names
+    except Exception as e:
+        # Fallback to mock data when backend is not available
+        st.warning("Backend not available, using mock data")
+        return ['Information Technology', 'Health Care', 'Financials', 'Consumer Discretionary', 'Communication Services']
 
 def plot_all_sub_sectors_within_sector(sector_name, financial_indicator, financial_performance_indicators):
     avg_financials = find_sub_industries_avg_financials_by_sector(sector_name, financial_indicator)
@@ -38,7 +42,7 @@ def plot_all_sub_sectors_within_sector(sector_name, financial_indicator, financi
 def find_sub_industries_avg_financials_by_sector(sector_name, financial_indicator):
     # Get sub-sectors for the selected sector and create mock data
     try:
-        sub_sectors_url = "http://fastapi_backend:8000/api/v1/sectors/sub-sectors"
+        sub_sectors_url = f"{BACKEND_BASE_URL}/api/v1/sectors/sub-sectors"
         response = requests.get(sub_sectors_url)
         all_sub_sectors = response.json().get('sub_sector_names', [])
         

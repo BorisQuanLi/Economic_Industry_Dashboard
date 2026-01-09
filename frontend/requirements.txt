@@ -6,3 +6,4 @@ plotly==5.20.0
 
 # Testing Dependencies
 pytest==8.1.1
+

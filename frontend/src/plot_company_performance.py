@@ -2,8 +2,7 @@ import streamlit as st
 import requests
 import plotly.graph_objects as go
 from financial_performance_indicator import FinancialPerformanceIndicator
-
-SEARCH_SUB_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/sub-sectors"
+from config import BACKEND_BASE_URL
 
 def plot_company_level_performance(sub_sector_name, sub_sector_financial_indicator):
     selected_sub_sector_name = select_sub_sector_within_sector(sub_sector_name)
@@ -17,7 +16,8 @@ def select_sub_sector_within_sector(sub_sector_name):
     st.header('Historical financial performance by companies within a sub-Sector.')
     st.header(' ')
     st.write(f"Select from the dropdown menu an economic sub-Sector in the {sub_sector_name} sector:")
-    sub_sector_names_response = requests.get(SEARCH_SUB_SECTOR_URL, 
+    search_sub_sector_url = f"{BACKEND_BASE_URL}/api/v1/sectors/sub-sectors"
+    sub_sector_names_response = requests.get(search_sub_sector_url, 
                                                 params= {'sub_sector_name': 'all_sub_sectors', 'financial_indicator': sub_sector_name})
     sub_sector_names = sub_sector_names_response.json()['sub_sector_names']
     sub_sector_choice = st.selectbox('', sub_sector_names, index=0, key= 'company_level_entrypoint')
@@ -33,7 +33,7 @@ def plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_fina
 
 def find_company_financials_within_sub_sector(sub_sector_name, financial_indicator):
     try:
-        company_financials_url = f"http://fastapi_backend:8000/api/v1/sectors/companies/{sub_sector_name}/financials"
+        company_financials_url = f"{BACKEND_BASE_URL}/api/v1/sectors/companies/{sub_sector_name}/financials"
         response = requests.get(company_financials_url, params={'financial_indicator': financial_indicator})
         return response.json()
     except Exception as e:
