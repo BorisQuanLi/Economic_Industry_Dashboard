@@ -14,6 +14,7 @@ fastapi_backend/.env
 etl_service/.env
 mcp_agent_system/.env
 airflow/.env
+multi_agent_poc/.env
 
 # Configuration files
 ./api/src/adapters/api_calls/api_client_config.py
@@ -33,4 +34,8 @@ mcp_agent_system/.venv/
 mcp_agent_system/venv/
 airflow/.venv/
 airflow/venv/
+multi_agent_poc/.venv
+multi_agent_poc/venv
+
+# Pytest output files
 pytest_output.txt

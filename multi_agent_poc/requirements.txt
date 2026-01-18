@@ -1,0 +1,2 @@
+# Coogle Cloud Vertext AI SDK
+google-cloud-aiplatform
