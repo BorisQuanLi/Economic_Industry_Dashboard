@@ -1,2 +1,6 @@
-# Coogle Cloud Vertext AI SDK
+# Google Cloud Vertex AI SDK
 google-cloud-aiplatform
+
+# Mistral Vibe Agent dependencies
+requests>=2.31.0
+python-dotenv>=1.0.0
