@@ -10,48 +10,13 @@ import sys
 import os
 import subprocess
 import json
-import threading
-import queue
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# --- Configuration and Data Structures ---
-
-class AgentType(Enum):
-    """Supported agent types."""
-    GEMINI = "gemini"
-    MISTRAL_VIBE = "mistral_vibe"
-    AMAZON_Q = "amazon_q"
-
-@dataclass
-class AgentTask:
-    """Represents a task to be executed by an agent."""
-    agent_type: AgentType
-    task_type: str
-    input_data: str
-    task_id: str
-    output_file: Optional[str] = None
-    dependencies: Optional[List[str]] = None
-
-@dataclass
-class AgentResult:
-    """Represents the result of an agent task."""
-    task_id: str
-    agent_type: AgentType
-    success: bool
-    output: str
-    error: Optional[str] = None
-    execution_time: float = 0.0
-
-class WorkflowStatus(Enum):
-    """Workflow execution status."""
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
+from models import AgentType, AgentTask, AgentResult, WorkflowStatus
 
 # --- Core Orchestrator Class ---
 
@@ -262,7 +227,7 @@ class MultiAgentOrchestrator:
             cmd,
             capture_output=True,
             text=True,
-            cwd="."
+            cwd=os.path.dirname(os.path.abspath(__file__))
         )
         
         if result.returncode != 0:
@@ -282,7 +247,7 @@ class MultiAgentOrchestrator:
             cmd,
             capture_output=True,
             text=True,
-            cwd="."
+            cwd=os.path.dirname(os.path.abspath(__file__))
         )
         
         if result.returncode != 0:
@@ -302,7 +267,7 @@ class MultiAgentOrchestrator:
             cmd,
             capture_output=True,
             text=True,
-            cwd="."
+            cwd=os.path.dirname(os.path.abspath(__file__))
         )
         
         if result.returncode != 0:
@@ -483,10 +448,13 @@ def main():
         result = orchestrator.execute_workflow(workflow)
         
         # Save results
-        with open(f"workflow_{workflow_type}_results.json", "w") as f:
+        output_path = os.path.join("workflow_results", f"workflow_{workflow_type}_results.json")
+        os.makedirs("workflow_results", exist_ok=True)
+        with open(output_path, "w") as f:
             json.dump(result, f, indent=2)
         
-        print(f"✅ Results saved to: workflow_{workflow_type}_results.json")
+        print(f"✅ Results saved to: {output_path}")
+        print(f"💡 Tip: Run this from the multi_agent_poc/ directory for best results")
         
     elif command == "custom":
         if len(sys.argv) < 3:
@@ -503,12 +471,15 @@ def main():
             result = orchestrator.execute_workflow(workflow)
             
             # Save results
-            base_name = os.path.splitext(workflow_file)[0]
+            base_name = os.path.basename(os.path.splitext(workflow_file)[0])
             output_file = f"{base_name}_results.json"
-            with open(output_file, "w") as f:
+            output_path = os.path.join("workflow_results", output_file)
+            os.makedirs("workflow_results", exist_ok=True)
+            with open(output_path, "w") as f:
                 json.dump(result, f, indent=2)
             
-            print(f"✅ Results saved to: {output_file}")
+            print(f"✅ Results saved to: {output_path}")
+            print(f"💡 Tip: Run this from the multi_agent_poc/ directory for best results")
             
         except Exception as e:
             print(f"❌ Error loading workflow file: {e}")
