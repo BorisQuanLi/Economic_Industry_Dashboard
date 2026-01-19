@@ -1,6 +1,6 @@
 # Multi-Agent POC System
 
-A proof-of-concept implementation of a multi-agent AI system for software development productivity.
+A proof-of-concept implementation of a multi-agent AI coding system for enterprise-grade software development.
 
 ## 🚀 Quick Start
 
@@ -43,6 +43,21 @@ gcloud services enable aiplatform.googleapis.com
 # Create .env file with your Mistral API key
 cp .env.example .env
 echo "MISTRAL_API_KEY=your_api_key_here" >> .env
+```
+
+#### Amazon Q Agent (AWS)
+
+```bash
+# Configure AWS credentials
+aws configure
+
+# Or set environment variables
+export AWS_ACCESS_KEY_ID="your_access_key"
+export AWS_SECRET_ACCESS_KEY="your_secret_key"
+export AWS_DEFAULT_REGION="us-east-1"
+
+# Install AWS SDK
+pip install boto3
 ```
 
 ## 🤖 AI Agents Overview
@@ -116,6 +131,20 @@ python3 amazon_q_agent.py "<documentation_request>"
 python3 amazon_q_agent.py "Generate architecture diagram for multi-agent system"
 ```
 
+**Configuration**:
+```bash
+# AWS credentials configuration
+aws configure
+
+# Or set environment variables
+export AWS_ACCESS_KEY_ID="your_access_key"
+export AWS_SECRET_ACCESS_KEY="your_secret_key"
+export AWS_DEFAULT_REGION="us-east-1"
+
+# Install AWS SDK
+pip install boto3
+```
+
 **Status**: Placeholder implementation (AWS integration planned)
 
 ## 🎯 Division of Labor
@@ -152,7 +181,115 @@ multi_agent_poc/
 ├── mistral_vibe_agent.py   # Mistral Vibe Agent implementation
 ├── amazon_q_agent.py       # Amazon Q Agent implementation
 ├── models.py               # Data models (Pydantic)
-└── orchestrator.py         # Multi-agent orchestrator (placeholder)
+└── orchestrator.py         # Multi-agent orchestrator
+└── workflow_results/       # Workflow output directory
+```
+
+## 🎬 Multi-Agent Orchestrator
+
+The orchestrator coordinates the three AI agents to create unified workflows for AI-powered software development.
+
+### Usage Instructions
+
+**Important**: For best results, run the orchestrator from the `multi_agent_poc/` directory:
+
+```bash
+# Navigate to the multi_agent_poc directory
+cd Economic_Industry_Dashboard/multi_agent_poc/
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Run predefined workflows
+python3 orchestrator.py run <workflow_type>
+
+# Run custom workflows
+python3 orchestrator.py custom <workflow_file.json>
+
+# Check status
+python3 orchestrator.py status
+
+# View history
+python3 orchestrator.py history
+```
+
+### Available Workflow Types
+
+1. **refactoring**: Complete code refactoring workflow
+   ```bash
+   python3 orchestrator.py run refactoring
+   ```
+
+2. **documentation**: Comprehensive documentation generation
+   ```bash
+   python3 orchestrator.py run documentation
+   ```
+
+3. **parallel**: Parallel execution workflow
+   ```bash
+   python3 orchestrator.py run parallel
+   ```
+
+### Workflow Results
+
+All workflow results are saved in the `workflow_results/` directory with timestamps and detailed execution logs:
+
+```
+workflow_results/
+├── workflow_refactoring_results.json
+├── workflow_documentation_results.json
+├── workflow_parallel_results.json
+└── custom_workflow_results.json
+```
+
+### Example Output
+
+```bash
+$ python3 orchestrator.py run parallel
+✅ Multi-Agent Orchestrator initialized with 3 workers
+🚀 Running parallel workflow...
+🚀 Starting workflow: workflow_1768842868
+📝 Executing task: generate_module_a
+   Agent: gemini
+   Type: generate
+📝 Executing task: generate_module_b
+   Agent: gemini
+   Type: generate
+✅ Task completed: generate_module_b
+   Duration: 11.72 seconds
+✅ Task completed: generate_module_a
+   Duration: 12.77 seconds
+📝 Executing task: validate_both
+   Agent: mistral_vibe
+   Type: validate
+✅ Task completed: validate_both
+   Duration: 0.15 seconds
+📝 Executing task: document_system
+   Agent: amazon_q
+   Type: documentation
+✅ Task completed: document_system
+   Duration: 0.31 seconds
+✅ Workflow completed: workflow_1768842868
+   Duration: 13.23 seconds
+   Tasks executed: 4
+   Results generated: 4
+✅ Results saved to: workflow_results/workflow_parallel_results.json
+💡 Tip: Run this from the multi_agent_poc/ directory for best results
+```
+
+### Troubleshooting
+
+**FileNotFoundError**: Ensure you're running from the `multi_agent_poc/` directory
+
+**Missing agents**: Verify all agent files are present:
+- `gemini_agent.py`
+- `mistral_vibe_agent.py` 
+- `amazon_q_agent.py`
+
+**Permission issues**: Check virtual environment activation and dependencies:
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ## 🔧 Development
