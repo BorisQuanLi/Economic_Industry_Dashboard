@@ -1,0 +1,40 @@
+{
+  "description": "System Refactor: Consolidate existing Python modules provisioning AI CLI coding agents into a modular sub-package and implement localized results directory and target-aware pathing.",
+  "tasks": {
+    "prepare_ops_result_dir": {
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Ensure the directory 'multi_agent_poc/workflow_results/sys_ops/' exists to act as a localized registry for system operations artifacts."
+    },
+    "create_cli_package": {
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Create directory multi_agent_poc/cli_coding_agents/ and an empty __init__.py to establish it as a Python package.",
+      "depends_on": ["prepare_ops_result_dir"]
+    },
+    "migrate_agent_wrappers": {
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Move gemini_agent.py, mistral_vibe_agent.py, and amazon_q_agent.py into multi_agent_poc/cli_coding_agents/.",
+      "depends_on": ["create_cli_package"]
+    },
+    "refactor_orchestrator_logic": {
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Modify orchestrator.py: 1) Update _execute_*_task methods to resolve agent paths in cli_coding_agents/. 2) Refactor the main() 'custom' command logic to dynamically save results in workflow_results/<sub_folder>/ based on the JSON's parent directory.",
+      "depends_on": ["migrate_agent_wrappers"]
+    },
+    "validate_structural_integrity": {
+      "agent": "mistral_vibe",
+      "type": "validate",
+      "input": "Run the existing test suite in multi_agent_poc/tests/ to ensure that path refactoring has not broken core orchestration logic.",
+      "depends_on": ["refactor_orchestrator_logic"]
+    },
+    "update_architecture_docs": {
+      "agent": "amazon_q",
+      "type": "api-docs",
+      "input": "Update multi_agent_poc/README.md to reflect the new modular structure and the use of 'sys_ops' localized result folders.",
+      "depends_on": ["validate_structural_integrity"]
+    }
+  }
+}
