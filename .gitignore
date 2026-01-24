@@ -39,3 +39,6 @@ multi_agent_poc/venv
 
 # Pytest output files
 pytest_output.txt
+
+# Agentic workflow output files
+multi_agent_poc/workflow_results/

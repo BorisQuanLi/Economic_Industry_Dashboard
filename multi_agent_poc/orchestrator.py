@@ -46,7 +46,8 @@ class MultiAgentOrchestrator:
             )
 
             if result.returncode != 0:
-                raise Exception(f"Agent {task.agent_type.value} failed: {result.stderr}")
+                error_message = result.stderr if result.stderr.strip() else result.stdout
+                raise Exception(f"Agent {task.agent_type.value} failed with exit code {result.returncode}:\n{error_message}")
 
             return AgentResult(
                 task_id=task.task_id, agent_type=task.agent_type,
@@ -58,38 +59,137 @@ class MultiAgentOrchestrator:
                 success=False, output="", error=str(e), execution_time=time.time() - start_time
             )
 
-    # ... [Internal parsing and dependency logic preserved from Source 78-82] ...
+    def _parse_workflow_definition(self, definition: Dict[str, Any]) -> List[AgentTask]:
+        """Parse workflow definition into agent tasks."""
+        tasks = []
+        
+        for task_id, task_config in definition.get("tasks", {}).items():
+            agent_type = AgentType(task_config["agent"])
+            task_type = task_config["type"]
+            input_data = task_config.get("input", "")
+            output_file = task_config.get("output_file")
+            dependencies = task_config.get("depends_on", [])
+            
+            task = AgentTask(
+                agent_type=agent_type,
+                task_type=task_type,
+                input_data=input_data,
+                task_id=task_id,
+                output_file=output_file,
+                dependencies=dependencies
+            )
+            tasks.append(task)
+        
+        return tasks
+    
+    def _execute_tasks_with_dependencies(self, tasks: List[AgentTask]) -> List[AgentResult]:
+        """Execute tasks with dependency management."""
+        results = []
+        completed_task_ids = set()
+        
+        # Execute tasks in dependency order
+        while len(completed_task_ids) < len(tasks):
+            # Find tasks with satisfied dependencies
+            ready_tasks = [
+                task for task in tasks 
+                if task.task_id not in completed_task_ids and
+                self._dependencies_satisfied(task, completed_task_ids)
+            ]
+            
+            if not ready_tasks:
+                raise ValueError("Circular dependency detected in workflow")
+            
+            # Execute ready tasks in parallel
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                futures = []
+                for task in ready_tasks:
+                    future = executor.submit(
+                        self._execute_single_task,
+                        task
+                    )
+                    futures.append(future)
+                
+                # Collect results
+                for future in as_completed(futures):
+                    result = future.result()
+                    results.append(result)
+                    completed_task_ids.add(result.task_id)
+        
+        return results
+
+    def _dependencies_satisfied(self, task: AgentTask, completed: set) -> bool:
+        """Check if task dependencies are satisfied."""
+        if not task.dependencies:
+            return True
+        return all(dep in completed for dep in task.dependencies)
+
+    def _aggregate_results(self, results: List[AgentResult]) -> Dict[str, Any]:
+        """Aggregate results from multiple agent tasks."""
+        aggregated = {
+            "success": all(r.success for r in results),
+            "tasks": [],
+            "results": {}
+        }
+        
+        for result in results:
+            task_result = {
+                "task_id": result.task_id,
+                "agent": result.agent_type.value,
+                "success": result.success,
+                "execution_time": result.execution_time
+            }
+            
+            if result.success:
+                task_result["output"] = result.output
+            else:
+                task_result["error"] = result.error
+            
+            aggregated["tasks"].append(task_result)
+            aggregated["results"][result.task_id] = result.output if result.success else None
+        
+        return aggregated
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) != 3 or sys.argv[1] != 'custom':
         print("Usage: python3 orchestrator.py custom <path/to/workflow.json>")
         sys.exit(1)
 
-    command = sys.argv
-    workflow_path = sys.argv
+    command = sys.argv[1]
+    workflow_path = sys.argv[2]
     orchestrator = MultiAgentOrchestrator()
 
     if command == "custom":
-        with open(workflow_path, "r") as f:
-            workflow = json.load(f)
+        try:
+            with open(workflow_path, "r") as f:
+                workflow = json.load(f)
 
-        # Result Registry Logic: Create sub-folders based on JSON location (e.g., sys_ops) [Conversation History]
-        json_dir = os.path.dirname(workflow_path)
-        category = os.path.basename(json_dir) if json_dir else "general"
+            # Result Registry Logic
+            json_dir = os.path.dirname(workflow_path)
+            category = os.path.basename(json_dir) if json_dir else "general"
 
-        results_dir = os.path.join("workflow_results", category)
-        os.makedirs(results_dir, exist_ok=True)
+            results_dir = os.path.join("workflow_results", category)
+            os.makedirs(results_dir, exist_ok=True)
 
-        print(f"🚀 Running custom workflow. Registry: {results_dir}")
-        result = orchestrator.execute_workflow(workflow)
+            print(f"🚀 Running custom workflow. Registry: {results_dir}")
+            result = orchestrator.execute_workflow(workflow)
 
-        # Save results to the localized registry
-        base_name = os.path.basename(os.path.splitext(workflow_path))
-        output_path = os.path.join(results_dir, f"{base_name}_results.json")
+            # Save results to the localized registry
+            base_name = os.path.splitext(os.path.basename(workflow_path))[0]
+            output_path = os.path.join(results_dir, f"{base_name}_results.json")
 
-        with open(output_path, "w") as f:
-            json.dump(result, f, indent=2)
-        print(f"✅ Results persisted to: {output_path}")
+            with open(output_path, "w") as f:
+                json.dump(result, f, indent=2)
+            print(f"✅ Results persisted to: {output_path}")
+
+        except FileNotFoundError:
+            print(f"Error: Workflow file not found at '{workflow_path}'")
+            sys.exit(1)
+        except json.JSONDecodeError:
+            print(f"Error: Could not decode JSON from '{workflow_path}'")
+            sys.exit(1)
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

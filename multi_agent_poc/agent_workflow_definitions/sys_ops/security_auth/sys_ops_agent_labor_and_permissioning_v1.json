@@ -1,0 +1,36 @@
+{
+  "workflow_id": "sys_ops_agent_labor_and_permissioning_v1",
+  "description": "Autonomous implementation of the Permissioning Registry and Orchestrator Middleware for SOW 1",
+  "tasks": {
+    "implement_permission_logic": {
+      "task_id": "logic_001",
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Refactor orchestrator.py to include a '_validate_authority' method. This method must load 'permissions_registry.json' and verify that an agent's task_type and file paths align with its defined authority before execution. Ensure the orchestrator is 'context-aware' of the current git worktree to prevent Black Box errors.",
+      "output_file": "orchestrator.py"
+    },
+    "generate_security_evals": {
+      "task_id": "test_001",
+      "agent": "mistral_vibe",
+      "type": "test-suite",
+      "input": "Create a new test suite 'tests/test_agent_authority.py' using pytest. Implement 'evals' that simulate unauthorized write attempts to restricted directories (e.g., /etc/ or .env) to verify that the Mistral-generated middleware successfully blocks these actions. Focus on AWS-native context for infrastructure security.",
+      "output_file": "tests/test_agent_authority.py",
+      "depends_on": ["implement_permission_logic"]
+    },
+    "document_security_standards": {
+      "task_id": "doc_001",
+      "agent": "amazon_q",
+      "type": "documentation",
+      "input": "Synthesize a new section for 'ENGINEERING_STANDARDS.md' titled 'Agentic Authority & Permissioning'. Document the JSON schema for 'permissions_registry.json', define the specific roles of the agent triad, and explain the security scrubbing layers required for high-stakes financial movements as envisioned by Ankit Agarwal.",
+      "output_file": "ENGINEERING_STANDARDS.md",
+      "depends_on": ["implement_permission_logic"]
+    },
+    "final_integrity_audit": {
+      "task_id": "audit_001",
+      "agent": "mistral_vibe",
+      "type": "validate",
+      "input": "Perform a final audit of the refactored orchestrator.py against the new tests in tests/test_agent_authority.py. Ensure the logic is resilient and that no 'two-way door' decisions have introduced critical vulnerabilities into the money-movement simulation paths.",
+      "depends_on": ["generate_security_evals", "document_security_standards"]
+    }
+  }
+}
