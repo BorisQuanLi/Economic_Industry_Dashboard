@@ -1,36 +1,29 @@
 {
   "workflow_id": "sys_ops_agent_labor_and_permissioning_v1",
-  "description": "Autonomous implementation of the Permissioning Registry and Orchestrator Middleware for SOW 1",
+  "description": "Refactor agent modules to implement new Division of Labor: Mistral (Gen), Amazon Q (Test), Gemini (Doc).",
   "tasks": {
-    "implement_permission_logic": {
-      "task_id": "logic_001",
+    "refactor_mistral_role": {
+      "task_id": "refactor_001",
+      "agent": "mistral_vibe",
+      "type": "refactor",
+      "input": "Generate Python agent code with ROLE='Code Generation Specialist' and SYSTEM_INSTRUCTION='Focus on high-efficiency code generation and refactoring'. Include main() function with sys.argv handling for task_type and input_data parameters.",
+      "output_file": "cli_coding_agents/mistral_vibe_agent_v2.py"
+    },
+    "refactor_amazon_q_role": {
+      "task_id": "refactor_002",
+      "agent": "amazon_q",
+      "type": "refactor",
+      "input": "Generate Python agent code with ROLE='Testing and Validation Specialist' and SYSTEM_INSTRUCTION='Focus on AWS-native testing, unit tests, and security validation'. Include main() function with sys.argv handling for task_type and input_data parameters.",
+      "output_file": "cli_coding_agents/amazon_q_agent_v2.py",
+      "depends_on": ["refactor_mistral_role"]
+    },
+    "refactor_gemini_role": {
+      "task_id": "refactor_003",
       "agent": "gemini",
       "type": "refactor",
-      "input": "Refactor orchestrator.py to include a '_validate_authority' method. This method must load 'permissions_registry.json' and verify that an agent's task_type and file paths align with its defined authority before execution. Ensure the orchestrator is 'context-aware' of the current git worktree to prevent Black Box errors.",
-      "output_file": "orchestrator.py"
-    },
-    "generate_security_evals": {
-      "task_id": "test_001",
-      "agent": "mistral_vibe",
-      "type": "test-suite",
-      "input": "Create a new test suite 'tests/test_agent_authority.py' using pytest. Implement 'evals' that simulate unauthorized write attempts to restricted directories (e.g., /etc/ or .env) to verify that the Mistral-generated middleware successfully blocks these actions. Focus on AWS-native context for infrastructure security.",
-      "output_file": "tests/test_agent_authority.py",
-      "depends_on": ["implement_permission_logic"]
-    },
-    "document_security_standards": {
-      "task_id": "doc_001",
-      "agent": "amazon_q",
-      "type": "documentation",
-      "input": "Synthesize a new section for 'ENGINEERING_STANDARDS.md' titled 'Agentic Authority & Permissioning'. Document the JSON schema for 'permissions_registry.json', define the specific roles of the agent triad, and explain the security scrubbing layers required for high-stakes financial movements as envisioned by Ankit Agarwal.",
-      "output_file": "ENGINEERING_STANDARDS.md",
-      "depends_on": ["implement_permission_logic"]
-    },
-    "final_integrity_audit": {
-      "task_id": "audit_001",
-      "agent": "mistral_vibe",
-      "type": "validate",
-      "input": "Perform a final audit of the refactored orchestrator.py against the new tests in tests/test_agent_authority.py. Ensure the logic is resilient and that no 'two-way door' decisions have introduced critical vulnerabilities into the money-movement simulation paths.",
-      "depends_on": ["generate_security_evals", "document_security_standards"]
+      "input": "Generate Python agent code with ROLE='Documentation and Synthesis Specialist' and SYSTEM_INSTRUCTION='Focus on massive-context documentation, architectural overviews, and standard synthesis'. Include main() function with sys.argv handling for task_type and input_data parameters.",
+      "output_file": "cli_coding_agents/gemini_agent_v2.py",
+      "depends_on": ["refactor_amazon_q_role"]
     }
   }
 }
