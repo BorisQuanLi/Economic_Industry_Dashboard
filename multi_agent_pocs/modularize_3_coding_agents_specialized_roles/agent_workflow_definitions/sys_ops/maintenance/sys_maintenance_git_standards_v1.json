@@ -1,0 +1,24 @@
+{
+  "description": "Maintenance workflow to enforce Git standards and generate engineering documentation",
+  "tasks": {
+    "refactor_git_commands": {
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Search all JSON files in agent_workflow_definitions/sys_ops/ and replace standard 'mv' commands with 'git mv' to ensure repository history preservation for autonomous refactors.",
+      "output_file": "workflow_results/sys_ops/git_mv_refactor_log.txt"
+    },
+    "generate_standards_doc": {
+      "agent": "amazon_q",
+      "type": "documentation",
+      "input": "Create an ENGINEERING_STANDARDS.md file in the multi_agent_poc root. Document the requirement for 'git mv' in all structural refactors, the new 'cli_coding_agents' modular package structure, and the use of 'workflow_results/sys_ops/' for localized telemetry.",
+      "output_file": "ENGINEERING_STANDARDS.md"
+    },
+    "validate_maintenance_quality": {
+      "agent": "mistral_vibe",
+      "type": "validate",
+      "input": "Verify that the JSON files in agent_workflow_definitions/sys_ops/ are syntactically correct after the 'git mv' replacement and ensure the new ENGINEERING_STANDARDS.md aligns with the project's technical DNA.",
+      "depends_on": ["refactor_git_commands", "generate_standards_doc"]
+    }
+  }
+}
+

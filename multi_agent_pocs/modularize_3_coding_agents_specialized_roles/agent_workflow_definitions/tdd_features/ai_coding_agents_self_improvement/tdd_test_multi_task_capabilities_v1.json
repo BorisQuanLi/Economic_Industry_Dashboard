@@ -1,0 +1,54 @@
+{
+  "workflow_id": "tdd_enterprise_agent_fix_v1",
+  "description": "Enterprise SDLC: Test prompt → Detect error → Trigger remediation → Validate fix",
+  "parent_workflow": "sys_ops_agent_labor_and_permissioning_v1.json",
+  "tasks": {
+    "unit_test_prompt": {
+      "task_id": "test_001",
+      "agent": "mistral_vibe",
+      "type": "test-suite",
+      "input": "python3 cli_coding_agents/mistral_vibe_agent_v2.py documentation 'Update README.md'",
+      "expected_result": "Exit code 0"
+    },
+    "generate_fixed_agent": {
+      "task_id": "fix_001",
+      "agent": "gemini",
+      "type": "refactor",
+      "input": "Generate functional agent that handles documentation, refactor, and test-suite tasks",
+      "output_file": "cli_coding_agents/mistral_vibe_agent_v3.py",
+      "depends_on": ["unit_test_prompt"]
+    },
+    "replace_broken_agent": {
+      "task_id": "replace_001",
+      "agent": "mistral_vibe",
+      "type": "refactor",
+      "input": "Self-heal: Read the broken v2 agent, fix the syntax error (unterminated string), and generate working code",
+      "output_file": "cli_coding_agents/mistral_vibe_agent_v2.py",
+      "depends_on": ["generate_fixed_agent"]
+    },
+    "validate_fix": {
+      "task_id": "validate_001",
+      "agent": "mistral_vibe",
+      "type": "test-suite",
+      "input": "python3 cli_coding_agents/mistral_vibe_agent_v2.py documentation 'Update README.md'",
+      "expected_result": "Exit code 0",
+      "depends_on": ["replace_broken_agent"]
+    },
+    "heal_gemini_agent": {
+      "task_id": "heal_002",
+      "agent": "mistral_vibe",
+      "type": "refactor",
+      "input": "Self-heal: Generate functional Gemini agent with documentation, refactor, and test-suite capabilities",
+      "output_file": "cli_coding_agents/gemini_agent_v2.py",
+      "depends_on": ["validate_fix"]
+    },
+    "heal_amazon_q_agent": {
+      "task_id": "heal_003",
+      "agent": "mistral_vibe",
+      "type": "refactor",
+      "input": "Self-heal: Generate functional Amazon Q agent with documentation, refactor, and test-suite capabilities",
+      "output_file": "cli_coding_agents/amazon_q_agent_v2.py",
+      "depends_on": ["heal_gemini_agent"]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "summary": {
+    "success": false,
+    "count": 6
+  },
+  "details": [
+    {
+      "id": "unit_test_prompt",
+      "ok": false,
+      "time": 0.02
+    },
+    {
+      "id": "generate_fixed_agent",
+      "ok": true,
+      "time": 0.02
+    },
+    {
+      "id": "replace_broken_agent",
+      "ok": true,
+      "time": 0.02
+    },
+    {
+      "id": "validate_fix",
+      "ok": false,
+      "time": 0.02
+    },
+    {
+      "id": "heal_gemini_agent",
+      "ok": true,
+      "time": 0.02
+    },
+    {
+      "id": "heal_amazon_q_agent",
+      "ok": true,
+      "time": 0.02
+    }
+  ]
+}
