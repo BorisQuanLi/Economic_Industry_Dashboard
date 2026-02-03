@@ -1,0 +1,16 @@
+{
+  "workflow_step": "TDD_REFACTOR_PHASE",
+  "version": "1.0",
+  "optimization_targets": {
+    "primary": "DRY_PRINCIPLE_ENFORCEMENT",
+    "secondary": "COMPLEMENTARY_ABSTRACTION",
+    "probabilistic": {
+      "llm_judge_prompt": "Analyze the code for redundant logic. If a function can be generalized for 'multi_agent_core/utils/', flag it for abstraction. Prioritize deduplication over stylistic minutiae."
+    }
+  },
+  "agent_instructions": {
+    "role": "Mistral Vibe (Lead Developer)",
+    "task": "Clean up the Green-stage code. Look for patterns that should be moved to the Core Framework.",
+    "constraint": "Maintain 100% test pass rate. Do not change functional behavior."
+  }
+}
