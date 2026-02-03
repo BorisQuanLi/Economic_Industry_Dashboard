@@ -1,0 +1,78 @@
+{
+  "workflow_id": "ai_code_quality_gates_v1",
+  "description": "Quality assurance workflow: Validate AI-generated code meets SDLC standards before commit",
+  "parent_workflow": "tdd_features/tdd_incremental_agent_fix_v1.json",
+  "tasks": {
+    "syntax_validation": {
+      "task_id": "qa_syntax_001",
+      "agent": "mistral_vibe",
+      "type": "validate",
+      "input": "Validate AI-generated code has no syntax errors and follows Python best practices",
+      "expected_result": "PASS - Code has valid syntax and no PEP 8 violations",
+      "quality_gate": "MANDATORY"
+    },
+    "functionality_testing": {
+      "task_id": "qa_function_001",
+      "agent": "mistral_vibe",
+      "type": "test-suite",
+      "input": "Execute comprehensive functionality tests for all required task types",
+      "expected_result": "PASS - All task types (documentation, refactor, test-suite) work correctly",
+      "quality_gate": "MANDATORY"
+    },
+    "security_scan": {
+      "task_id": "qa_security_001",
+      "agent": "mistral_vibe",
+      "type": "validate",
+      "input": "Scan AI-generated code for security vulnerabilities and unsafe practices",
+      "expected_result": "PASS - No security vulnerabilities detected",
+      "quality_gate": "MANDATORY"
+    },
+    "documentation_completeness": {
+      "task_id": "qa_docs_001",
+      "agent": "amazon_q",
+      "type": "documentation",
+      "input": "Verify AI-generated code has complete documentation including docstrings, comments, and usage examples",
+      "expected_result": "PASS - Code meets documentation standards",
+      "quality_gate": "MANDATORY",
+      "output_file": "workflow_results/quality_assurance/qa_documentation_report_v1.md"
+    },
+    "performance_analysis": {
+      "task_id": "qa_performance_001",
+      "agent": "mistral_vibe",
+      "type": "performance",
+      "input": "Analyze AI-generated code for performance characteristics and optimization opportunities",
+      "expected_result": "PASS - Code meets performance requirements",
+      "quality_gate": "ADVISORY",
+      "output_file": "workflow_results/quality_assurance/qa_performance_report_v1.md"
+    },
+    "code_review_preparation": {
+      "task_id": "qa_review_001",
+      "agent": "amazon_q",
+      "type": "documentation",
+      "input": "Generate comprehensive code review documentation including changes, test results, and quality metrics",
+      "expected_result": "PASS - Complete code review package generated",
+      "quality_gate": "MANDATORY",
+      "output_file": "workflow_results/quality_assurance/qa_code_review_package_v1.md"
+    },
+    "commit_preparation": {
+      "task_id": "qa_commit_001",
+      "agent": "amazon_q",
+      "type": "documentation",
+      "input": "Prepare commit message and documentation for AI-generated code that passed all quality gates",
+      "expected_result": "PASS - Commit-ready package with proper documentation",
+      "quality_gate": "MANDATORY",
+      "output_file": "workflow_results/quality_assurance/qa_commit_package_v1.json"
+    }
+  },
+  "quality_gate_policy": {
+    "MANDATORY": "Must pass for code to be approved",
+    "ADVISORY": "Should pass, but not blocking",
+    "OPTIONAL": "Nice to have, not required"
+  },
+  "approval_criteria": {
+    "minimum_pass_rate": "100%",
+    "mandatory_gates": "all",
+    "documentation_required": true,
+    "test_coverage_required": "100%"
+  }
+}
