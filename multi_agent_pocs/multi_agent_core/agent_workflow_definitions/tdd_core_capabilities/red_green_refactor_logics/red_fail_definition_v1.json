@@ -1,0 +1,8 @@
+{
+  "workflow_step": "TDD_RED_PHASE",
+  "version": "1.0",
+  "evaluation_criteria": {
+    "deterministic": { "exit_code": 1, "required_error_type": "AssertionError" },
+    "probabilistic": { "llm_judge_prompt": "Verify the test fails because of missing logic, not syntax errors." }
+  }
+}

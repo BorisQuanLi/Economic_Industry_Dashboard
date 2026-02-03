@@ -1,0 +1,8 @@
+{
+  "workflow_step": "TDD_GREEN_PHASE",
+  "version": "1.0",
+  "success_thresholds": {
+    "deterministic": { "exit_code": 0, "test_pass_rate": 1.0 },
+    "probabilistic": { "llm_judge_prompt": "Ensure code satisfies the test without speculative over-engineering." }
+  }
+}
