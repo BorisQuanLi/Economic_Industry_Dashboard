@@ -1,0 +1,12 @@
+{
+  "workflow_id": "core_sanity_check_v1",
+  "description": "Validates that Core agents can resolve Core JSON instructions.",
+  "tasks": {
+    "ping_agents": {
+      "task_id": "ping_001",
+      "agent": "mistral_vibe",
+      "type": "sanity_check",
+      "input": "Confirm framework readiness."
+    }
+  }
+}
