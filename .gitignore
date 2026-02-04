@@ -2,6 +2,7 @@
 .DS_Store
 .vscode/
 __pycache__/
+multi_agent_pocs/**/__pycache__/
 *.pyc
 .ipynb_checkpoints
 
@@ -14,7 +15,7 @@ fastapi_backend/.env
 etl_service/.env
 mcp_agent_system/.env
 airflow/.env
-multi_agent_poc/.env
+multi_agent_pocs/**/.env
 
 # Configuration files
 ./api/src/adapters/api_calls/api_client_config.py
@@ -34,11 +35,11 @@ mcp_agent_system/.venv/
 mcp_agent_system/venv/
 airflow/.venv/
 airflow/venv/
-multi_agent_poc/.venv
-multi_agent_poc/venv
+# Multi-Agent Modular Service Namespace
+multi_agent_pocs/**/.venv/
 
 # Pytest output files
 pytest_output.txt
 
 # Agentic workflow output files
-multi_agent_poc/workflow_results/
+multi_agent_pocs/**/workflow_results/
