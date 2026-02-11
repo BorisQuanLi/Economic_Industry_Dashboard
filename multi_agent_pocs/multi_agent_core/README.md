@@ -6,13 +6,18 @@ This package implements an **Instructional Engine** approach where general-purpo
 
 ## Core Assets & Service Components
 - **models.py**: Shared enterprise communication protocol (AgentTask, AgentResult).
-- **orchestrator.py**: Base Class mechanical engine with Registry Discovery.
+- **orchestrator.py**: Base Class mechanical engine with Registry Discovery and Self-Healing fallbacks.
 - **agent_workflow_definitions/**: Capability-based instruction sets (TDD, QA, Documentation).
-- **cli_coding_agents/**: Core agent interfaces designed for SDLC task execution.
-- **utils/**: Shared cross-cutting concerns and helper modules.
+- **cli_coding_agents/**: Core "Golden Image" agent interfaces.
+- **utils/**: Centralized helper modules (File I/O, prompt sanitization).
 
 ## Quick Start
-Run `python3 orchestrator.py` to execute the core sanity-check demo.
 
-## Deployment
-Intended to be executed as a standalone service within the `multi_agent_pocs` namespace.
+### 🔧 Environment Setup
+Dependencies are centralized at the namespace root. From the `multi_agent_pocs/` directory:
+
+```bash
+python3 -m venv .venv
+source ../.venv/bin/activate
+pip install -r requirements.txt
+```

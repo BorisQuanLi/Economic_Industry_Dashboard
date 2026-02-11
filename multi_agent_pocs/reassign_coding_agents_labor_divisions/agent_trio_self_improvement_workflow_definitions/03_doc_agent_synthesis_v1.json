@@ -1,0 +1,12 @@
+{
+  "workflow_id": "doc_synthesis_v1",
+  "description": "Gemini CLI: Autonomous discovery and synthesis of project-wide technical documentation.",
+  "tasks": {
+    "synthesize_landscape": {
+      "agent": "gemini_cli",
+      "type": "documentation",
+      "input": "Recursive Audit: Discover all READMEs and domain-specific markdown files (e.g. *BEST_PRACTICES.md). Synthesize their content to generate a 'TECHNICAL_LANDSCAPE.md' that provides a Quick-Start guide and an overview of our 3-agent SDLC architecture.",
+      "output_file": "TECHNICAL_LANDSCAPE.md"
+    }
+  }
+}

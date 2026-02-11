@@ -32,6 +32,11 @@ This document outlines the Software Development Life Cycle (SDLC) best practices
 2. **Green Phase**: Generate code that passes tests
 3. **Refactor Phase**: Optimize and improve code quality
 
+**Interface Standards (CLI)**:
+- **Command Protocol**: Agents must implement a standardized CLI interface to process `phase` and `payload` arguments via system input.
+- **State Awareness**: The implementation must distinguish between TDD phases (Red/Green/Refactor) to ensure the output aligns with the current workflow state.
+- **Execution Loop**: Success is defined by the transition from a failing requirement (Red) to a functional, validated implementation (Green).
+
 **Workflow Files**:
 - `tdd_multi_task_cli_agent_capability.json` - Basic TDD workflow
 - `tdd_fix_broken_agents_v1.json` - Comprehensive agent fixing
