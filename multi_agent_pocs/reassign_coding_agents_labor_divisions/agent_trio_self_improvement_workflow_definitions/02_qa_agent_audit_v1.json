@@ -1,0 +1,12 @@
+{
+  "workflow_id": "qa_audit_v1",
+  "description": "Amazon Q: Autonomous Syntax Audit and Refactoring Recommendation Gate.",
+  "tasks": {
+    "code_audit": {
+      "agent": "amazon_q",
+      "type": "testing",
+      "input": "Recursive Audit: Scan the 'cli_coding_agents/' directory. Detect any Python SyntaxErrors (e.g., unterminated strings, indentation issues) or PEP8 violations. Generate a 'QA_AUDIT_REPORT.md' with specific remediation prompts for the Developer agent.",
+      "output_file": "QA_AUDIT_REPORT.md"
+    }
+  }
+}

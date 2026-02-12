@@ -1,0 +1,16 @@
+# --- Cloud SDKs & Providers ---
+google-cloud-aiplatform
+boto3>=1.28.0
+
+# --- Web & Networking ---
+requests>=2.31.0
+
+# --- Data Validation & Models ---
+pydantic
+email-validator
+
+# --- Configuration & Environment ---
+python-dotenv>=1.0.0
+
+# --- Testing (Move to -dev.txt post-MVP) ---
+pytest

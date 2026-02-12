@@ -1,0 +1,25 @@
+{
+  "workflow_id": "sdlc_labor_reassignment_v1",
+  "description": "Enterprise Provisioning: Assigning specialized SDLC roles to the 3-Agent Crew.",
+  "tasks": {
+    "assign_mistral_as_developer": {
+    "agent": "mistral_vibe",
+    "type": "tdd_cycle",
+    "input": "Generate a Standardized TDD Engine. The script must implement a CLI interface (sys.argv) to accept a phase and a payload. It must include a Mechanical Logic Factory that dynamically generates Python code based on the payload while adhering to the TDD phase (Red/Green/Refactor). The output must be valid, executable Python code with a shebang and standard error handling.",
+    "output_file": "cli_coding_agents/mistral_vibe_agent_v2.py"
+    },
+    "assign_amazon_as_qa": {
+      "agent": "amazon_q",
+      "type": "refactor",
+      "input": "Generate a QA Engineer Agent capable of syntax auditing.",
+      "output_file": "cli_coding_agents/amazon_q_agent_v2.py"
+    },
+    "assign_gemini_as_documentarian": {
+      "agent": "gemini_cli",
+      "type": "refactor",
+      "input": "Generate a Documentation Agent capable of technical synthesis.",
+      "output_file": "cli_coding_agents/gemini_cli_agent_v2.py"
+    }
+  }
+}
+

@@ -4,7 +4,8 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 
 class AgentType(str, Enum):
-    GEMINI = "gemini"
+    # Updated to reflect the specialized CLI branding
+    GEMINI_CLI = "gemini_cli" 
     MISTRAL_VIBE = "mistral_vibe"
     AMAZON_Q = "amazon_q"
 
@@ -18,7 +19,8 @@ class WorkflowStatus(str, Enum):
 class AgentTask:
     task_id: str
     agent_type: AgentType
-    task_type: str  # e.g., "refactor", "tdd_red", "doc_gen"
+    # Updated comment to reflect specialized roles
+    task_type: str  # e.g., "refactor", "testing", "documentation"
     input_data: str
     dependencies: List[str] = field(default_factory=list)
     output_file: Optional[str] = None
