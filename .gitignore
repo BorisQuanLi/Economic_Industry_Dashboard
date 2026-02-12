@@ -1,45 +1,43 @@
-# Operating System / Editor specific
+# ==========================================
+# OS / Editor Specific
+# ==========================================
 .DS_Store
 .vscode/
-__pycache__/
-multi_agent_pocs/**/__pycache__/
-*.pyc
 .ipynb_checkpoints
+*.py[cod]
+__pycache__/
 
-# Environment variables
-*.env
+# ==========================================
+# Environment & Secrets (Global)
+# ==========================================
+# This covers .env, .env.template, and service-specific .env files automatically
 .env
-frontend/.env
-backend/.env
-fastapi_backend/.env
-etl_service/.env
-mcp_agent_system/.env
-airflow/.env
-multi_agent_pocs/**/.env
+*.env
+.env.*
+!.env.example
 
-# Configuration files
-./api/src/adapters/api_calls/api_client_config.py
-
-#Virtual environments
+# ==========================================
+# Virtual Environments (Global)
+# ==========================================
+# Matches .venv or venv at any directory level
 .venv/
 venv/
-frontend/.venv/
-frontend/venv/
-backend/.venv/
-backend/venv/
-fastapi_backend/.venv/
-fastapi_backend/venv/
-etl_service/.venv/
-etl_service/venv/
-mcp_agent_system/.venv/
-mcp_agent_system/venv/
-airflow/.venv/
-airflow/venv/
-# Multi-Agent Modular Service Namespace
-multi_agent_pocs/**/.venv/
 
-# Pytest output files
+# ==========================================
+# Test & Internal Logs
+# ==========================================
 pytest_output.txt
+# Add other generic patterns here to serve as "reminders" for all services
+tmp/
+temp/
+logs/
 
-# Agentic workflow output files
+# ==========================================
+# Specific Service Namespaces
+# ==========================================
+
+# Configuration file specific to a path
+api/src/adapters/api_calls/api_client_config.py
+
+# Agent workflow results 
 multi_agent_pocs/**/workflow_results/
