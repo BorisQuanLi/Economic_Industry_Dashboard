@@ -47,7 +47,7 @@ class LaborDivisionOrchestrator(CoreOrchestrator):
         super().__init__(feature_path=str(FEATURE_ROOT))
         self.max_workers = max_workers
         self.agent_map = {
-            AgentType.GEMINI_CLI: "gemini_cli_agent_v2.py",
+            AgentType.GEMINI_CLI: "gemini_agent_v2.py",
             AgentType.MISTRAL_VIBE: "mistral_vibe_agent_v2.py",
             AgentType.AMAZON_Q: "amazon_q_agent_v2.py"
         }
