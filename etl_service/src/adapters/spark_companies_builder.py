@@ -9,10 +9,10 @@ import logging
 import os
 from pyspark.sql import SparkSession, DataFrame, Window
 from pyspark.sql.functions import (
-    col, when, split, regexp_extract, trim, coalesce, lit,
-    rank, lag, avg, count, sum as spark_sum
+    col, when, split, trim, coalesce, lit,
+    rank, lag, avg, count
 )
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from pyspark.sql.types import IntegerType
 
 from etl_service.src.adapters.wiki_page_client import get_sp500_wiki_data
 
@@ -241,7 +241,7 @@ class SparkCompaniesBuilder:
         null_tickers = df.filter(col("ticker").isNull()).count()
         null_names = df.filter(col("name").isNull()).count()
         
-        logger.info(f"Data quality metrics:")
+        logger.info("Data quality metrics:")
         logger.info(f"  - Records with null tickers: {null_tickers}")
         logger.info(f"  - Records with null names: {null_names}")
     
