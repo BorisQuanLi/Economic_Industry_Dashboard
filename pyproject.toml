@@ -1,0 +1,10 @@
+[tool.ruff]
+# Enforce lint on the PySpark adapter layer and its tests.
+# Legacy src/ modules (Pandas/DB pipeline) and aws/ stubs carry pre-existing
+# lint debt intentionally deferred — they are not part of this sprint.
+include = [
+    "etl_service/src/adapters/spark_companies_builder.py",
+    "etl_service/src/adapters/wiki_page_client.py",
+    "etl_service/pipelines/spark_pipeline.py",
+    "etl_service/tests/*.py",
+]
