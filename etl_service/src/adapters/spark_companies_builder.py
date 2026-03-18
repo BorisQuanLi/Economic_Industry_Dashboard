@@ -6,12 +6,20 @@ using Apache Spark for distributed processing.
 """
 
 import logging
-from typing import Optional
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import col, when, split, regexp_extract, trim, coalesce, lit
+import os
+from pyspark.sql import SparkSession, DataFrame, Window
+from pyspark.sql.functions import (
+    col, when, split, regexp_extract, trim, coalesce, lit,
+    rank, lag, avg, count, sum as spark_sum
+)
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
-from etl_service.src.adapters.wiki_page_client import WikiPageClient
+from etl_service.src.adapters.wiki_page_client import get_sp500_wiki_data
+
+# Set the absolute filepath for the first data source in the ETL pipeline
+BASE_DIR = os.getenv("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+# Use BASE_DIR to ensure the path is consistent
+sp500_wiki_data_filepath = os.path.join(BASE_DIR, "data/sp500_stocks_wiki_info.csv")
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +29,7 @@ class SparkCompaniesBuilder:
     
     def __init__(self, spark: SparkSession):
         self.spark = spark
-        self.wiki_client = WikiPageClient()
+        self.wiki_client = get_sp500_wiki_data()
     
     def extract_companies_data(self) -> DataFrame:
         """Extract S&P 500 companies data from Wikipedia."""
@@ -126,21 +134,67 @@ class SparkCompaniesBuilder:
         
         return clean_df
     
-    def get_sector_summary(self, df: DataFrame) -> DataFrame:
-        """Generate sector summary statistics."""
-        logger.info("Generating sector summary...")
+    def get_transaction_risk_summary(self, df: DataFrame) -> DataFrame:
+        """
+        Rank companies by employee count within each sector using window functions.
+        This helps identify high-impact entities for risk assessment.
+        """
+        logger.info("Ranking companies by size within sectors...")
         
+        # Define the window: group by sector, order by employee count descending
+        window_spec = Window.partitionBy("sector").orderBy(col("number_of_employees").desc())
+        
+        return df.withColumn("size_rank_in_sector", rank().over(window_spec))
+
+    def get_sector_growth_trend(self, df: DataFrame) -> DataFrame:
+        """
+        Use lag() window function to compute employee count change vs. the
+        previously-founded company in the same sector (ordered by founding year).
+        Negative delta flags shrinking entities — relevant for AML risk velocity checks.
+        """
+        logger.info("Computing sector growth trends with lag()...")
+        window_spec = Window.partitionBy("sector").orderBy(col("year_founded"))
+        return df.withColumn(
+            "prev_employees_in_sector",
+            lag("number_of_employees", 1).over(window_spec)
+        ).withColumn(
+            "employee_delta",
+            col("number_of_employees") - col("prev_employees_in_sector")
+        )
+
+    def join_sector_risk_profile(self, df: DataFrame) -> DataFrame:
+        """
+        Join company-level data with sector-level AML risk summary.
+        Demonstrates Spark DataFrame join — enriches each row with its sector's
+        aggregate risk flag and avg employee count.
+        """
+        logger.info("Joining company data with sector risk profile...")
+        sector_profile = self.get_sector_summary(df).select(
+            "sector", "avg_employees", "aml_risk_flag"
+        )
+        return df.join(sector_profile, on="sector", how="left")
+
+    def get_sector_summary(self, df: DataFrame) -> DataFrame:
+        """Generate sector summary statistics using explicit named-function style."""
+        logger.info("Generating sector summary (Refactored)...")
+
+        # Refactored to use explicit count() and avg() functions
         sector_summary = df.groupBy("sector") \
             .agg(
-                {"*": "count", 
-                 "year_founded": "avg",
-                 "number_of_employees": "avg"}
+                count("*").alias("company_count"),
+                avg("year_founded").alias("avg_founded_year"),
+                avg("number_of_employees").alias("avg_employees")
             ) \
-            .withColumnRenamed("count(1)", "company_count") \
-            .withColumnRenamed("avg(year_founded)", "avg_founded_year") \
-            .withColumnRenamed("avg(number_of_employees)", "avg_employees") \
             .orderBy(col("company_count").desc())
-        
+
+        # 3. AML Outlier Logic: Flag sectors with unusually high average employee counts
+        # e.g., sectors where avg_employees > 50,000 are flagged as 'High Capacity'
+        sector_summary = sector_summary.withColumn(
+            "aml_risk_flag",
+            when(col("avg_employees") > 50000, lit("High Capacity / Review Needed"))
+            .otherwise(lit("Standard"))
+        )
+
         return sector_summary
     
     def get_sub_industry_summary(self, df: DataFrame) -> DataFrame:
@@ -148,16 +202,27 @@ class SparkCompaniesBuilder:
         logger.info("Generating sub-industry summary...")
         
         sub_industry_summary = df.groupBy("sector", "sub_industry") \
-            .agg({"*": "count"}) \
-            .withColumnRenamed("count(1)", "company_count") \
+            .agg(count("*").alias("company_count")) \
             .orderBy(col("sector"), col("company_count").desc())
         
         return sub_industry_summary
     
     def run_analysis(self, df: DataFrame):
-        """Run comprehensive analysis on companies data."""
+        """Showcase AML Risk flags and Sector Rankings.
+        Run comprehensive analysis on companies data."""
         logger.info("Running comprehensive companies analysis...")
         
+        # Show high-risk sectors first
+        risk_summary = self.get_sector_summary(df)
+        high_risk = risk_summary.filter(col("aml_risk_flag") != "Standard")
+        
+        if high_risk.count() > 0:
+            logger.warning("HIGH RISK SECTORS IDENTIFIED:")
+            high_risk.show()
+        
+        # Show top-ranked companies per sector
+        df.filter(col("size_rank_in_sector") <= 3).show()
+
         # Basic statistics
         total_companies = df.count()
         logger.info(f"Total companies processed: {total_companies}")
@@ -181,21 +246,22 @@ class SparkCompaniesBuilder:
         logger.info(f"  - Records with null names: {null_names}")
     
     def run(self) -> DataFrame:
-        """Run the complete companies ETL process."""
-        logger.info("Starting PySpark companies ETL process...")
-        
+        """Run the complete companies ETL process with advanced analytics."""
+        logger.info("Starting Enhanced PySpark ETL process...")
+
         try:
-            # Extract
             raw_df = self.extract_companies_data()
-            
-            # Transform
             transformed_df = self.transform_companies_data(raw_df)
+
+            # New Analytics: Risk Ranking
+            ranked_df = self.get_transaction_risk_summary(transformed_df)
+            ranked_df.cache()  # Avoid DAG re-computation — ranked_df used twice below
             
-            # Analysis
-            self.run_analysis(transformed_df)
-            
+            # Updated Analysis (includes AML flags)
+            self.run_analysis(ranked_df)
+
             logger.info("PySpark companies ETL process completed successfully")
-            return transformed_df
+            return ranked_df
             
         except Exception as e:
             logger.error(f"PySpark companies ETL process failed: {e}")

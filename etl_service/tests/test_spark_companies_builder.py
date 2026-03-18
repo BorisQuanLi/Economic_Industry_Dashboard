@@ -1,154 +1,156 @@
-#!/usr/bin/env python3
-"""
-PySpark Setup Test Script
-
-Quick test to verify PySpark installation and basic functionality.
-"""
-
 import logging
-import sys
+import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, count
+from etl_service.src.adapters.spark_companies_builder import SparkCompaniesBuilder
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+@pytest.fixture(scope="module")
+def spark():
+    """PySpark session fixture for testing."""
+    session = SparkSession.builder \
+        .master("local[1]") \
+        .appName("PySparkUnitTests") \
+        .config("spark.sql.adaptive.enabled", "false") \
+        .getOrCreate()
+    yield session
+    session.stop()
 
-
-def test_spark_setup():
-    """Test basic PySpark functionality."""
-    logger.info("Testing PySpark setup...")
-    
-    try:
-        # Initialize Spark session
-        spark = SparkSession.builder \
-            .appName("PySpark-Setup-Test") \
-            .master("local[*]") \
-            .config("spark.sql.adaptive.enabled", "true") \
-            .getOrCreate()
-        
-        spark.sparkContext.setLogLevel("WARN")
-        logger.info("✅ Spark session created successfully")
-        
-        # Test basic DataFrame operations
-        data = [
-            ("Technology", "Apple Inc.", "AAPL"),
-            ("Technology", "Microsoft Corp.", "MSFT"),
-            ("Healthcare", "Johnson & Johnson", "JNJ"),
-            ("Financials", "JPMorgan Chase", "JPM")
-        ]
-        
-        columns = ["sector", "company", "ticker"]
-        df = spark.createDataFrame(data, columns)
-        
-        logger.info("✅ DataFrame created successfully")
-        
-        # Test transformations
-        sector_count = df.groupBy("sector").agg(count("*").alias("company_count"))
-        
-        logger.info("Sample data:")
-        df.show()
-        
-        logger.info("Sector summary:")
-        sector_count.show()
-        
-        # Test SQL operations
-        df.createOrReplaceTempView("companies")
-        sql_result = spark.sql("SELECT sector, COUNT(*) as count FROM companies GROUP BY sector")
-        
-        logger.info("SQL query result:")
-        sql_result.show()
-        
-        logger.info("✅ All PySpark operations completed successfully")
-        
-        # Stop Spark session
-        spark.stop()
-        logger.info("✅ Spark session stopped")
-        
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ PySpark test failed: {e}")
-        return False
-
-
-def test_wikipedia_integration():
-    """Test integration with existing Wikipedia client."""
-    logger.info("Testing Wikipedia integration...")
-    
-    try:
-        from etl_service.src.adapters.wiki_page_client import WikiPageClient
-        
-        wiki_client = WikiPageClient()
-        companies_data = wiki_client.get_sp500_companies()
-        
-        logger.info(f"✅ Successfully fetched {len(companies_data)} companies from Wikipedia")
-        
-        # Test with Spark
-        spark = SparkSession.builder \
-            .appName("Wikipedia-Integration-Test") \
-            .master("local[*]") \
-            .getOrCreate()
-        
-        spark.sparkContext.setLogLevel("WARN")
-        
-        df = spark.createDataFrame(companies_data)
-        logger.info(f"✅ Created Spark DataFrame with {df.count()} rows")
-        
-        # Show sample
-        logger.info("Sample Wikipedia data:")
-        df.select("Security", "Ticker", "GICS Sector").show(5)
-        
-        spark.stop()
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ Wikipedia integration test failed: {e}")
-        return False
-
-
-def main():
-    """Run all tests."""
-    logger.info("Starting PySpark setup verification...")
-    
-    tests = [
-        ("Basic PySpark Setup", test_spark_setup),
-        ("Wikipedia Integration", test_wikipedia_integration)
+def test_pyspark_analytics_logic(spark):
+    """
+    Test window function ranking and AML flagging logic in SparkCompaniesBuilder.
+    """
+    # 1. Setup Mock Data
+    # This data is designed to test ranking within partitions and AML thresholds.
+    data = [
+        ("TechCorp", "TC", "Technology", "New York", 2000, 1000),
+        ("Gigantor", "GG", "Technology", "California", 1995, 5000),
+        ("SmallBank", "SB", "Finance", "Chicago", 2010, 200),
+        ("MegaBank", "MB", "Finance", "New York", 1980, 100000)
     ]
+    columns = ["name", "ticker", "sector", "hq_state", "year_founded", "number_of_employees"]
+    df = spark.createDataFrame(data, columns)
     
-    results = []
-    for test_name, test_func in tests:
-        logger.info(f"\n{'='*50}")
-        logger.info(f"Running: {test_name}")
-        logger.info(f"{'='*50}")
-        
-        try:
-            result = test_func()
-            results.append((test_name, result))
-        except Exception as e:
-            logger.error(f"Test {test_name} crashed: {e}")
-            results.append((test_name, False))
+    builder = SparkCompaniesBuilder(spark)
+
+    # 2. Test Window Function (Ranking by employee size in sector)
+    ranked_df = builder.get_transaction_risk_summary(df)
+    results = ranked_df.orderBy("sector", "size_rank_in_sector").collect()
     
-    # Summary
-    logger.info(f"\n{'='*50}")
-    logger.info("TEST SUMMARY")
-    logger.info(f"{'='*50}")
+    # Expected ranking: Gigantor (5000) > TechCorp (1000) in Technology
+    # Expected ranking: MegaBank (100k) > SmallBank (200) in Finance
     
-    passed = 0
-    for test_name, result in results:
-        status = "✅ PASSED" if result else "❌ FAILED"
-        logger.info(f"{test_name}: {status}")
-        if result:
-            passed += 1
+    # Verify Gigantor is Rank 1 in Technology
+    gigantor = next(r for r in results if r.name == "Gigantor")
+    assert gigantor.size_rank_in_sector == 1, "Gigantor should be rank 1 in Technology"
     
-    logger.info(f"\nOverall: {passed}/{len(results)} tests passed")
+    # Verify TechCorp is Rank 2 in Technology
+    techcorp = next(r for r in results if r.name == "TechCorp")
+    assert techcorp.size_rank_in_sector == 2, "TechCorp should be rank 2 in Technology"
+
+    # Verify MegaBank is Rank 1 in Finance
+    megabank = next(r for r in results if r.name == "MegaBank")
+    assert megabank.size_rank_in_sector == 1, "MegaBank should be rank 1 in Finance"
     
-    if passed == len(results):
-        logger.info("🎉 All tests passed! PySpark setup is ready.")
-        sys.exit(0)
-    else:
-        logger.error("❌ Some tests failed. Check the logs above.")
-        sys.exit(1)
+    # 3. Test Sector Summary & AML Flagging Logic
+    summary_df = builder.get_sector_summary(df)
+    summary_results = summary_df.collect()
+    
+    # Finance average employees = (200 + 100000) / 2 = 50100, which is > 50k
+    finance_summary = next(r for r in summary_results if r.sector == "Finance")
+    assert finance_summary.aml_risk_flag == "High Capacity / Review Needed", \
+        "Finance sector should be flagged due to high average employee count"
+    
+    # Technology average employees = (1000 + 5000) / 2 = 3000, which is < 50k
+    tech_summary = next(r for r in summary_results if r.sector == "Technology")
+    assert tech_summary.aml_risk_flag == "Standard", \
+        "Technology sector should have a 'Standard' AML risk flag"
+
+def test_data_quality_checks(spark):
+    """
+    Test data quality checks to ensure invalid records are filtered out.
+    """
+    # 1. Setup Mock Data with invalid records
+    data = [
+        ("ValidCorp", "VC", "ValidSector", "ValidState", 2020, 100),
+        ("", "NV", "NoNameSector", "State", 2021, 50),          # Invalid: Empty name
+        ("NoTicker", None, "NoTickerSector", "State", 2022, 75)  # Invalid: Null ticker
+    ]
+    columns = ["name", "ticker", "sector", "hq_state", "year_founded", "number_of_employees"]
+    df = spark.createDataFrame(data, columns)
+
+    builder = SparkCompaniesBuilder(spark)
+
+    # 2. Apply data quality checks via the transform method
+    # The _add_data_quality_checks is called within transform_companies_data
+    
+    # Mocking the transform_companies_data to isolate the quality check
+    # For this test, we can directly call the "private" method, though it's not best practice.
+    # A better approach would be to refactor it out if it were more complex.
+    clean_df = builder._add_data_quality_checks(df)
+    
+    # 3. Verify that only the valid record remains
+    assert clean_df.count() == 1, "Should only have one valid record after cleaning"
+    
+    # Verify the correct record is kept
+    remaining_record = clean_df.collect()[0]
+    assert remaining_record.name == "ValidCorp", "The remaining record should be ValidCorp"
+
+def test_run_analysis_warns_on_high_risk_sector(spark, caplog):
+    """run_analysis() should emit a WARNING when a high-risk sector is present."""
+    data = [
+        ("MegaBank", "MB", "Finance", "Diversified Banks", "New York", 1980, 100000),
+        ("SmallBank", "SB", "Finance", "Regional Banks", "Chicago", 2010, 200),
+        ("TechCorp", "TC", "Technology", "Software", "New York", 2000, 1000),
+    ]
+    columns = ["name", "ticker", "sector", "sub_industry", "hq_state", "year_founded", "number_of_employees"]
+    df = spark.createDataFrame(data, columns)
+
+    builder = SparkCompaniesBuilder(spark)
+    ranked_df = builder.get_transaction_risk_summary(df)
+
+    with caplog.at_level(logging.WARNING, logger="etl_service.src.adapters.spark_companies_builder"):
+        builder.run_analysis(ranked_df)
+
+    assert "HIGH RISK SECTORS IDENTIFIED" in caplog.text
+
+def test_get_sector_growth_trend(spark):
+    """lag() should populate prev_employees and compute employee_delta per sector."""
+    data = [
+        ("OldBank",  "OB", "Finance",    "Banks",    "NY", 1980, 50000),
+        ("NewBank",  "NB", "Finance",    "Banks",    "NJ", 2000, 80000),
+        ("TechCorp", "TC", "Technology", "Software", "CA", 1995, 5000),
+    ]
+    columns = ["name", "ticker", "sector", "sub_industry", "hq_state", "year_founded", "number_of_employees"]
+    df = spark.createDataFrame(data, columns)
+
+    builder = SparkCompaniesBuilder(spark)
+    result = builder.get_sector_growth_trend(df).orderBy("sector", "year_founded").collect()
+
+    # OldBank is first in Finance — no predecessor, delta should be null
+    old_bank = next(r for r in result if r.name == "OldBank")
+    assert old_bank.prev_employees_in_sector is None
+    assert old_bank.employee_delta is None
+
+    # NewBank follows OldBank — delta = 80000 - 50000
+    new_bank = next(r for r in result if r.name == "NewBank")
+    assert new_bank.employee_delta == 30000
 
 
-if __name__ == "__main__":
-    main()
+def test_join_sector_risk_profile(spark):
+    """Each company row should be enriched with its sector's aml_risk_flag."""
+    data = [
+        ("MegaBank", "MB", "Finance",    "Banks",    "NY", 1980, 100000),
+        ("SmallBank","SB", "Finance",    "Banks",    "IL", 2010, 200),
+        ("TechCorp", "TC", "Technology", "Software", "CA", 2000, 1000),
+    ]
+    columns = ["name", "ticker", "sector", "sub_industry", "hq_state", "year_founded", "number_of_employees"]
+    df = spark.createDataFrame(data, columns)
+
+    builder = SparkCompaniesBuilder(spark)
+    result = builder.join_sector_risk_profile(df).collect()
+
+    finance_rows = [r for r in result if r.sector == "Finance"]
+    # All Finance rows should carry the sector-level flag
+    assert all(r.aml_risk_flag == "High Capacity / Review Needed" for r in finance_rows)
+
+    tech_rows = [r for r in result if r.sector == "Technology"]
+    assert all(r.aml_risk_flag == "Standard" for r in tech_rows)
