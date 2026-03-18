@@ -137,4 +137,4 @@ def cleanup_old_quarters(current_filepath):
                 logger.warning(f"Failed to delete old file {old_file}: {e}")
 
 if __name__ == "__main__":
-    ingest_sp500_stocks_info() 
+    get_sp500_wiki_data()
