@@ -26,9 +26,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, when, regexp_extract, split
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
-from etl_service.src.db.db import get_db, close_db
-from etl_service.src.adapters.wiki_page_client import WikiPageClient
-from etl_service.settings import DATABASE_URL
+from etl_service.src.adapters.spark_companies_builder import SparkCompaniesBuilder
 
 logging.basicConfig(
     level=logging.INFO,
@@ -159,27 +157,28 @@ class SparkETLPipeline:
             raise
     
     def run_companies_pipeline(self):
-        """Run the complete companies ETL pipeline."""
+        """Run the complete companies ETL pipeline with AML analytics."""
         logger.info("Starting PySpark companies ETL pipeline...")
         start_time = time.time()
-        
+
         try:
-            # Extract
-            companies_df = self.extract_sp500_companies()
-            
-            # Transform
-            transformed_df = self.transform_companies_data(companies_df)
-            
-            # Show sample data
-            logger.info("Sample transformed data:")
-            transformed_df.show(5, truncate=False)
-            
-            # Load (commented out for now - requires proper table setup)
-            # self.load_to_postgresql(transformed_df, "companies")
-            
+            builder = SparkCompaniesBuilder(self.spark)
+            ranked_df = builder.run()
+
+            # Demonstrate join: enrich each company row with sector-level risk profile
+            enriched_df = builder.join_sector_risk_profile(ranked_df)
+            logger.info("Sample enriched data (company + sector AML risk profile):")
+            enriched_df.show(5, truncate=False)
+
+            # Demonstrate lag window: employee growth trend per sector
+            trend_df = builder.get_sector_growth_trend(ranked_df)
+            logger.info("Sample sector growth trend (lag window):")
+            trend_df.select("name", "sector", "year_founded",
+                            "number_of_employees", "employee_delta").show(10, truncate=False)
+
             elapsed = time.time() - start_time
             logger.info(f"PySpark ETL pipeline completed in {elapsed:.2f} seconds")
-            
+
         except Exception as e:
             logger.error(f"PySpark ETL pipeline failed: {e}")
             raise

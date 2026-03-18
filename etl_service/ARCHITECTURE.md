@@ -102,8 +102,8 @@ Existing well-structured modules (unchanged):
 
 Consolidated testing for all components:
 
-- **`test_pyspark.py`**: PySpark functionality verification
-- Future: `test_glue.py`, `test_lake_formation.py`
+- **`test_spark_companies_builder.py`**: Window functions, AML flagging, join, lag — all analytics methods
+- **`test_wiki_page_client.py`**: Data source adapter unit tests
 
 ## Import Patterns
 
