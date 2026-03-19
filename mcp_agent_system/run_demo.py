@@ -6,6 +6,7 @@ Cross-platform launcher for all available demonstrations.
 Supports Windows, macOS, and Linux.
 """
 
+import argparse
 import asyncio
 import sys
 import os
@@ -155,9 +156,35 @@ async def main():
             print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\n👋 Goodbye!")
-    except Exception as e:
-        print(f"❌ Fatal error: {e}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--demo", choices=["aml-agent"], default=None)
+    args, _ = parser.parse_known_args()
+
+    if args.demo == "aml-agent":
+        async def _run_aml():
+            from mcp_agent_system.agents.langgraph_aml_agent import build_aml_graph
+            from mcp_agent_system.agents.rag_index import build_sector_index
+            from langchain_openai import ChatOpenAI
+
+            sector_rows = [
+                {"sector": "Finance", "company_count": 65, "avg_employees": 87420.0,
+                 "aml_risk_flag": "High Capacity / Review Needed"},
+                {"sector": "Technology", "company_count": 72, "avg_employees": 32100.0,
+                 "aml_risk_flag": "Standard"},
+            ]
+            index = build_sector_index(sector_rows)
+            retriever = index.as_retriever(search_kwargs={"k": 1})
+            llm = ChatOpenAI(model="gpt-4o-mini")
+            graph = build_aml_graph(retriever, llm)
+            result = graph.invoke({"query": "Which sectors pose the highest AML risk?"})
+            import json
+            print(json.dumps(result, indent=2))
+
+        asyncio.run(_run_aml())
+    else:
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+        except Exception as e:
+            print(f"❌ Fatal error: {e}")

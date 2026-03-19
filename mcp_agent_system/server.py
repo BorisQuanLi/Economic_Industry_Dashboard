@@ -65,6 +65,17 @@ class FinancialMCPServer:
         async def list_tools() -> List[Tool]:
             return [
                 Tool(
+                    name="run_aml_agent",
+                    description="Run the LangGraph AML risk assessment agent on a natural language query.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {"type": "string", "description": "AML risk question about S&P 500 sectors"}
+                        },
+                        "required": ["query"],
+                    },
+                ),
+                Tool(
                     name="analyze_sector_performance",
                     description="Analyze sector performance using sliding window algorithm",
                     inputSchema={
@@ -89,7 +100,25 @@ class FinancialMCPServer:
         
         @self.server.call_tool()
         async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
-            if name == "analyze_sector_performance":
+            if name == "run_aml_agent":
+                from mcp_agent_system.agents.langgraph_aml_agent import build_aml_graph
+                from mcp_agent_system.agents.rag_index import build_sector_index
+                from langchain_openai import ChatOpenAI
+
+                # Minimal sector data for demo; replace with SparkCompaniesBuilder in prod
+                sector_rows = [
+                    {"sector": "Finance", "company_count": 65, "avg_employees": 87420.0,
+                     "aml_risk_flag": "High Capacity / Review Needed"},
+                    {"sector": "Technology", "company_count": 72, "avg_employees": 32100.0,
+                     "aml_risk_flag": "Standard"},
+                ]
+                index = build_sector_index(sector_rows)
+                retriever = index.as_retriever(search_kwargs={"k": 1})
+                llm = ChatOpenAI(model="gpt-4o-mini")
+                graph = build_aml_graph(retriever, llm)
+                result = graph.invoke({"query": arguments["query"]})
+                return [TextContent(type="text", text=json.dumps(result))]
+            elif name == "analyze_sector_performance":
                 sectors = arguments.get("sectors", ["Technology"])
                 return [TextContent(
                     type="text", 

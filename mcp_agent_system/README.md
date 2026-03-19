@@ -19,6 +19,22 @@
 4. **Investment Strategy Agent** (`agent_004`) - Trade recommendations & optimization
 5. **Orchestrator Agent** (`agent_005`) - Multi-agent coordination & decision synthesis
 
+## 🛠️ Local Development Setup
+
+```bash
+# From mcp_agent_system/
+python3 -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+# Run tests (venv must be activated)
+python3 -m pytest
+```
+
+> The `.venv/` directory lives at `mcp_agent_system/.venv/` and is excluded from git via the root `.gitignore`.
+
+---
+
 ### 🏗️ Modular Architecture
 
 ```
