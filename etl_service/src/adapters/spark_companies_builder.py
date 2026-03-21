@@ -29,25 +29,12 @@ class SparkCompaniesBuilder:
     
     def __init__(self, spark: SparkSession):
         self.spark = spark
-        self.wiki_client = get_sp500_wiki_data()
-    
+        self._csv_path = get_sp500_wiki_data()  # triggers scrape if stale, returns filepath
+
     def extract_companies_data(self) -> DataFrame:
-        """Extract S&P 500 companies data from Wikipedia."""
-        logger.info("Extracting S&P 500 companies from Wikipedia...")
-        
-        try:
-            # Get raw data from Wikipedia client
-            companies_data = self.wiki_client.get_sp500_companies()
-            
-            # Convert to Spark DataFrame
-            df = self.spark.createDataFrame(companies_data)
-            
-            logger.info(f"Successfully extracted {df.count()} companies")
-            return df
-            
-        except Exception as e:
-            logger.error(f"Failed to extract companies data: {e}")
-            raise
+        """Load S&P 500 companies from the quarterly-suffixed Wikipedia CSV."""
+        logger.info(f"Loading S&P 500 companies from {self._csv_path}...")
+        return self.spark.read.csv(self._csv_path, header=True, inferSchema=True)
     
     def transform_companies_data(self, df: DataFrame) -> DataFrame:
         """Transform companies data using Spark operations."""
