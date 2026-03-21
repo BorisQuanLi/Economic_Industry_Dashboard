@@ -165,7 +165,7 @@ def main():
     if args.spark_mode:
         logger.info(f"Running in PySpark mode: {args.spark_mode}")
         try:
-            from etl_service.run_pipeline_spark import SparkETLPipeline
+            from etl_service.pipelines.spark_pipeline import SparkETLPipeline
             pipeline = SparkETLPipeline(spark_mode=args.spark_mode)
             
             if args.init_db:
