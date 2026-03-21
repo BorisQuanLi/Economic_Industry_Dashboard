@@ -1,5 +1,5 @@
 import pytest
-from fastapi_backend.services.sliding_window import SlidingWindowService
+from services.sliding_window import SlidingWindowService
 
 @pytest.mark.asyncio
 async def test_get_aligned_sector_performance():

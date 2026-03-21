@@ -3,6 +3,7 @@ from typing import List, Dict, Optional
 
 from models.financial import CompanyFinancials
 from db_session import get_db_session
+from cache import cache_get, cache_set
 
 router = APIRouter()
 
@@ -29,6 +30,11 @@ async def get_all_sectors_performance(
     """
     Get sector data with company counts (since we don't have financial data yet).
     """
+    cache_key = f"sectors:all:{financial_indicator or 'default'}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         cursor.execute("""
             SELECT s.sector_gics, COUNT(c.id) as company_count
@@ -57,6 +63,7 @@ async def get_all_sectors_performance(
                     "quarter": quarter, 
                     "year": str(year)
                 })
+        cache_set(cache_key, sector_data)
         return sector_data
     except Exception as e:
         return _get_mock_sector_data(financial_indicator or "revenue")
@@ -103,7 +110,13 @@ async def get_sector_performance(
     financial_indicator: Optional[str] = None
 ):
     """Get sector-level financial performance with sliding window alignment"""
-    return {"sector": sector_name, "status": "mock_data", "data": []}
+    cache_key = f"sectors:performance:{sector_name}:{financial_indicator or 'default'}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+    result = {"sector": sector_name, "status": "mock_data", "data": []}
+    cache_set(cache_key, result)
+    return result
 
 @router.get("/sub-sectors/{sector_name}/financials")
 async def get_sub_sector_financials(
