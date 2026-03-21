@@ -58,18 +58,17 @@ def get_sp500_wiki_data():
 
 def get_sp500_wiki_info():
     """Ingest S&P 500 company basic info from Wikipedia."""
-    url = 'https://en.wikipedia.org'
+    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
     session = get_session_with_retries()
     response = session.get(url, headers=HEADERS, timeout=30)
     response.raise_for_status()
 
-    # Use StringIO to avoid FutureWarning from read_html
     tables = pd.read_html(StringIO(response.text))
     if not tables:
         raise ValueError("No tables found on Wikipedia S&P 500 page")
 
     sp500_df = tables[0]
-    # Rename 'Symbol' column to 'Ticker' for consistency across data sources
+    # Column is 'Symbol' on the S&P 500 page — rename to 'Ticker' for consistency
     return sp500_df.rename(columns={'Symbol': 'Ticker'})
 
 def include_employees_total(sp500_df):
