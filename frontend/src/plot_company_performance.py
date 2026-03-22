@@ -5,13 +5,17 @@ from financial_performance_indicator import FinancialPerformanceIndicator
 
 SEARCH_SUB_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/sub-sectors"
 
-def plot_company_level_performance(sub_sector_name, sub_sector_financial_indicator):
-    selected_sub_sector_name = select_sub_sector_within_sector(sub_sector_name)
-    financial_performance_indicators = FinancialPerformanceIndicator()
-    selected_financial_indicator = (financial_performance_indicators
-                                        .select_from_financial_indicators_menu(sub_sector_financial_indicator, 'company'))
-    plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_financial_indicator, financial_performance_indicators)
-    return selected_sub_sector_name
+def find_company_financials_within_sub_sector(sub_sector_name, financial_indicator):
+    try:
+        company_financials_url = f"http://fastapi_backend:8000/api/v1/sectors/companies/{sub_sector_name}/financials"
+        response = requests.get(company_financials_url, params={'financial_indicator': financial_indicator})
+        companies = response.json()
+        if not companies:
+            st.warning("No company data found. Please ensure the ETL pipeline has run.")
+            return
+        return companies
+    except Exception as e:
+        return {}
 
 def select_sub_sector_within_sector(sub_sector_name):
     st.header('Historical financial performance by companies within a sub-Sector.')
@@ -25,6 +29,8 @@ def select_sub_sector_within_sector(sub_sector_name):
 
 def plot_all_companies_within_sub_sector(selected_sub_sector_name, selected_financial_indicator, financial_performance_indicators):
     avg_financials = find_company_financials_within_sub_sector(selected_sub_sector_name, selected_financial_indicator)
+    if not avg_financials:
+        return
     sub_sectors_xy_axis_info = {company_name : (get_sub_industry_xy_axis_info(
                                                     selected_financial_indicator, financial_performance_indicators, quarterly_info_dicts))
                                         for company_name, quarterly_info_dicts in avg_financials.items()}
@@ -78,3 +84,9 @@ def update_layout(fig, sub_sector_name, financial_indicator, financial_performan
                     )
                 )
     return fig
+
+def plot_company_level_performance(sub_sector_name, financial_indicator):
+    from financial_performance_indicator import FinancialPerformanceIndicator
+    financial_performance_indicators = FinancialPerformanceIndicator()
+    selected_sub_sector = select_sub_sector_within_sector(sub_sector_name)
+    plot_all_companies_within_sub_sector(selected_sub_sector, financial_indicator, financial_performance_indicators)
