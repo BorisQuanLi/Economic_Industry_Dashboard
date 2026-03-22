@@ -35,11 +35,31 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  airflow:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://${DB_USER}:${DB_PASS}@postgres:5432/airflow"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "${AIRFLOW_SECRET_KEY:-changeme}"
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin --firstname Air --lastname Flow --role Admin --email admin@example.com || true &&
+               airflow webserver & airflow scheduler"
 
   etl_service:
     build:

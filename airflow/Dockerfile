@@ -1,11 +1,4 @@
-FROM apache/airflow:2.7.3-python3.11
-
-USER root
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+FROM apache/airflow:2.10.5-python3.12
 
 USER airflow
 

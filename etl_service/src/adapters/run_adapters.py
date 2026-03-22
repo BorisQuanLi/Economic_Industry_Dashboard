@@ -1,4 +1,5 @@
 import csv
+import logging
 import pandas as pd
 import etl_service.src.models as models
 import etl_service.src.db as db
@@ -6,6 +7,8 @@ from etl_service.src.adapters.wiki_page_client import get_sp500_wiki_data
 from etl_service.src.adapters.companies_builder import CompanyBuilder
 from etl_service.src.adapters.quarterly_financials_builder import QuarterlyFinancialsBuilder
 from etl_service.src.adapters.quarterly_price_pe_builder import QuarterlyPricePEBuilder
+
+logger = logging.getLogger(__name__)
 
 class BuildSP500Companies: 
     def __init__(self):
@@ -34,6 +37,9 @@ class BuildSP500Companies:
                 self.process_row_data(wiki_row)     
 
     def process_row_data(self, wiki_row):
+        if 'GICS Sub-Industry' not in wiki_row:
+            logger.warning(f"Missing 'GICS Sub-Industry' key. Available keys: {list(wiki_row.keys())}")
+            return
         sub_industry_name = wiki_row['GICS Sub-Industry']
         sub_industry_obj = (models.SubIndustry
                                 .find_by_sub_industry_name(sub_industry_name, self.cursor))
