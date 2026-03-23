@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(layout="wide")
 import requests
 import plotly.graph_objects as go
 from plot_sub_sector_financial_performance import plot_sub_sectors_performance
