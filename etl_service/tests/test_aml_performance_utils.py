@@ -1,4 +1,3 @@
-import pytest
 from pyspark.sql import Row
 # Use relative import if running inside the package, 
 # or keep as is if running with 'python -m pytest'
