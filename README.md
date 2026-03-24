@@ -94,6 +94,14 @@ The API exposes the delta between naive and aligned analytical views:
 
 The `avg_revenue` delta between these rows quantifies the "reporting lag error"—which in this dataset produces a **~$4.7B cumulative sector distortion** and a ~$0.94B skew in average revenue across the Information Technology cohort.
 
+### 🛡️ Analytical Verification
+To verify the **Sliding Window Alignment** and quantified error correction (~$4.7B delta), query the live API:
+
+```bash
+# Returns both Naive (distorted) and Aligned (corrected) results
+curl -s http://localhost:8000/api/v1/analytics/sliding-window | jq '.[0, 1]'
+```
+
 ---
 
 ## What this project demonstrates
