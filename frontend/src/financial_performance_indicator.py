@@ -1,4 +1,21 @@
 import streamlit as st
+from datetime import date
+
+
+def get_recent_8_quarters() -> list[tuple[int, int]]:
+    """Return the 8 most recently completed calendar quarters as (year, quarter), oldest first."""
+    today = date.today()
+    year, quarter = today.year, (today.month - 1) // 3  # last completed quarter
+    if quarter == 0:
+        year, quarter = year - 1, 4
+    quarters = []
+    for _ in range(8):
+        quarters.append((year, quarter))
+        quarter -= 1
+        if quarter == 0:
+            year, quarter = year - 1, 4
+    return list(reversed(quarters))
+
 
 class FinancialPerformanceIndicator:
 
@@ -24,8 +41,16 @@ class FinancialPerformanceIndicator:
     def get_indicators_in_frontend_format(self, indicators_in_backend_format=None):
         if not indicators_in_backend_format:
             indicators_in_backend_format = self.indicators_in_backend_format
-        indicators_in_frontend_format = [' '.join([word.capitalize() for word in indicator.split('_')]) 
-                                                                        for indicator in indicators_in_backend_format]
+        
+        # Mapping for specific custom naming, otherwise use capitalize
+        custom_mapping = {
+            'price_earnings_ratio': 'Price-to-Earnings (P/E) Ratio'
+        }
+        
+        indicators_in_frontend_format = [
+            custom_mapping.get(indicator, ' '.join([word.capitalize() for word in indicator.split('_')]))
+            for indicator in indicators_in_backend_format
+        ]
         return indicators_in_frontend_format
 
     def select_from_financial_indicators_menu(self, financial_indicator, streamlit_key):
@@ -33,7 +58,7 @@ class FinancialPerformanceIndicator:
         self.indicators_in_backend_format = [financial_indicator] + self.indicators_in_backend_format
         indicators_in_frontend_format = self.get_indicators_in_frontend_format(
                                                         self.indicators_in_backend_format)
-        selected_financial_indicator = st.selectbox('', indicators_in_frontend_format, index=0, key= streamlit_key)
+        selected_financial_indicator = st.selectbox('Financial Indicator', indicators_in_frontend_format, index=0, key=streamlit_key, label_visibility='collapsed')
         selected_financial_indicator = self.frontend_backend_string_format_mapping(selected_financial_indicator)
         return selected_financial_indicator
 
@@ -49,8 +74,12 @@ class FinancialPerformanceIndicator:
         return f'{quarter_ending_month} {year}'
 
     def get_financial_item_unit(self, financial_item):
-        usd_financial_items = ['revenue', 'net_income', 'earnings_per_share', 'closing_price']
-        financial_item_unit_mapping = {usd_item: 'USD' for usd_item in usd_financial_items}
-        financial_item_unit_mapping['profit_margin'] = 'percentage'
-        financial_item_unit_mapping['price_earnings_ratio'] = ''
-        return financial_item_unit_mapping[financial_item]
+        financial_item_unit_mapping = {
+            'revenue':              'USD (billions)',
+            'net_income':           'USD (millions)',
+            'earnings_per_share':   'USD',
+            'closing_price':        'USD',
+            'profit_margin':        'Percentage',
+            'price_earnings_ratio': 'P/E Ratio (x)',
+        }
+        return financial_item_unit_mapping.get(financial_item, 'USD')

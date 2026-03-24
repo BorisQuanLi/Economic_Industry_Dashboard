@@ -4,7 +4,7 @@ Tests for SparkFinancialsReader.
 JDBC reads are replaced with spark.createDataFrame() so no live DB is required.
 """
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from pyspark.sql import SparkSession, Row
 
 from etl_service.src.adapters.spark_financials_reader import SparkFinancialsReader

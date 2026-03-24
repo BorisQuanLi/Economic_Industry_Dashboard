@@ -4,28 +4,17 @@ Solves Apple Q4 October filing vs Standard Q4 December misalignment
 Demonstrates enterprise automation for Jefferies Graph Data Engineer role
 """
 from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.providers.postgres.operators.postgres import PostgresOperator
 import time
 import requests
 from typing import List, Dict
 
-default_args = {
-    'owner': 'boris-li',
-    'depends_on_past': False,
-    'start_date': datetime(2024, 11, 9),
-    'retries': 2,
-    'retry_delay': timedelta(minutes=5)
-}
-
-dag = DAG(
-    'fmp_rate_limited_extraction',
-    default_args=default_args,
-    description='Rate-limited FMP API with sliding window algorithm',
-    schedule_interval='@weekly',
-    catchup=False
-)
+try:
+    from airflow import DAG
+    from airflow.operators.python import PythonOperator
+    from airflow.providers.postgres.operators.postgres import PostgresOperator
+    _AIRFLOW_AVAILABLE = True
+except ImportError:
+    _AIRFLOW_AVAILABLE = False
 
 def rate_limited_extraction(**context):
     """Extract all 11 S&P sectors with FMP rate limiting (250 calls/minute)"""
@@ -126,29 +115,46 @@ def get_sector_tickers(sector: str) -> List[str]:
     return sector_mapping.get(sector, [])
 
 # DAG Tasks
-extract_task = PythonOperator(
-    task_id='rate_limited_extraction',
-    python_callable=rate_limited_extraction,
-    dag=dag
-)
+if _AIRFLOW_AVAILABLE:
+    default_args = {
+        'owner': 'boris-li',
+        'depends_on_past': False,
+        'start_date': datetime(2024, 11, 9),
+        'retries': 2,
+        'retry_delay': timedelta(minutes=5)
+    }
 
-load_task = PostgresOperator(
-    task_id='load_aligned_data',
-    postgres_conn_id='postgres_default',
-    sql="""
-    CREATE TABLE IF NOT EXISTS quarterly_reports_aligned (
-        id SERIAL PRIMARY KEY,
-        ticker VARCHAR(10),
-        revenue BIGINT,
-        net_income BIGINT,
-        eps DECIMAL(10,2),
-        filing_date DATE,
-        aligned_quarter VARCHAR(10),
-        profit_margin DECIMAL(5,2),
-        created_at TIMESTAMP DEFAULT NOW()
-    );
-    """,
-    dag=dag
-)
+    dag = DAG(
+        'fmp_rate_limited_extraction',
+        default_args=default_args,
+        description='Rate-limited FMP API with sliding window algorithm',
+        schedule_interval='@weekly',
+        catchup=False
+    )
 
-extract_task >> load_task
+    extract_task = PythonOperator(
+        task_id='rate_limited_extraction',
+        python_callable=rate_limited_extraction,
+        dag=dag
+    )
+
+    load_task = PostgresOperator(
+        task_id='load_aligned_data',
+        postgres_conn_id='postgres_default',
+        sql="""
+        CREATE TABLE IF NOT EXISTS quarterly_reports_aligned (
+            id SERIAL PRIMARY KEY,
+            ticker VARCHAR(10),
+            revenue BIGINT,
+            net_income BIGINT,
+            eps DECIMAL(10,2),
+            filing_date DATE,
+            aligned_quarter VARCHAR(10),
+            profit_margin DECIMAL(5,2),
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        """,
+        dag=dag
+    )
+
+    extract_task >> load_task

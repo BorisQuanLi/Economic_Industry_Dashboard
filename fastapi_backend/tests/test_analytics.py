@@ -10,8 +10,8 @@ def test_sliding_window_analytics():
     assert response.status_code == 200
     data = response.json()
     assert len(data) > 0
-    assert data[0]["aligned_quarter"] == "2025Q3"
-    assert data[0]["filing_alignment"] == "October_aligned"
+    assert data[0]["aligned_quarter"] == "2025Q4_naive"
+    assert data[1]["aligned_quarter"] == "2025Q4_aligned"
 
 def test_health_check():
     """Test health endpoint"""
