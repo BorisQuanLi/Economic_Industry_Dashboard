@@ -76,8 +76,30 @@ jobs:
       run: docker compose build
 
     - name: Run integration tests
+      env:
+        # Non-secret defaults for ephemeral CI containers.
+        DB_USER: postgres
+        DB_PASS: postgres
+        DB_NAME: investment_analysis
+        # Prevent accidental dependency on external APIs in CI.
+        FMP_API_KEY: ""
       run: |
         docker compose up -d
         sleep 10
-        curl -f http://localhost:8000/health || exit 1
-        docker compose down
+        curl -f http://localhost:8000/health
+
+    - name: Dump compose logs (on failure)
+      if: failure()
+      run: |
+        docker compose ps
+        echo "---- postgres logs ----"
+        docker compose logs --no-color postgres || true
+        echo "---- fastapi_backend logs ----"
+        docker compose logs --no-color fastapi_backend || true
+        echo "---- etl_service logs ----"
+        docker compose logs --no-color etl_service || true
+        docker compose config
+
+    - name: Cleanup
+      if: always()
+      run: docker compose down --volumes --remove-orphans
