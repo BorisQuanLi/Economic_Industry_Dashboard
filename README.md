@@ -51,6 +51,7 @@ Open `http://localhost:8501` — the Streamlit dashboard loads with representati
 
 - **Streamlit Dashboard:** `http://localhost:8501`
 - **FastAPI Swagger UI:** `http://localhost:8000/docs`
+- **Kotlin Agent GraphiQL:** `http://localhost:8090/graphiql`
 - **Airflow UI:** `http://localhost:8080`
 - **PostgreSQL:** `localhost:5432`
 
@@ -106,7 +107,7 @@ curl -s http://localhost:8000/api/v1/analytics/sliding-window | jq '.[0, 1]'
 
 ## What this project demonstrates
 
-The codebase reflects a realistic engineering progression: a working Flask/PostgreSQL backend refactored into a modular FastAPI service, an Airflow-orchestrated ETL pipeline extended with PySpark distributed analytics, and an MCP-based AI agent layer added on top of the existing data infrastructure — each stage building on the last without discarding what worked.
+The codebase reflects a realistic engineering progression: a working Flask/PostgreSQL backend refactored into a modular FastAPI service, an Airflow-orchestrated ETL pipeline extended with PySpark distributed analytics, an MCP-based AI agent layer added on top of the existing data infrastructure, and a Kotlin/Ktor JVM service introduced as a polyglot agent — each stage building on the last without discarding what worked.
 
 **Services in this repo:**
 
@@ -117,6 +118,7 @@ The codebase reflects a realistic engineering progression: a working Flask/Postg
 | `etl_service/` | PySpark ETL pipeline — Wikipedia ingestion, JDBC reads from PostgreSQL, window function analytics |
 | `airflow/` | Orchestration — DAGs for rate-limited FMP API extraction (250 calls/day), data quality checks |
 | `mcp_agent_system/` | AI agent layer — MCP server exposing financial tools; LangGraph stateful agent with FAISS RAG |
+| `kotlin-data-agent/` | JVM agent (agent_006) — Kotlin/Ktor GraphQL + REST service; exponential-backoff retry; DDD value objects |
 | `frontend/` | Streamlit dashboard — sector/sub-sector/company-level financial performance visualization |
 
 ---
@@ -140,7 +142,12 @@ The codebase reflects a realistic engineering progression: a working Flask/Postg
           └───────┬───────┘
                   ▼
          MCP Agent Layer (Stateful Reasoning)
-                  │
+          ┌───────┴────────────────────┐
+          │                            │
+   Python Agents (in-process)   Kotlin/Ktor Agent (agent_006)
+   LangGraph · FAISS RAG        GraphQL + REST · Exponential-backoff retry
+          │                            │
+          └───────┬────────────────────┘
                   ▼
          Streamlit (Presentation Tier)
 ```
@@ -185,6 +192,12 @@ Stage 2 skips gracefully if the upstream Airflow pipeline hasn't populated the D
 ---
 
 ## Technology stack
+
+**JVM / Kotlin agent**
+- Kotlin 2.0 / JVM 17 — `kotlin-data-agent` as `agent_006` in the MCP system
+- Ktor 3 — async HTTP server (Netty engine) and CIO client
+- graphql-kotlin-ktor-server 8.3.0 — reflection-based GraphQL schema generation
+- Gradle 8 (Kotlin DSL) — two-stage Docker build
 
 **Backend**
 - Python 3.12+
@@ -259,6 +272,14 @@ cd mcp_agent_system/
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python3 run_demo.py
+```
+
+**Kotlin agent (agent_006)**
+```bash
+cd kotlin-data-agent/
+docker compose up -d kotlin-data-agent
+curl http://localhost:8090/health
+# GraphQL: http://localhost:8090/graphiql
 ```
 
 **Airflow Orchestration**
