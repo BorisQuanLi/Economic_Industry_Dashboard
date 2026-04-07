@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from typing import List, Dict, Optional
 
 from models.financial import CompanyFinancials
-from db_session import get_db_session
 from cache import cache_get, cache_set
 from utils import get_recent_8_quarters, indicator_base
 
@@ -72,7 +71,6 @@ async def test_db():
 @router.get("/")
 async def get_all_sectors_performance(
     financial_indicator: Optional[str] = None,
-    cursor = Depends(get_db_session)
 ):
     """
     Get sector data with company counts (since we don't have financial data yet).
@@ -83,15 +81,22 @@ async def get_all_sectors_performance(
         return cached
 
     try:
-        cursor.execute("""
-            SELECT s.sector_gics, COUNT(c.id) as company_count
-            FROM sub_industries s
-            LEFT JOIN companies c ON c.sub_industry_id = s.id
-            WHERE s.sector_gics IS NOT NULL
-            GROUP BY s.sector_gics
-            ORDER BY company_count DESC
-        """)
-        results = cursor.fetchall()
+        from db_session import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT s.sector_gics, COUNT(c.id) as company_count
+                FROM sub_industries s
+                LEFT JOIN companies c ON c.sub_industry_id = s.id
+                WHERE s.sector_gics IS NOT NULL
+                GROUP BY s.sector_gics
+                ORDER BY company_count DESC
+            """)
+            results = cursor.fetchall()
+        finally:
+            cursor.close()
+            conn.close()
 
         import random
         ind = financial_indicator or "revenue"
