@@ -6,24 +6,38 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - fastapi_backend
+      - fastapi-backend
     environment:
       FRONTEND_ENV_VAR: "example_value"
 
-  fastapi_backend:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  fastapi-backend:
     build:
       context: ./fastapi_backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DB_HOST: "postgres"
       DB_NAME: "${DB_NAME}"
       DB_USER: "${DB_USER}"
       DB_PASS: "${DB_PASS}"
       DB_PORT: "5432"
+      REDIS_URL: "redis://redis:6379/0"
 
   postgres:
     image: postgres:13
@@ -80,6 +94,17 @@ services:
     volumes:
       - etl_data:/app/data
     command: ["python", "etl_service/pipelines/standard_pipeline.py", "--init-db", "--companies-only"]
+
+  kotlin-data-agent:
+    build:
+      context: ./kotlin-data-agent
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8080"
+    depends_on:
+      - fastapi-backend
+    environment:
+      FASTAPI_BASE_URL: "http://fastapi-backend:8000"
 
 volumes:
   postgres_data:
