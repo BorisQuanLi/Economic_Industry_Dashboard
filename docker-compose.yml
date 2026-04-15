@@ -6,7 +6,7 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - fastapi-backend
+      - fastapi_backend
     environment:
       FRONTEND_ENV_VAR: "example_value"
 
@@ -20,7 +20,7 @@ services:
       timeout: 3s
       retries: 5
 
-  fastapi-backend:
+  fastapi_backend:
     build:
       context: ./fastapi_backend
       dockerfile: Dockerfile
@@ -102,9 +102,9 @@ services:
     ports:
       - "8090:8080"
     depends_on:
-      - fastapi-backend
+      - fastapi_backend
     environment:
-      FASTAPI_BASE_URL: "http://fastapi-backend:8000"
+      FASTAPI_BASE_URL: "http://fastapi_backend:8000"
 
 volumes:
   postgres_data:
