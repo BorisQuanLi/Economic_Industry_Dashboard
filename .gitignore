@@ -34,7 +34,3 @@ mcp_agent_system/venv/
 airflow/.venv/
 airflow/venv/
 pytest_output.txt
-
-# Data artifacts
-etl_service/data/
-
