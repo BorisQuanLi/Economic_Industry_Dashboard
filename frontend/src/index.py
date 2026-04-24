@@ -12,7 +12,7 @@ st.write(f"                           by Boris Li, {datetime.now().year}")
 
 financial_indicator_selected = plot_sector_level_performance()
 sub_sector_name, sub_sector_financial_indicator = plot_sub_sectors_performance(financial_indicator_selected)
-# plot_company_level_performance(sub_sector_name, sub_sector_financial_indicator)
+plot_company_level_performance(sub_sector_name, sub_sector_financial_indicator)
 
 st.write("Data provided by Financial Modeling Prep:")
 st.write("https://financialmodelingprep.com/developer/docs/")

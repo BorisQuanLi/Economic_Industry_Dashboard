@@ -9,6 +9,8 @@ services:
       - fastapi_backend
     environment:
       FRONTEND_ENV_VAR: "example_value"
+      BACKEND_HOST: "fastapi_backend"
+      BACKEND_PORT: "8000"
 
   redis:
     image: redis:7-alpine
