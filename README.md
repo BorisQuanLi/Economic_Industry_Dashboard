@@ -22,6 +22,8 @@ make setup
 docker compose up --build
 ```
 
+> **Note:** The Streamlit container logs will print a `172.x.x.x` Network URL — this is the internal Docker bridge IP and is not accessible from your browser. Always use `http://localhost:8501` instead.
+
 ## Dashboard & Services
 
 Open `http://localhost:8501` — the Streamlit dashboard loads with representative S&P 500 data and is fully interactive without FMP API credentials.

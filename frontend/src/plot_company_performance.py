@@ -86,6 +86,7 @@ def add_traces_to_fig(sub_sector_name, financial_indicator, financial_performanc
         fig.add_trace(go.Scatter(x = dates_list, y = values_list, 
                                                         name = f"{company_name}", mode='lines+markers'))
     fig = update_layout(fig, sub_sector_name, financial_indicator, financial_performance_indicators)
+    fig.update_layout(showlegend=True)
     return fig
 
 def update_layout(fig, sub_sector_name, financial_indicator, financial_performance_indicators):
