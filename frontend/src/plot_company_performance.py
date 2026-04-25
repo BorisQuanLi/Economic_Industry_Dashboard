@@ -10,7 +10,7 @@ def select_sub_sector_within_sector(sub_sector_name):
     st.header('Historical financial performance by companies within a sub-Sector.')
     st.header(' ')
     st.write(f"Select from the dropdown menu an economic sub-Sector in the {sub_sector_name} sector:")
-    sub_sector_names_response = requests.get(SEARCH_SUB_SECTOR_URL,
+    sub_sector_names_response = requests.get(f"{BACKEND_BASE_URL}/api/v1/sectors/sub-sectors",
                                                 params={'sector_name': sub_sector_name})
     sub_sector_names = sub_sector_names_response.json()['sub_sector_names']
     sub_sector_choice = st.selectbox('Sub-Sector', sub_sector_names, index=0, key=f'company_level_{sub_sector_name}', label_visibility='collapsed')
