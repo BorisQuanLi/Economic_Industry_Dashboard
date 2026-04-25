@@ -34,3 +34,16 @@ mcp_agent_system/venv/
 airflow/.venv/
 airflow/venv/
 pytest_output.txt
+
+# --- Terraform Global ---
+**/.terraform/
+**/*.tfstate*
+
+# Ignore all variable files as they may contain sensitive input
+**/*.tfvars
+**/*.tfvars.json
+
+# Optional: If you want to allow a specific "safe" vars file
+# !example.tfvars
+
+
