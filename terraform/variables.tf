@@ -28,9 +28,3 @@ variable "aws_secrets" {
   }
 }
 
-# Ensure your existing creds are marked as sensitive
-variable "db_user" { type = string }
-variable "db_pass" { 
-  type      = string
-  sensitive = true 
-}
