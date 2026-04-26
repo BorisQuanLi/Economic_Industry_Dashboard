@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 import math
 from chart_layout import apply_standard_chart_layout
 from financial_performance_indicator import FinancialPerformanceIndicator, get_recent_8_quarters
+from config import BACKEND_BASE_URL
 
-SEARCH_SECTOR_URL = "http://fastapi_backend:8000/api/v1/sectors/search"
+SEARCH_SECTOR_URL = f"{BACKEND_BASE_URL}/api/v1/sectors/search"
 
 def plot_sub_sectors_performance(sector_financial_indicator): 
     sector_name_selected = select_from_sectors_menu()
@@ -52,7 +53,7 @@ def find_sub_industries_avg_financials_by_sector(sector_name, financial_indicato
         'profit_margin': 15, 'closing_price': 50, 'price_earnings_ratio': 20,
     }
     try:
-        sub_sectors_url = "http://fastapi_backend:8000/api/v1/sectors/sub-sectors"
+        sub_sectors_url = f"{BACKEND_BASE_URL}/api/v1/sectors/sub-sectors"
         response = requests.get(sub_sectors_url, params={'sector_name': sector_name})
         selected_sub_sectors = response.json().get('sub_sector_names', [])[:5]
 
