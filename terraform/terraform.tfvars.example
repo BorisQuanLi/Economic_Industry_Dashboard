@@ -1,0 +1,6 @@
+# Example Terraform variables - Copy to terraform.tfvars and fill in
+# DO NOT COMMIT THE ACTUAL .tfvars FILE TO VERSION CONTROL
+
+db_user = "admin_user"
+db_pass = "provide-a-strong-password-here"
+db_name = "investment_analysis"

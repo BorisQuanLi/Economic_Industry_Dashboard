@@ -1,13 +1,18 @@
+import os
 import psycopg2
 from datetime import datetime, timedelta
 from etl_service.settings import DB_USER, DB_NAME, DB_HOST, DB_PASSWORD
+from etl_service.src.db.connection import get_iam_token_connection
 
 conn = None # Global connection for simple script-based execution
 
 def get_db():
     global conn
     if conn is None:
-        conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+        if os.getenv("DB_AUTH_MODE") == "iam":
+            conn = get_iam_token_connection()
+        else:
+            conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD)
     return conn
 
 def close_db(e=None):
