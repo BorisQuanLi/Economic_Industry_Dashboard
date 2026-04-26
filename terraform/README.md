@@ -59,11 +59,24 @@ aws ecs update-service --cluster dashboard-cluster --service fastapi-backend --f
 
 ### 5. Create the RDS IAM user
 
-Connect to RDS once using the master password (from `terraform.tfvars`), then:
+RDS is in a private subnet — connect via a one-shot ECS task (no bastion needed):
 
-```sql
-CREATE USER iam_user WITH LOGIN;
-GRANT rds_iam TO iam_user;
+```bash
+aws ecs run-task \
+  --cluster dashboard-cluster \
+  --task-definition dashboard-etl \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[<any-public-subnet-id>],securityGroups=[<ecs-sg-id>],assignPublicIp=ENABLED}" \
+  --overrides '{"containerOverrides":[{"name":"etl_service","command":["python","-c","import psycopg2; conn=psycopg2.connect(host=\"<rds_endpoint>\",database=\"<db_name>\",user=\"<db_user>\",password=\"<db_pass>\"); cur=conn.cursor(); cur.execute(\"CREATE USER iam_user WITH LOGIN\"); cur.execute(\"GRANT rds_iam TO iam_user\"); conn.commit(); print(\"done\")"]}]}'
+```
+
+Substitute subnet ID and security group ID from the `terraform output` values. Confirm success:
+
+```bash
+aws logs get-log-events --log-group-name /ecs/dashboard \
+  --log-stream-name etl/etl_service/<task-id> \
+  --query 'events[*].message' --output text
+# Expected output: done
 ```
 
 ### 6. Get the dashboard URL
