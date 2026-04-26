@@ -34,18 +34,17 @@ terraform apply
 Note the `ecr_urls` output — you'll need these in the next step.
 
 ### 4. Build and push Docker images
-Navigate back to the project root (one level up from `terraform/`) so Docker can find the service folders:
+Navigate back to the project root (one level up from `terraform/`) so Docker can find the service folders, then build and push to ECR:
 
 ```bash
 cd ..
 
+# Define base URL
 AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-AWS_REGION=us-east-1
-ECR_BASE="${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+ECR_BASE="${AWS_ACCOUNT}.dkr.ecr.us-east-1.amazonaws.com"
 
-# Login
-aws ecr get-login-password --region $AWS_REGION | \
-  docker login --username AWS --password-stdin $ECR_BASE
+# Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_BASE
 
 # Build and Push
 for SERVICE in frontend fastapi_backend etl_service; do
@@ -67,20 +66,19 @@ CREATE USER iam_user WITH LOGIN;
 GRANT rds_iam TO iam_user;
 ```
 
-### 6. Open the dashboard
+### 6. Get the dashboard URL
 
-ECS assigns a public IP to the frontend task. To find it:
+ECS assigns a fresh public IP on every task deployment. Retrieve it with:
 
 ```bash
-aws ecs list-tasks --cluster dashboard-cluster --service-name frontend
-aws ecs describe-tasks --cluster dashboard-cluster --tasks <task-arn> \
-  --query 'tasks[0].attachments[0].details'
-# Look for the "networkInterfaceId" value, then:
-aws ec2 describe-network-interfaces --network-interface-ids <eni-id> \
+aws ecs list-tasks --cluster dashboard-cluster --service-name frontend --query 'taskArns[0]' --output text \
+| xargs -I {} aws ecs describe-tasks --cluster dashboard-cluster --tasks {} \
+  --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text \
+| xargs -I {} aws ec2 describe-network-interfaces --network-interface-ids {} \
   --query 'NetworkInterfaces[0].Association.PublicIp' --output text
 ```
 
-Open `http://<public-ip>:8501` in your browser.
+Open `http://<output-ip>:8501` in your browser.
 
 ### 7. Tear down when done
 

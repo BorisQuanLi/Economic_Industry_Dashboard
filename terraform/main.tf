@@ -2,6 +2,15 @@ provider "aws" {
   region = "us-east-1"
 }
 
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.28"
+    }
+  }
+}
+
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
@@ -183,7 +192,7 @@ resource "aws_security_group" "ecs_sg" {
   name   = "dashboard-ecs-sg"
   vpc_id = module.vpc.vpc_id
 
-  # FastAPI internal port (frontend → fastapi_backend)
+  # FastAPI port — from ALB and within VPC
   ingress {
     from_port   = 8000
     to_port     = 8000
@@ -283,6 +292,39 @@ resource "aws_ecs_task_definition" "etl" {
   }])
 }
 
+# ── Internal ALB for fastapi_backend ─────────────────────────────────────────
+
+resource "aws_lb" "fastapi" {
+  name               = "dashboard-fastapi-alb"
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = module.vpc.private_subnets
+  security_groups    = [aws_security_group.ecs_sg.id]
+}
+
+resource "aws_lb_target_group" "fastapi" {
+  name        = "dashboard-fastapi-tg"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = module.vpc.vpc_id
+  target_type = "ip"
+
+  health_check {
+    path = "/health"
+  }
+}
+
+resource "aws_lb_listener" "fastapi" {
+  load_balancer_arn = aws_lb.fastapi.arn
+  port              = 8000
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.fastapi.arn
+  }
+}
+
 # ── ECS Task: fastapi_backend (long-running service) ─────────────────────────
 
 resource "aws_ecs_task_definition" "fastapi" {
@@ -301,8 +343,8 @@ resource "aws_ecs_task_definition" "fastapi" {
     environment = [
       { name = "DB_HOST", value = aws_db_instance.postgres.address },
       { name = "DB_NAME", value = var.db_name },
-      { name = "DB_USER", value = "iam_user" },
-      { name = "DB_AUTH_MODE", value = "iam" },
+      { name = "DB_USER", value = var.db_user },
+      { name = "DB_PASS", value = var.db_pass },
       { name = "REDIS_URL", value = "redis://localhost:6379/0" }
     ]
     logConfiguration = {
@@ -328,6 +370,12 @@ resource "aws_ecs_service" "fastapi" {
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.fastapi.arn
+    container_name   = "fastapi_backend"
+    container_port   = 8000
+  }
 }
 
 # ── ECS Task: frontend (Streamlit, public-facing) ────────────────────────────
@@ -345,7 +393,7 @@ resource "aws_ecs_task_definition" "frontend" {
     image        = "${aws_ecr_repository.app_repos["frontend"].repository_url}:latest"
     portMappings = [{ containerPort = 8501, protocol = "tcp" }]
     environment = [
-      { name = "BACKEND_HOST", value = "fastapi_backend" },
+      { name = "BACKEND_HOST", value = aws_lb.fastapi.dns_name },
       { name = "BACKEND_PORT", value = "8000" }
     ]
     logConfiguration = {
@@ -374,6 +422,11 @@ resource "aws_ecs_service" "frontend" {
 }
 
 # ── Outputs ───────────────────────────────────────────────────────────────────
+
+output "fastapi_alb_dns" {
+  description = "Internal ALB DNS for fastapi_backend (used by frontend BACKEND_HOST)"
+  value       = aws_lb.fastapi.dns_name
+}
 
 output "frontend_url" {
   description = "Streamlit dashboard — check ECS task ENI for the assigned public IP"
