@@ -49,6 +49,7 @@ resource "aws_ecr_repository" "app_repos" {
   for_each             = toset(local.services)
   name                 = "dashboard/${each.key}"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true
 
   image_scanning_configuration { scan_on_push = true }
 }
