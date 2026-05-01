@@ -1,0 +1,16 @@
+# --- Core Compute (H100/CUDA 12.1 Optimized) ---
+--extra-index-url https://pytorch.org
+torch
+torchvision
+
+# --- Data & Persistence ---
+astrapy>=1.2.0
+pandas
+pyarrow
+numpy
+
+# --- API & Orchestration ---
+fastapi
+uvicorn
+redis
+python-dotenv

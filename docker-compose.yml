@@ -108,6 +108,26 @@ services:
     environment:
       FASTAPI_BASE_URL: "http://fastapi_backend:8000"
 
+  gpu-ops-alpha-orchestrator:
+    build:
+      context: ./gpu_ops_alpha_orchestrator
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    restart: on-failure
+    ports:
+    - "8070:8070"  # Expose the GPU orchestrator port
+    environment:
+      - ASTRA_DB_APPLICATION_TOKEN=${ASTRA_DB_TOKEN}
+    volumes:
+      - ./gpu_cache:/app/cache  # For staging features before GPU ingestion
+    depends_on:
+      - redis # For task queuing
+
 volumes:
   postgres_data:
   etl_data:
