@@ -75,6 +75,14 @@ clean: ## Remove temporary files, caches, and the virtual environment
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 	find . -type d -name ".ruff_cache" -exec rm -rf {} +
+	@# --- NEW: Infrastructure Hygiene ---
+	@if [ -d "gpu_cache" ]; then \
+		echo "🧹 Clearing GPU staging cache..."; \
+		sudo rm -rf gpu_cache/*; \
+	fi
+
+clean-gpu: ## Targeted clearing of GPU staging volume
+	sudo rm -rf gpu_cache/*
 
 list-worktrees: ## List all active dev-environments (worktrees)
 	@echo "🌳 Active Worktrees:"

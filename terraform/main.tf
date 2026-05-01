@@ -422,6 +422,15 @@ resource "aws_ecs_service" "frontend" {
   }
 }
 
+# ── Provision the Vector Database for the Feature Store ───────────────────────
+
+resource "astra_database" "feature_store" {
+  name           = "mw_feature_store"
+  keyspace       = "alpha_signals"
+  cloud_provider = "gcp"
+  regions        = ["us-east1"]
+}
+
 # ── Outputs ───────────────────────────────────────────────────────────────────
 
 output "fastapi_alb_dns" {
