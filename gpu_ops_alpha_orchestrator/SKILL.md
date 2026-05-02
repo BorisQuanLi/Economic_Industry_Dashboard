@@ -2,8 +2,8 @@
 name: gpu-ops-alpha-orchestrator
 version: 1.1.0
 description: >-
-  Specialized agent for high-performance GPU feature engineering. 
-  Manages CUDA-accelerated microservices within the Economic Industry Dashboard ecosystem.
+  Specialized agent for high-performance GPU feature engineering.
+  Manages CUDA-accelerated microservices within the ecosystem.
 metadata:
   project_id: eid-gpu-orchestrator
   service_context: gpu_testing
