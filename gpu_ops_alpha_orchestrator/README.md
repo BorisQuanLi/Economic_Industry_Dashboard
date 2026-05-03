@@ -1,31 +1,35 @@
 # 🚀 GPU-Ops Alpha Orchestrator (EID-MW Integration)
 
 ## 🎯 Design Philosophy
-This microservice serves as the **Operational Alpha** layer for the Economic Industry Dashboard (EID). It bridges the gap between raw macroeconomic data (NoSQL/Astra) and signal generation by utilizing GPU-accelerated automated feature engineering.
+This microservice is a **Greenfield Operational Alpha** layer for the Economic Industry Dashboard (EID). It functions as the critical bridge between **Quantitative Research** and **Platform Engineering**, automating the transition from raw macroeconomic datasets to high-fidelity, GPU-accelerated signal generation.
+
+Adopting a **"Data-First" architecture**, the service prioritizes the precision of **automated feature engineering** over model complexity, ensuring that the features—not just the architecture—drive measurable alpha in systematic strategies.
 
 ## 🏛️ Infrastructure Architecture
-- **Compute Layer**: CUDA-accelerated PyTorch kernels for high-throughput cross-feature interaction.
-- **Storage Layer**: Multi-cloud persistence via Astra DB (GCP) for low-latency vector retrieval.
-- **Orchestration**: Docker-compose with NVIDIA-container-toolkit reservations, designed for future migration to K8s/Ray.
+- **Compute Layer**: CUDA-accelerated PyTorch kernels for high-throughput cross-feature interaction and time-series transforms.
+- **Storage Layer**: Multi-cloud persistence via Astra DB (GCP) for low-latency vector retrieval and managed embedding generation.
+- **Orchestration**: Docker-compose with NVIDIA-container-toolkit reservations, optimized for future migration to Ray-managed GPU clusters.
 
-## 🧪 Engineering Excellence & CI/CD 
+## 🏗️ Technical Specification & Performance Profile
+- **Compute Strategy**: Specialized CUDA 12.1 PyTorch kernels for vectorized normalization (Z-Scoring) to maintain high-throughput signal integrity.
+- **Vector Intelligence**: Deployment of the **Nvidia nv-embedqa-e5-v5** model via the **Astra DB Vectorize** pattern. This offloads embedding generation to the **GCP-hosted H100 fabric**, minimizing VRAM-to-CPU context switching.
+- **Latency Optimization**: By utilizing cloud-native vectorization at the storage layer, the local H100 TFLOPS are reserved exclusively for high-frequency feature interaction and rolling-window math.
+
+## 🛡️ Operational Reliability & Resource Governance
+- **Strict Hardware Contracts**: Implements an infrastructure-aware boot sequence. The orchestrator enforces a **Fail-Fast** protocol if CUDA kernels are unreachable, preventing silent performance drift into CPU-bound states.
+- **Security Tier 3 Isolation**: Credential management is decoupled from the application logic through environmental injection (`ASTRA_DB_TOKEN`), ensuring compliance with enterprise-grade secret rotation standards.
+- **Scalability Path**: Designed as a containerized microservice compatible with **NVIDIA Container Toolkit**, ready for horizontal scaling into K8s-orchestrated GPU clusters.
+
+## 🧪 Engineering Excellence & CI/CD
 This orchestrator utilizes a **Contract-First SDLC**. Every commit is validated against a specialized multi-service infrastructure matrix:
-
 - **Skill Governance**: `SKILL.md` frontmatter is linted to enforce compliance with **Security Tier 3** and **VRAM-limit** protocols.
 - **Dependency Integrity**: PyTorch/CUDA 12.1 index resolution is verified in an isolated Ubuntu-3.12 runner.
 - **Polyglot Harmony**: Integration tests ensure zero-regression across the existing FastAPI/ETL/Kotlin services.
 
-> **Verification Status**: As of 2026-05-01, the `feat/gpu-feature-factory` branch has achieved **100% Greenfield Pass Rate** across all matrix jobs, validating the portability of the CUDA-aware build.
-
-## 🛡️ Operational Reliability & Hardware Contracts
-### Fail-Fast Hardware Validation
-To maintain the integrity of "Operational Alpha" signals, this service implements a **Strict Hardware Contract**.
-
-- **Production**: The `docker-compose.yml` (and future K8s manifests) enforces an NVIDIA GPU reservation.
-- **Development/WSL2**: In environments without a passthrough GPU, the service is designed to start in a **Degraded State**.
-- **Observability**: The `/health/gpu-status` endpoint will return a `critical_failure` if CUDA kernels are unreachable.
-
-> **Architectural Rationale**: This design choice prevents "Performance Drift" where a service silently reverts to CPU-bound processing, potentially causing catastrophic latency spikes in a high-frequency trading context.
+## 🗺️ Technical Roadmap & Signal Alpha
+1. [MVP] **Vectorized Normalization**: GPU-accelerated Z-scoring across 14-day rolling windows.
+2. [V2] **Integrated Vector Pipelines**: Leveraging Astra DB's `$vectorize` for automated ingestion of unstructured macroeconomic metadata.
+3. [V3] **Distributed Feature Factory**: Migration to Ray clusters for multi-node GPU training and cross-asset signal backtesting.
 
 ## ⚡ Quick Start (Demonstrating Operational Alpha)
 ### Local Development & Hardware Diagnostics
@@ -45,20 +49,3 @@ curl http://localhost:8070/health/gpu-status
    ```bash
    docker exec -it gpu-ops-alpha-orchestrator python3 -c "import feature_engine; feature_engine.run_benchmark()"
    ```
-
-## 🧹 Maintenance & Development Hygiene
-### Automated Cleanup
-```bash
-# Clear GPU staging cache only
-make clean-gpu
-
-# Full system reset (Venv, Caches, and GPU Staging)
-make clean
-```
-> **Performance Tip**: Always run `make clean-gpu` between different alpha signal backtests to prevent data leakage between VRAM ingestion cycles.
-
-## 🗺️ Roadmap
-1. [MVP] - **Vectorized Normalization**: GPU-accelerated Z-scoring across 14-day rolling windows.
-2. [V2] - **Embedding Generation**: Utilize LLMs via Astra DB to convert unstructured alternative data into signals.
-3. [V3] - **Distributed Feature Factory**: Implement Ray clusters to handle multi-node GPU training pipelines.
-4. [V4] [Telemetry]: Integration with **Prometheus/Grafana** for real-time TFLOPS and VRAM monitoring.
