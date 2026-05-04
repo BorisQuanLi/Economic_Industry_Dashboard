@@ -7,6 +7,21 @@ Adopting a **"Data-First" architecture**, the service prioritizes the precision 
 
 ---
 
+## 🤖 AI-Augmented SDLC
+
+This service was built using a structured **AI-Native SDLC** where multiple AI coding agents (Kiro-CLI, Amazon Q Developer) operate under machine-readable governance constraints — not ad-hoc prompting.
+
+| Artifact | Role |
+|---|---|
+| [`SKILL.md`](./SKILL.md) | Policy-as-Code — Security Tier 3, 8 GB VRAM cap, Fail-Fast contract, scope boundaries. Re-read by every agent before every session. |
+| [`AGENT_LOGS.md`](./AGENT_LOGS.md) | Immutable audit trail — "Intent → Decision → Result" log across all agent sessions. The git blame for *reasoning*, not just code. |
+
+Zero credential leakage, full scope isolation, and cross-session architectural continuity across 4 sessions and 3 agents — all verified by the test suite.
+
+📄 **Full methodology writeup**: [AI_AUGMENTED_SDLC.md](./AI_AUGMENTED_SDLC.md)
+
+---
+
 ## 🏗️ MVP: Implemented Pipeline
 
 The MVP delivers a complete, end-to-end signal processing pipeline across three stages:
