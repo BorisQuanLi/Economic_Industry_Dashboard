@@ -9,7 +9,7 @@ metadata:
   service_context: gpu_testing
   security_tier: 3
   target_hardware: nvidia-cuda-12.1
-  storage_target: astra-db-vector-store
+  storage_target: astra-db (nvidia/nv-embedqa-e5-v5)
   owner: boris-dev-ops
 ---
 

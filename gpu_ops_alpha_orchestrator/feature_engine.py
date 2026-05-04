@@ -1,5 +1,45 @@
 import time
 import torch
+from torch import Tensor
+
+
+class VectorizedSignalProcessor:
+    """14-day rolling Z-score normalization via CUDA-accelerated PyTorch unfold."""
+
+    WINDOW = 14
+
+    def __init__(self) -> None:
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    @torch.no_grad()
+    def normalize(self, signal: Tensor) -> Tensor:
+        """
+        Args:
+            signal: 1-D or 2-D tensor of shape (T,) or (T, F).
+        Returns:
+            Stationary Z-score tensor of same shape, on CPU, ready for Astra ingestion.
+        """
+        squeeze = signal.dim() == 1
+        if squeeze:
+            signal = signal.unsqueeze(1)          # (T, 1)
+
+        try:
+            x = signal.to(self.device)            # (T, F)
+        except torch.cuda.OutOfMemoryError:
+            torch.cuda.empty_cache()
+            x = signal.to("cpu")
+
+        T, F = x.shape
+        # unfold: (T - W + 1, F, W)  — fully vectorized, zero Python loops
+        windows = x.unfold(0, self.WINDOW, 1)     # (T-W+1, F, W)
+        mu  = windows.mean(dim=-1)                # (T-W+1, F)
+        sig = windows.std(dim=-1, unbiased=False) # (T-W+1, F)
+        z   = (x[self.WINDOW - 1:] - mu) / (sig + 1e-6)  # (T-W+1, F)
+
+        if squeeze:
+            z = z.squeeze(1)
+        return z.cpu()
+
 
 @torch.no_grad() # Prevents tracking history (and using memory) for computations
 def generate_alpha_features(market_data_tensor):

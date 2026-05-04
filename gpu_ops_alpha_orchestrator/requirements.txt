@@ -5,6 +5,8 @@ torchvision
 
 # --- Data & Persistence ---
 astrapy>=1.2.0
+psycopg2-binary==2.9.9
+boto3
 pandas
 pyarrow
 numpy
@@ -14,3 +16,5 @@ fastapi
 uvicorn
 redis
 python-dotenv
+requests
+
