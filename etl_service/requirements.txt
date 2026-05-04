@@ -9,3 +9,4 @@ pyspark==3.5.0
 py4j==0.10.9.7
 boto3==1.34.0
 botocore==1.34.0
+astrapy>=1.2.0
