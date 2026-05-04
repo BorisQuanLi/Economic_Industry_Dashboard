@@ -1,51 +1,116 @@
 # 🚀 GPU-Ops Alpha Orchestrator (EID-MW Integration)
 
 ## 🎯 Design Philosophy
-This microservice is a **Greenfield Operational Alpha** layer for the Economic Industry Dashboard (EID). It functions as the critical bridge between **Quantitative Research** and **Platform Engineering**, automating the transition from raw macroeconomic datasets to high-fidelity, GPU-accelerated signal generation.
+This microservice is the **Operational Alpha** layer for the Economic Industry Dashboard (EID). It bridges **Quantitative Research** and **Platform Engineering** by automating the transition from raw macroeconomic datasets to GPU-accelerated signal generation and cloud-native vector persistence.
 
-Adopting a **"Data-First" architecture**, the service prioritizes the precision of **automated feature engineering** over model complexity, ensuring that the features—not just the architecture—drive measurable alpha in systematic strategies.
+Adopting a **"Data-First" architecture**, the service prioritizes the precision of automated feature engineering over model complexity — features, not architecture, drive measurable alpha.
 
-## 🏛️ Infrastructure Architecture
-- **Compute Layer**: CUDA-accelerated PyTorch kernels for high-throughput cross-feature interaction and time-series transforms.
-- **Storage Layer**: Multi-cloud persistence via Astra DB (GCP) for low-latency vector retrieval and managed embedding generation.
-- **Orchestration**: Docker-compose with NVIDIA-container-toolkit reservations, optimized for future migration to Ray-managed GPU clusters.
+---
 
-## 🏗️ Technical Specification & Performance Profile
-- **Compute Strategy**: Specialized CUDA 12.1 PyTorch kernels for vectorized normalization (Z-Scoring) to maintain high-throughput signal integrity.
-- **Vector Intelligence**: Deployment of the **Nvidia nv-embedqa-e5-v5** model via the **Astra DB Vectorize** pattern. This offloads embedding generation to the **GCP-hosted H100 fabric**, minimizing VRAM-to-CPU context switching.
-- **Latency Optimization**: By utilizing cloud-native vectorization at the storage layer, the local H100 TFLOPS are reserved exclusively for high-frequency feature interaction and rolling-window math.
+## 🏗️ MVP: Implemented Pipeline
+
+The MVP delivers a complete, end-to-end signal processing pipeline across three stages:
+
+```text
+generate_signal()          →   [1M, 64] tensor (Gaussian noise + sine drift)
+        │
+        ▼
+process_in_chunks()        →   generate_alpha_features() per 50k-row chunk
+        │                      (Z-score normalization, CUDA or CPU fallback)
+        ▼
+gpu_cache/alpha_signals.pt →   zero-copy .pt handoff
+        │
+        ▼
+generate_signal_summary()  →   statistical fingerprint {mean, std, max_variance}
+        │                      (computed on CPU — no VRAM held during I/O)
+        ▼
+persist_alpha_summary()    →   Astra DB alpha_signals collection
+                               ($vectorize → NVIDIA nv-embedqa-e5-v5 on GCP H100)
+```
+
+### Modules
+
+| File | Role |
+|---|---|
+| `feature_engine.py` | `VectorizedSignalProcessor` — 14-day rolling Z-score via `torch.unfold`; `generate_alpha_features()` — cross-feature normalization kernel |
+| `synthetic_alpha_generator.py` | 1M-tick signal generation, chunked GPU processing, statistical fingerprinting, Astra persistence |
+
+### Run the full pipeline
+```bash
+cd gpu_ops_alpha_orchestrator/
+python3 synthetic_alpha_generator.py
+```
+Output:
+```
+Alpha signals written to gpu_cache/alpha_signals.pt  shape=torch.Size([1000000, 64])
+Statistical fingerprint: {'mean': ..., 'std': ..., 'max_variance': ...}
+Summary persisted to Astra alpha_signals collection.
+```
+
+---
 
 ## 🛡️ Operational Reliability & Resource Governance
-- **Strict Hardware Contracts**: Implements an infrastructure-aware boot sequence. The orchestrator enforces a **Fail-Fast** protocol if CUDA kernels are unreachable, preventing silent performance drift into CPU-bound states.
-- **Security Tier 3 Isolation**: Credential management is decoupled from the application logic through environmental injection (`ASTRA_DB_TOKEN`), ensuring compliance with enterprise-grade secret rotation standards.
-- **Scalability Path**: Designed as a containerized microservice compatible with **NVIDIA Container Toolkit**, ready for horizontal scaling into K8s-orchestrated GPU clusters.
 
-## 🧪 Engineering Excellence & CI/CD
-This orchestrator utilizes a **Contract-First SDLC**. Every commit is validated against a specialized multi-service infrastructure matrix:
-- **Skill Governance**: `SKILL.md` frontmatter is linted to enforce compliance with **Security Tier 3** and **VRAM-limit** protocols.
-- **Dependency Integrity**: PyTorch/CUDA 12.1 index resolution is verified in an isolated Ubuntu-3.12 runner.
-- **Polyglot Harmony**: Integration tests ensure zero-regression across the existing FastAPI/ETL/Kotlin services.
+**Memory Management (SKILL.md: 8 GB VRAM hard cap)**
+- Signal processed in 50k-row chunks (≈ 12.8 MB each) — structurally enforces the VRAM threshold.
+- `torch.cuda.OutOfMemoryError` caught per chunk: `empty_cache()` called, chunk retried on CPU.
+- Statistical fingerprint computed via `.cpu()` before reductions — no VRAM held during Astra I/O.
 
-## 🗺️ Technical Roadmap & Signal Alpha
-1. [MVP] **Vectorized Normalization**: GPU-accelerated Z-scoring across 14-day rolling windows.
-2. [V2] **Integrated Vector Pipelines**: Leveraging Astra DB's `$vectorize` for automated ingestion of unstructured macroeconomic metadata.
-3. [V3] **Distributed Feature Factory**: Migration to Ray clusters for multi-node GPU training and cross-asset signal backtesting.
+**Degraded State**
+- `torch.device("cuda" if available else "cpu")` resolved at init time in `VectorizedSignalProcessor`.
+- All pipeline stages complete on CPU-only hardware (WSL2, CI runners) without modification.
+- Astra `_collection is None` → silent no-op with `WARNING` log; pipeline does not crash.
 
-## ⚡ Quick Start (Demonstrating Operational Alpha)
-### Local Development & Hardware Diagnostics
-The orchestrator includes built-in hardware awareness. To verify the environment:
+**Security Tier 3**
+- `ASTRA_DB_TOKEN` and `ASTRA_DB_API_ENDPOINT` sourced exclusively via `os.getenv`.
+- Zero raw credentials in source — enforced by automated test (`test_persist_alpha_summary_no_hardcoded_credentials`).
+
+---
+
+## 🧪 Test Suite
+
 ```bash
-python3 main.py
+pytest gpu_ops_alpha_orchestrator/ -v
+# 18 passed, 1 skipped (GPU benchmark — no CUDA device, correct Degraded State behavior)
+```
+
+| Test file | Coverage |
+|---|---|
+| `test_feature_engine.py` | Shape, stationarity, known-value Z-score, CPU output, OOM fallback, GPU benchmark |
+| `test_signal_scale.py` | Degraded state, signal shape/drift, serialization, 1M vs 1k latency benchmark, summary correctness, Astra delegation, credential scan |
+| `test_imports.py` | Module import smoke test |
+
+---
+
+## 🏛️ Infrastructure
+
+- **Compute**: CUDA-accelerated PyTorch kernels; CPU fallback on non-GPU hardware.
+- **Storage**: `gpu_cache/alpha_signals.pt` for zero-copy tensor handoff; Astra DB (GCP us-east1) for vector persistence.
+- **Embedding**: NVIDIA `nv-embedqa-e5-v5` via Astra `$vectorize` — offloads to GCP H100 fabric, preserving local VRAM for feature computation.
+- **Orchestration**: Docker Compose with NVIDIA Container Toolkit reservations; Kubernetes-ready.
+
+### Environment variables
+```bash
+ASTRA_DB_TOKEN=<from astra.datastax.com>
+ASTRA_DB_API_ENDPOINT=<GCP us-east1 database URL>
+ASTRA_DB_KEYSPACE=alpha_signals   # default
+```
+
+### Containerized deployment
+```bash
+docker compose up -d gpu-ops-alpha-orchestrator
 curl http://localhost:8070/health/gpu-status
 ```
-> **Note on Local Environments**: On non-accelerated hardware, the service will return a `critical_failure`. This is **intentional behavior** to protect the Alpha pipeline's latency requirements.
 
-### Containerized Deployment (Production-Ready)
-1. **Launch with Nvidia Container Toolkit**:
-   ```bash
-   docker-compose up -d gpu-ops-alpha-orchestrator
-   ```
-2. **Execute the Benchmarking Suite**:
-   ```bash
-   docker exec -it gpu-ops-alpha-orchestrator python3 -c "import feature_engine; feature_engine.run_benchmark()"
-   ```
+> **Note on non-GPU hardware**: `health/gpu-status` returns `critical_failure` by design — the Fail-Fast contract protects pipeline latency requirements. All compute stages fall back to CPU transparently.
+
+---
+
+## 🗺️ Roadmap
+
+| Stage | Status | Description |
+|---|---|---|
+| [MVP] Vectorized Normalization | ✅ Complete | 14-day rolling Z-score, CUDA-accelerated |
+| [MVP] Synthetic Alpha Generator | ✅ Complete | 1M-tick signal, chunked GPU processing, Astra persistence |
+| [V2] Integrated Vector Pipelines | Planned | Astra `$vectorize` for unstructured macroeconomic metadata ingestion |
+| [V3] Distributed Feature Factory | Planned | Ray clusters for multi-node GPU training and cross-asset signal backtesting |
