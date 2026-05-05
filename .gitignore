@@ -35,6 +35,8 @@ airflow/.venv/
 airflow/venv/
 gpu_ops_alpha_orchestrator/.venv
 gpu_ops_alpha_orchestrator/venv
+superhost_api_gateway/.venv
+superhost_api_gateway/venv
 
 # GPU Orchestrator Staging & Cache
 gpu_cache/
