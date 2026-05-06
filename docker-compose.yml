@@ -128,6 +128,20 @@ services:
     depends_on:
       - redis # For task queuing
 
+  superhost_api_gateway:
+    build:
+      context: ./superhost_api_gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/superhost_db
+      - FIREBASE_PROJECT_ID=${GCP_PROJECT_ID}
+      - ASTRA_DB_TOKEN=${ASTRA_DB_TOKEN}
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   postgres_data:
   etl_data:
