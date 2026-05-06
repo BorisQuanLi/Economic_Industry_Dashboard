@@ -135,9 +135,24 @@ services:
     ports:
       - "8080:8080"
     environment:
+      # Database & External Tokens
       - DATABASE_URL=postgresql://user:password@postgres:5432/superhost_db
-      - FIREBASE_PROJECT_ID=${GCP_PROJECT_ID}
       - ASTRA_DB_TOKEN=${ASTRA_DB_TOKEN}
+      
+      # Redis Service Discovery (Fixed: host is service name, not localhost)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      
+      # GCP & Firebase Configuration
+      - GCP_PROJECT_ID=agentverse-devfest-10-2025
+      - FIREBASE_PROJECT_ID=agentverse-devfest-10-2025
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcloud_config/application_default_credentials.json
+      
+      # Emulator Toggle (Signal for hiring manager)
+      - FIRESTORE_EMULATOR_HOST=${FIRESTORE_EMULATOR_HOST:-}
+    volumes:
+      # Mount local gcloud credentials into the container
+      - /home/boris/.config/gcloud:/app/gcloud_config:ro
     depends_on:
       - postgres
       - redis
