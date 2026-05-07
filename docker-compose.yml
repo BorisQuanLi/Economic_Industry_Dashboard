@@ -108,7 +108,7 @@ services:
     environment:
       FASTAPI_BASE_URL: "http://fastapi_backend:8000"
 
-  gpu-ops-alpha-orchestrator:
+  gpu_ops_alpha_orchestrator:
     build:
       context: ./gpu_ops_alpha_orchestrator
     # deploy:

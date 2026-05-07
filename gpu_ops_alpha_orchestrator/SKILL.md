@@ -1,5 +1,5 @@
 ---
-name: gpu-ops-alpha-orchestrator
+name: gpu_ops_alpha_orchestrator
 version: 1.1.0
 description: >-
   Specialized agent for high-performance GPU feature engineering.

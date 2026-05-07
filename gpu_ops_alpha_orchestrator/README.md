@@ -113,7 +113,7 @@ ASTRA_DB_KEYSPACE=alpha_signals   # default
 
 ### Containerized deployment
 ```bash
-docker compose up -d gpu-ops-alpha-orchestrator
+docker compose up -d gpu_ops_alpha_orchestrator
 curl http://localhost:8070/health/gpu-status
 ```
 
