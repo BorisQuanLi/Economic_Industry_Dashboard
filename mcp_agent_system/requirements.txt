@@ -1,5 +1,6 @@
 mcp==1.0.0
 asyncio-mqtt==0.16.2
+pyspark>=3.5.0
 pydantic>=2.5.0
 fastapi==0.121.1
 langgraph>=0.2.0

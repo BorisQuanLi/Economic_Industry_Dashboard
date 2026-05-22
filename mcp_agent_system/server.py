@@ -8,10 +8,43 @@ from the existing Flask/FastAPI/Airflow pipeline for automated investment analys
 
 import asyncio
 import json
+import logging
 from typing import Any, Dict, List
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Resource, Tool, TextContent
+
+logger = logging.getLogger(__name__)
+
+_FALLBACK_SECTOR_ROWS = [
+    {"sector": "Financials", "company_count": 65, "avg_employees": 87420.0,
+     "aml_risk_flag": "High Capacity / Review Needed"},
+    {"sector": "Information Technology", "company_count": 72, "avg_employees": 32100.0,
+     "aml_risk_flag": "Standard"},
+]
+
+
+def _get_sector_rows() -> list[dict]:
+    """Load sector AML risk profiles from SparkCompaniesBuilder.
+    Falls back to representative mock rows if Spark is unavailable."""
+    try:
+        from pyspark.sql import SparkSession
+        from etl_service.src.adapters.spark_companies_builder import SparkCompaniesBuilder
+
+        spark = SparkSession.builder \
+            .appName("mcp-aml-sector-index") \
+            .master("local[*]") \
+            .getOrCreate()
+        builder = SparkCompaniesBuilder(spark)
+        companies_df = builder.run()
+        sector_df = builder.get_sector_summary(companies_df)
+        rows = [row.asDict() for row in sector_df.collect()]
+        spark.stop()
+        logger.info("Sector rows loaded from SparkCompaniesBuilder (%d sectors)", len(rows))
+        return rows
+    except Exception as exc:
+        logger.warning("SparkCompaniesBuilder unavailable, using fallback sector rows: %s", exc)
+        return _FALLBACK_SECTOR_ROWS
 
 class FinancialMCPServer:
     """MCP Server for Financial Data - AI Agent Consumption"""
@@ -105,13 +138,7 @@ class FinancialMCPServer:
                 from mcp_agent_system.agents.rag_index import build_sector_index
                 from langchain_openai import ChatOpenAI
 
-                # Minimal sector data for demo; replace with SparkCompaniesBuilder in prod
-                sector_rows = [
-                    {"sector": "Finance", "company_count": 65, "avg_employees": 87420.0,
-                     "aml_risk_flag": "High Capacity / Review Needed"},
-                    {"sector": "Technology", "company_count": 72, "avg_employees": 32100.0,
-                     "aml_risk_flag": "Standard"},
-                ]
+                sector_rows = _get_sector_rows()
                 index = build_sector_index(sector_rows)
                 retriever = index.as_retriever(search_kwargs={"k": 1})
                 llm = ChatOpenAI(model="gpt-4o-mini")
