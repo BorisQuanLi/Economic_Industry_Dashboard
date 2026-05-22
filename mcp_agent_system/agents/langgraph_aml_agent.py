@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 logger = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = (
-    "You are a Wells Fargo AML compliance analyst. "
+    "You are an AML compliance analyst at a major financial institution. "
     "Given sector data, assess AML risk and explain your reasoning concisely."
 )
 

@@ -45,4 +45,26 @@ Connect the two independently mature layers of the repo — the `etl_service` Py
 - [ ] **System prompt policy**: "Wells Fargo" reference pending removal
 - [ ] **Demo integrity**: `run_demo.py` cleanup pending
 
+#### Round 4: Offline-Safe Contract — FakeEmbeddings Fallback (SKILL.md: Offline-Safe Contract)
+- **Intent**: Make the demo runnable without an `OPENAI_API_KEY` — a live API dependency is unacceptable for a demo or CI run.
+- **Decision**: Extracted `_embeddings()` factory function in `rag_index.py` gated on `USE_FAKE_EMBEDDINGS=true` env var. Returns `FakeEmbeddings(size=1536)` from `langchain_core.embeddings.fake` (ships with `langchain-core`, no new dependency) when set; falls back to `OpenAIEmbeddings` otherwise.
+- **Rejected alternative**: Patching `OpenAIEmbeddings` at the call site — would require callers to know about the mock, violating the injection contract. The env-var gate keeps `build_sector_index()` signature unchanged; callers are unaffected.
+- **Size alignment**: `size=1536` matches `text-embedding-3-small` output dimension — FAISS index shape is consistent between fake and real paths.
+- **Result**: `rag_index.py` updated; demo runnable offline via `USE_FAKE_EMBEDDINGS=true`.
+
+#### Round 5: System Prompt Policy — Remove Competitor Institution (SKILL.md: System Prompt Policy)
+- **Intent**: Remove "Wells Fargo" from `_SYSTEM_PROMPT` in `langgraph_aml_agent.py` per SKILL.md policy.
+- **Decision**: Replaced with "a major financial institution" — neutral, domain-accurate, and appropriate for a Morgan Stanley interview artifact.
+- **Result**: One-line change; no behavioral impact on graph logic or tests.
+
+---
+
+### ⚖️ Architectural Verification
+- [x] **SparkCompaniesBuilder wire**: `_get_sector_rows()` connects ETL → agent pipeline; fallback ensures server stability
+- [x] **Scope isolation**: No modifications to `etl_service/`, `fastapi_backend/`, or `gpu_ops_alpha_orchestrator/`
+- [x] **Security**: No raw API keys in source; `OPENAI_API_KEY` consumed only via `os.getenv` in `rag_index.py`
+- [x] **Offline-safe contract**: `FakeEmbeddings` fallback via `USE_FAKE_EMBEDDINGS=true`
+- [x] **System prompt policy**: "Wells Fargo" reference removed
+- [ ] **Demo integrity**: `run_demo.py` cleanup pending
+
 ### 🚀 Session Status: IN PROGRESS
