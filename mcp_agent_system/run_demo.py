@@ -1,190 +1,46 @@
 #!/usr/bin/env python3
 """
-MCP Agent System Demo Launcher
+MCP Agent System — AML Risk Assessment Demo
 
-Cross-platform launcher for all available demonstrations.
-Supports Windows, macOS, and Linux.
+Runs the LangGraph AML agent end-to-end:
+  SparkCompaniesBuilder → FAISS RAG index → ingest → retrieve → reason → (escalate | respond)
+
+Usage:
+    python run_demo.py                          # uses SparkCompaniesBuilder (requires Spark)
+    USE_FAKE_EMBEDDINGS=true python run_demo.py # offline, no OPENAI_API_KEY required
 """
 
-import argparse
 import asyncio
-import sys
+import json
 import os
-from typing import Dict, Callable
 
-def show_demo_menu():
-    """Display available demo options"""
-    
-    print("🤖 FINANCEAI PRO™ - PROPRIETARY MCP SYSTEM")
-    print("=" * 55)
-    print("🏆 Cutting-Edge Investment Banking AI Platform")
-    print("🌐 Cross-Platform: Windows | macOS | Linux")
-    print("💰 Solving $2B+ Industry Problems with Proprietary AI")
-    print()
-    
-    demos = {
-        "1": {
-            "name": "Investment Banking Showcase",
-            "file": "investment_banking_showcase.py",
-            "description": "Complete technical interview demonstration"
-        },
-        "2": {
-            "name": "5-Agent System Orchestration", 
-            "file": "multi_agent_demo.py",
-            "description": "Live multi-agent workflow execution"
-        },
-        "3": {
-            "name": "MCP Server (Claude Desktop Style)",
-            "file": "mcp_server_demo.py", 
-            "description": "Financial data MCP server demonstration"
-        },
-        "4": {
-            "name": "Simple AI Agent Demo",
-            "file": "simple_agent_demo.py",
-            "description": "Basic AI agent workflow showcase"
-        },
-        "5": {
-            "name": "FastAPI Integration",
-            "file": "fastapi_integration_demo.py",
-            "description": "Sliding window analytics integration"
-        },
-        "6": {
-            "name": "🎯 M&A Advisory Graph Intelligence",
-            "file": "ma_advisory_graph_intelligence.py", 
-            "description": "Neo4j Graph Data Science for M&A advisory - $375M fee potential"
-        }
-    }
-    
-    print("📋 AVAILABLE DEMONSTRATIONS:")
-    for key, demo in demos.items():
-        print(f"   {key}. {demo['name']}")
-        print(f"      └─ {demo['description']}")
-    
-    print("\n   0. Exit")
-    print()
-    
-    return demos
-
-async def run_demo(demo_file: str):
-    """Run selected demonstration"""
-    
-    demo_path = os.path.join("demos", demo_file)
-    
-    if not os.path.exists(demo_path):
-        print(f"❌ Demo file not found: {demo_path}")
-        return
-    
-    print(f"🚀 Launching: {demo_file}")
-    print("-" * 50)
-    
-    # Import and run the demo
-    try:
-        # Add demos directory to path
-        sys.path.insert(0, "demos")
-        
-        # Import the demo module
-        module_name = demo_file.replace(".py", "")
-        demo_module = __import__(module_name)
-        
-        # Run the main function if it exists
-        if hasattr(demo_module, "main"):
-            await demo_module.main()
-        elif hasattr(demo_module, "run_multi_agent_system"):
-            await demo_module.run_multi_agent_system()
-        elif hasattr(demo_module, "run_mcp_server_demo"):
-            await demo_module.run_mcp_server_demo()
-        elif hasattr(demo_module, "demonstrate_integration"):
-            await demo_module.demonstrate_integration()
-        elif hasattr(demo_module, "run_wow_demo"):
-            await demo_module.run_wow_demo()
-        elif hasattr(demo_module, "run_ma_intelligence_demo"):
-            await demo_module.run_ma_intelligence_demo()
-        else:
-            print("⚠️  Demo module loaded but no main function found")
-            
-    except Exception as e:
-        print(f"❌ Error running demo: {e}")
-        print("💡 Make sure all dependencies are installed")
-    finally:
-        # Clean up path
-        if "demos" in sys.path:
-            sys.path.remove("demos")
-
-def get_platform_info():
-    """Get cross-platform information"""
-    
-    platform_info = {
-        "OS": sys.platform,
-        "Python": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-        "Architecture": "64-bit" if sys.maxsize > 2**32 else "32-bit"
-    }
-    
-    return platform_info
 
 async def main():
-    """Main demo launcher"""
-    
-    # Show platform compatibility
-    platform = get_platform_info()
-    print(f"💻 Platform: {platform['OS']} | Python {platform['Python']} | {platform['Architecture']}")
-    print()
-    
-    while True:
-        demos = show_demo_menu()
-        
-        try:
-            choice = input("🎯 Select demo (0-6): ").strip()
-            
-            if choice == "0":
-                print("\n👋 Goodbye! Thanks for exploring the MCP Agent System!")
-                break
-            elif choice in demos:
-                demo = demos[choice]
-                print(f"\n🎬 Starting: {demo['name']}")
-                await run_demo(demo["file"])
-                
-                print("\n" + "=" * 55)
-                input("Press Enter to return to menu...")
-                print()
-            else:
-                print("❌ Invalid choice. Please select 0-6.")
-                
-        except KeyboardInterrupt:
-            print("\n\n👋 Demo launcher interrupted. Goodbye!")
-            break
-        except Exception as e:
-            print(f"❌ Error: {e}")
+    from mcp_agent_system.server import _get_sector_rows
+    from mcp_agent_system.agents.rag_index import build_sector_index
+    from mcp_agent_system.agents.langgraph_aml_agent import build_aml_graph
+
+    offline = os.getenv("USE_FAKE_EMBEDDINGS", "").lower() == "true"
+    print(f"Embeddings: {'FakeEmbeddings (offline)' if offline else 'OpenAIEmbeddings'}")
+
+    sector_rows = _get_sector_rows()
+    print(f"Sectors loaded: {len(sector_rows)}")
+
+    index = build_sector_index(sector_rows)
+    retriever = index.as_retriever(search_kwargs={"k": 1})
+
+    if offline:
+        from unittest.mock import MagicMock
+        llm = MagicMock()
+        llm.invoke.return_value = MagicMock(content="[offline mock] AML risk assessment.")
+    else:
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(model="gpt-4o-mini")
+
+    graph = build_aml_graph(retriever, llm)
+    result = graph.invoke({"query": "Which sectors pose the highest AML risk?"})
+    print(json.dumps(result, indent=2))
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--demo", choices=["aml-agent"], default=None)
-    args, _ = parser.parse_known_args()
-
-    if args.demo == "aml-agent":
-        async def _run_aml():
-            from mcp_agent_system.agents.langgraph_aml_agent import build_aml_graph
-            from mcp_agent_system.agents.rag_index import build_sector_index
-            from langchain_openai import ChatOpenAI
-
-            sector_rows = [
-                {"sector": "Finance", "company_count": 65, "avg_employees": 87420.0,
-                 "aml_risk_flag": "High Capacity / Review Needed"},
-                {"sector": "Technology", "company_count": 72, "avg_employees": 32100.0,
-                 "aml_risk_flag": "Standard"},
-            ]
-            index = build_sector_index(sector_rows)
-            retriever = index.as_retriever(search_kwargs={"k": 1})
-            llm = ChatOpenAI(model="gpt-4o-mini")
-            graph = build_aml_graph(retriever, llm)
-            result = graph.invoke({"query": "Which sectors pose the highest AML risk?"})
-            import json
-            print(json.dumps(result, indent=2))
-
-        asyncio.run(_run_aml())
-    else:
-        try:
-            asyncio.run(main())
-        except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
-        except Exception as e:
-            print(f"❌ Fatal error: {e}")
+    asyncio.run(main())

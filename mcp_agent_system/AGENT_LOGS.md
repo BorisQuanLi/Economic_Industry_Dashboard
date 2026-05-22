@@ -65,6 +65,25 @@ Connect the two independently mature layers of the repo — the `etl_service` Py
 - [x] **Security**: No raw API keys in source; `OPENAI_API_KEY` consumed only via `os.getenv` in `rag_index.py`
 - [x] **Offline-safe contract**: `FakeEmbeddings` fallback via `USE_FAKE_EMBEDDINGS=true`
 - [x] **System prompt policy**: "Wells Fargo" reference removed
-- [ ] **Demo integrity**: `run_demo.py` cleanup pending
+- [x] **Demo integrity**: `run_demo.py` rewritten — single executable path, no dead imports
 
-### 🚀 Session Status: IN PROGRESS
+#### Round 6: Demo Integrity — run_demo.py Rewrite (SKILL.md: Demo Integrity)
+- **Intent**: Replace the Nov 2025 showcase launcher with a single executable path that exercises the real pipeline end-to-end.
+- **Problems removed**: `FINANCEAI PRO™` marketing copy; interactive menu referencing six demo files that do not exist in `agents/`; hardcoded `sector_rows` with incorrect GICS names; dead `argparse` `--demo aml-agent` branch that duplicated the menu path.
+- **Decision**: Single `async main()` that calls `_get_sector_rows()` (the wire connected in Round 2), `build_sector_index()`, `build_aml_graph()`, and `graph.invoke()`. Offline path (`USE_FAKE_EMBEDDINGS=true`) substitutes a `MagicMock` LLM so the full graph executes without any live API call — consistent with the LLM injection contract in `SKILL.md`.
+- **Result**: `run_demo.py` reduced from 140 lines to 42. Runnable offline via `USE_FAKE_EMBEDDINGS=true python run_demo.py`.
+
+---
+
+### ⚖️ Architectural Verification
+- [x] **SparkCompaniesBuilder wire**: `_get_sector_rows()` connects ETL → agent pipeline; fallback ensures server stability
+- [x] **Scope isolation**: No modifications to `etl_service/`, `fastapi_backend/`, or `gpu_ops_alpha_orchestrator/`
+- [x] **Security**: No raw API keys in source; `OPENAI_API_KEY` consumed only via `os.getenv` in `rag_index.py`
+- [x] **Offline-safe contract**: `FakeEmbeddings` fallback via `USE_FAKE_EMBEDDINGS=true`
+- [x] **System prompt policy**: "Wells Fargo" reference removed
+- [x] **Demo integrity**: `run_demo.py` rewritten — single executable path, no dead imports
+
+### 🚀 Session Status: GREEN
+**Files modified**: `server.py`, `requirements.txt`, `agents/rag_index.py`, `agents/langgraph_aml_agent.py`, `run_demo.py`
+**Files created**: `SKILL.md`, `AGENT_LOGS.md`
+**Branch**: `feat/agentic-platform-catalyst`
