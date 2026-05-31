@@ -87,3 +87,18 @@ Connect the two independently mature layers of the repo — the `etl_service` Py
 **Files modified**: `server.py`, `requirements.txt`, `agents/rag_index.py`, `agents/langgraph_aml_agent.py`, `run_demo.py`
 **Files created**: `SKILL.md`, `AGENT_LOGS.md`
 **Branch**: `feat/agentic-platform-catalyst`
+
+#### Round 7: Testable Spark/ETL Wiring Validation and Commit Prep
+- **Intent**: Validate branch health after server Spark dependency refactor and test additions, then prepare PR-ready commit.
+- **Test outcome**: `pytest mcp_agent_system/` passed with 13 tests (`test_data_ingestion_agent.py` 8, `test_langgraph_aml_agent.py` 2, `test_server.py` 3).
+- **Server refactor documented**:
+  - Added `_SparkDependenciesUnavailable` sentinel exception to distinguish missing dependencies from genuine ETL failures.
+  - Isolated Spark creation in `_create_spark_session()` and sector extraction in `_load_sector_rows_from_spark()` for independent test seams.
+  - Kept `SparkSession` and `SparkCompaniesBuilder` as module-level imports guarded by `ImportError` for injectability/mockability.
+- **`test_server.py` contracts covered**:
+  - Live path: verifies builder output is returned by `_load_sector_rows_from_spark()`.
+  - Fallback path: verifies `_get_sector_rows()` returns fallback rows when Spark dependencies are unavailable.
+  - Failure integrity: verifies genuine ETL errors propagate (no silent fallback masking).
+- **ETL rename compatibility check**:
+  - `etl_service` commit `f2f6fd2` renamed `get_transaction_risk_summary` to `rank_companies_by_sector_headcount`.
+  - No impact on MCP server path: `server.py` relies on `SparkCompaniesBuilder.run()` + `get_sector_summary()` only; renamed method is not in the MCP-facing interface contract.
