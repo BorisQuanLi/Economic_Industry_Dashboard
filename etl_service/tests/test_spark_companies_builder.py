@@ -32,7 +32,7 @@ def test_pyspark_analytics_logic(spark):
     builder = SparkCompaniesBuilder(spark)
 
     # 2. Test Window Function (Ranking by employee size in sector)
-    ranked_df = builder.get_transaction_risk_summary(df)
+    ranked_df = builder.rank_companies_by_sector_headcount(df)
     results = ranked_df.orderBy("sector", "size_rank_in_sector").collect()
     
     # Expected ranking: Gigantor (5000) > TechCorp (1000) in Technology
@@ -105,7 +105,7 @@ def test_run_analysis_warns_on_high_risk_sector(spark, caplog):
     df = spark.createDataFrame(data, columns)
 
     builder = SparkCompaniesBuilder(spark)
-    ranked_df = builder.get_transaction_risk_summary(df)
+    ranked_df = builder.rank_companies_by_sector_headcount(df)
 
     with caplog.at_level(logging.WARNING, logger="etl_service.src.adapters.spark_companies_builder"):
         builder.run_analysis(ranked_df)
