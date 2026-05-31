@@ -121,7 +121,7 @@ class SparkCompaniesBuilder:
         
         return clean_df
     
-    def get_transaction_risk_summary(self, df: DataFrame) -> DataFrame:
+    def rank_companies_by_sector_headcount(self, df: DataFrame) -> DataFrame:
         """
         Rank companies by employee count within each sector using window functions.
         This helps identify high-impact entities for risk assessment.
@@ -241,7 +241,7 @@ class SparkCompaniesBuilder:
             transformed_df = self.transform_companies_data(raw_df)
 
             # New Analytics: Risk Ranking
-            ranked_df = self.get_transaction_risk_summary(transformed_df)
+            ranked_df = self.rank_companies_by_sector_headcount(transformed_df)
             ranked_df.cache()  # Avoid DAG re-computation — ranked_df used twice below
             
             # Updated Analysis (includes AML flags)
