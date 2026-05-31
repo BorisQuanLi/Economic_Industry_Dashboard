@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from typing import List, Dict, Optional
 
 from models.financial import CompanyFinancials
+from db_session import get_db_session
 from cache import cache_get, cache_set
 from utils import get_recent_8_quarters, indicator_base
 
@@ -54,16 +55,13 @@ def _get_mock_company_financials(sub_sector_name: str, indicator: str) -> Dict:
     return result
 
 @router.get("/test")
-async def test_db():
+async def test_db(conn=Depends(get_db_session)):
     """Simple test endpoint to verify database connection."""
     try:
-        from db_session import get_db_connection
-        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM sub_industries")
         count = cursor.fetchone()[0]
         cursor.close()
-        conn.close()
         return {"status": "success", "sub_industries_count": count}
     except Exception as e:
         return {"status": "error", "error": str(e)}
@@ -71,6 +69,7 @@ async def test_db():
 @router.get("/")
 async def get_all_sectors_performance(
     financial_indicator: Optional[str] = None,
+    conn=Depends(get_db_session)
 ):
     """
     Get sector data with company counts (since we don't have financial data yet).
@@ -81,22 +80,17 @@ async def get_all_sectors_performance(
         return cached
 
     try:
-        from db_session import get_db_connection
-        conn = get_db_connection()
         cursor = conn.cursor()
-        try:
-            cursor.execute("""
-                SELECT s.sector_gics, COUNT(c.id) as company_count
-                FROM sub_industries s
-                LEFT JOIN companies c ON c.sub_industry_id = s.id
-                WHERE s.sector_gics IS NOT NULL
-                GROUP BY s.sector_gics
-                ORDER BY company_count DESC
-            """)
-            results = cursor.fetchall()
-        finally:
-            cursor.close()
-            conn.close()
+        cursor.execute("""
+            SELECT s.sector_gics, COUNT(c.id) as company_count
+            FROM sub_industries s
+            LEFT JOIN companies c ON c.sub_industry_id = s.id
+            WHERE s.sector_gics IS NOT NULL
+            GROUP BY s.sector_gics
+            ORDER BY company_count DESC
+        """)
+        results = cursor.fetchall()
+        cursor.close()
 
         import random
         ind = financial_indicator or "revenue"
@@ -121,31 +115,26 @@ async def get_all_sectors_performance(
         return _get_mock_sector_data(financial_indicator or "revenue")
 
 @router.get("/search")
-async def search_sector_names():
+async def search_sector_names(conn=Depends(get_db_session)):
     """
     Get a list of all sector names from the database.
     """
     try:
-        from db_session import get_db_connection
-        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT DISTINCT sector_gics FROM sub_industries ORDER BY sector_gics")
         results = cursor.fetchall()
         sector_names = [row[0] for row in results]
         cursor.close()
-        conn.close()
         return {"sector_names": sector_names}
     except Exception as e:
         return {"sector_names": ["Information Technology", "Health Care"], "error": str(e)}
 
 @router.get("/sub-sectors")
-async def get_sub_sectors(sector_name: Optional[str] = None):
+async def get_sub_sectors(sector_name: Optional[str] = None, conn=Depends(get_db_session)):
     """
     Get sub-sector names, optionally filtered by sector.
     """
     try:
-        from db_session import get_db_connection
-        conn = get_db_connection()
         cursor = conn.cursor()
         if sector_name:
             cursor.execute(
@@ -157,7 +146,6 @@ async def get_sub_sectors(sector_name: Optional[str] = None):
         results = cursor.fetchall()
         sub_sector_names = [row[0] for row in results]
         cursor.close()
-        conn.close()
         return {"sub_sector_names": sub_sector_names}
     except Exception as e:
         return {"sub_sector_names": ["Application Software", "Systems Software"], "error": str(e)}
@@ -194,14 +182,13 @@ async def get_sector_companies(sector_name: str):
 @router.get("/companies/{sub_sector_name}/financials")
 async def get_company_financials(
     sub_sector_name: str,
-    financial_indicator: Optional[str] = None
+    financial_indicator: Optional[str] = None,
+    conn=Depends(get_db_session)
 ):
     """
     Get financial data for all companies within a given sub-sector.
     """
     try:
-        from db_session import get_db_connection
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Get companies in the sub-sector
@@ -213,7 +200,6 @@ async def get_company_financials(
         """, (sub_sector_name,))
         companies = cursor.fetchall()
         cursor.close()
-        conn.close()
         
         if not companies:
             return _get_mock_company_financials(sub_sector_name, financial_indicator or "revenue")

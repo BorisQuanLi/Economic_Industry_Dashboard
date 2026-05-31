@@ -53,8 +53,9 @@ Cache keys follow the scheme `sectors:<resource>:<params>` (e.g. `sectors:all:de
 
 ## Design Patterns
 
-- **Dependency Injection** — `db_session.get_db_session()` injected via FastAPI `Depends()`;
-  connection lifecycle (commit / rollback / close) managed in one place, not in route handlers
+- **Dependency Injection** — `db_session.get_db_session()` and `SlidingWindowService` 
+  injected via FastAPI `Depends()`; connection lifecycle managed in one place, 
+  not in route handlers
 - **Service layer** — `SlidingWindowService` encapsulates cross-sector alignment logic,
   independently testable without an HTTP client
 - **Pydantic response models** — `SlidingWindowAnalytics`, `CompanyFinancials` enforce

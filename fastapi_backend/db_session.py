@@ -15,3 +15,15 @@ def get_db_connection():
         password=DB_PASS
     )
     return conn
+
+
+def get_db_session():
+    """
+    FastAPI dependency that provides a database connection and handles cleanup.
+    Usage: conn = Depends(get_db_session)
+    """
+    conn = get_db_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
