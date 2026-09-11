@@ -37,11 +37,35 @@ Implement a private equity graph intelligence microservice featuring Neo4j relat
 
 ---
 
+## Session 2: Kiro CLI / Antigravity Agent — NLP Sentiment & Quality Evals Layer (2026-09-11)
+
+### Intent
+Extend system capabilities to address text processing and LLM evaluation requirements: implement earnings call transcript ingestion, Pydantic-structured sentiment extraction with LLM-as-a-Judge quality scoring, and quality evaluation benchmarks.
+
+### Decision Trace
+
+1. **Round 7 — Transcript Ingestion & Sectioning**
+   - *Implementation*: Added `earnings_transcript_builder.py` in `etl_service/src/adapters/` with sectioning logic separating prepared remarks from Q&A.
+   - *Offline Path*: `USE_MOCK_TRANSCRIPTS=true` returns fixture transcript data.
+
+2. **Round 8 — Pydantic Sentiment & LLM-as-a-Judge Evaluation**
+   - *Service*: Added `transcript_sentiment_service.py` in `fastapi_backend/services/`.
+   - *LLM-as-a-Judge*: Secondary evaluation model (`SentimentJudgeEvaluation`) scores extraction fidelity and reasoning quality.
+
+3. **Round 9 — Quality Evaluation Benchmark Suite & Verification**
+   - *Test Suites*: Consolidated test contracts in `graph_intelligence/tests/test_quality_evals.py` and `graph_intelligence/tests/test_transcript_sentiment.py`.
+   - *Container Test Verification*: Executed `docker compose --profile demo run --rm graph_intelligence python -m pytest graph_intelligence/tests/ -v`.
+   - *Result*: 20 passed, 4 skipped (graceful skip for cross-service imports outside container).
+
+---
+
 ### Deliverables Summary
 - `graph_intelligence/neo4j_client.py`: Async Neo4j client with `USE_MOCK_GRAPH` offline path.
 - `graph_intelligence/graph_builder.py`: Ingestion pipeline with `RUN_GRAPH_INGESTION` safety gate.
-- `graph_intelligence/graph_analytics.py`: Feature matrix builder & RidgeCV deal attractiveness scoring with warning suppression for 3-sample mock fits.
+- `graph_intelligence/graph_analytics.py`: Feature matrix builder & RidgeCV deal attractiveness scoring.
 - `graph_intelligence/federated_query_layer.py`: LLM intent router with Pydantic validation.
 - `graph_intelligence/company_search_tool.py`: LangChain multi-source tool-calling agent runner.
-- `graph_intelligence/demo.py` & `Dockerfile`: Standalone demo and Docker setup.
-- `graph_intelligence/tests/test_graph_intelligence.py`: 16 offline unit test contracts.
+- `etl_service/src/adapters/earnings_transcript_builder.py`: Earnings call transcript sectioning adapter.
+- `fastapi_backend/services/transcript_sentiment_service.py`: Structured sentiment service with LLM-as-a-Judge evaluation.
+- `graph_intelligence/tests/test_quality_evals.py`: Labeled benchmark dataset for intent routing and LangSmith tracing contracts.
+- `graph_intelligence/tests/test_transcript_sentiment.py`: Transcript sentiment test suite.
