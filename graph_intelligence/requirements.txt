@@ -13,7 +13,7 @@ scikit-learn==1.5.2
 numpy==1.26.4
 
 # LLM orchestration (federated query layer + tool calling)
-langchain-core==0.2.38
+langchain-core==0.2.40
 langchain-openai==0.1.25
 openai==1.47.0
 pydantic==2.9.2

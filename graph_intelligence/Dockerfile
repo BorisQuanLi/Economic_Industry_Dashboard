@@ -13,13 +13,17 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy the package under /app/graph_intelligence/ so import paths resolve:
+#   from graph_intelligence.neo4j_client import Neo4jClient
+COPY . ./graph_intelligence/
 
-# Offline-safe default: no live Neo4j or OpenAI calls without explicit env vars.
-# Set USE_MOCK_GRAPH=false and provide NEO4J_URI / OPENAI_API_KEY for live mode.
-ENV USE_MOCK_GRAPH=true \
-    USE_FAKE_EMBEDDINGS=true
+# /app must be on PYTHONPATH so `graph_intelligence` is a top-level package.
+ENV PYTHONPATH=/app \
+    USE_MOCK_GRAPH=true \
+    USE_FAKE_EMBEDDINGS=true \
+    USE_MOCK_SCREENER=true
 
-# Library service — no HTTP port exposed by default.
-# Mount as a module: docker run graph_intelligence python -m graph_intelligence.company_search_tool
-CMD ["python", "-c", "import graph_intelligence; print('graph_intelligence ready')"]
+# Default: self-contained quick-start demo — offline, no credentials needed.
+# Run tests instead:
+#   docker run <image> python -m pytest graph_intelligence/tests/ -v
+CMD ["python", "graph_intelligence/demo.py"]

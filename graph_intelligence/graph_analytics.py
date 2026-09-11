@@ -267,6 +267,7 @@ def rank_deals_by_proximity_and_value(
     Works on the 3-row mock fixture — RidgeCV with 3 samples is numerically
     trivial but exercises the full code path.
     """
+    import warnings
     from sklearn.linear_model import RidgeCV  # deferred import — optional dependency
 
     numeric_cols = ["proximity_score", "avg_pe_ratio", "latest_revenue_usd_bn"]
@@ -302,9 +303,14 @@ def rank_deals_by_proximity_and_value(
 
     # RidgeCV: cross-validated alpha selection over three candidate values.
     # cv=min(3, n_samples) ensures the fit works even on the 3-row mock fixture.
+    # UndefinedMetricWarning is suppressed for small samples — expected behavior,
+    # not an error; the model still selects an alpha and produces valid predictions.
     n_samples = X_norm.shape[0]
     ridge = RidgeCV(alphas=[0.1, 1.0, 10.0], cv=min(3, n_samples))
-    ridge.fit(X_norm, y)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        warnings.filterwarnings("ignore", message="R\\^2 score is not well-defined")
+        ridge.fit(X_norm, y)
 
     df["deal_attractiveness_score"] = np.round(ridge.predict(X_norm), 4)
     df["rank"] = df["deal_attractiveness_score"].rank(
