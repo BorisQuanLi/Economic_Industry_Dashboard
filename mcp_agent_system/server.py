@@ -157,7 +157,66 @@ class FinancialMCPServer:
                             "risk_tolerance": {"type": "string", "enum": ["conservative", "moderate", "aggressive"]}
                         }
                     }
-                )
+                ),
+                Tool(
+                    name="find_conflict_paths",
+                    description=(
+                        "[POC] Compliance: detect relationship paths between the deal "
+                        "team and a target company via board memberships, employment "
+                        "history, or co-investment relationships. Multi-hop graph "
+                        "traversal via Neo4j — not feasible in SQL past depth 2. "
+                        "Set USE_MOCK_GRAPH=false and NEO4J_URI for live queries."
+                    ),
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "target_ticker": {
+                                "type": "string",
+                                "description": "Target company ticker, e.g. 'AAPL'",
+                            }
+                        },
+                        "required": ["target_ticker"],
+                    },
+                ),
+                Tool(
+                    name="score_deal_proximity",
+                    description=(
+                        "[POC] Sourcing: rank companies by relationship proximity to "
+                        "the portfolio via shared institutional holders, M&A history, "
+                        "and board connections. 2-hop Neo4j traversal. "
+                        "Set USE_MOCK_GRAPH=false and NEO4J_URI for live queries."
+                    ),
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "portfolio_tickers": {
+                                "type": "string",
+                                "description": "Comma-separated tickers, e.g. 'AAPL,MSFT'",
+                            }
+                        },
+                        "required": ["portfolio_tickers"],
+                    },
+                ),
+                Tool(
+                    name="federated_pe_query",
+                    description=(
+                        "[POC] Federated query: routes a natural-language analyst "
+                        "question across Neo4j (relationships), PostgreSQL (financials), "
+                        "and FAISS (sector risk profiles) via LLM intent routing. "
+                        "Data stays in source systems — no ETL migration required. "
+                        "Full wiring in feat/graph-relationship-intelligence."
+                    ),
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "analyst_question": {
+                                "type": "string",
+                                "description": "Natural-language analyst question",
+                            }
+                        },
+                        "required": ["analyst_question"],
+                    },
+                ),
             ]
         
         @self.server.call_tool()
@@ -193,6 +252,50 @@ class FinancialMCPServer:
                         "ai_rationale": f"Based on sliding window analysis and {risk} profile"
                     })
                 )]
+            elif name == "find_conflict_paths":
+                try:
+                    from graph_intelligence.neo4j_client import Neo4jClient
+                    client = Neo4jClient.from_env()
+                    paths = await client.find_conflict_paths(
+                        advisor_ids=["advisor_001", "advisor_002"],  # POC fixture
+                        target_ticker=arguments.get("target_ticker", "AAPL"),
+                    )
+                    await client.close()
+                    return [TextContent(type="text", text=json.dumps(paths, indent=2))]
+                except ImportError:
+                    return [TextContent(type="text", text=json.dumps({
+                        "error": "graph_intelligence package not on path",
+                        "hint": "Run from repo root or set PYTHONPATH",
+                    }))]
+
+            elif name == "score_deal_proximity":
+                try:
+                    from graph_intelligence.neo4j_client import Neo4jClient
+                    client = Neo4jClient.from_env()
+                    tickers = [
+                        t.strip()
+                        for t in arguments.get("portfolio_tickers", "AAPL,MSFT").split(",")
+                        if t.strip()
+                    ]
+                    results = await client.score_deal_proximity(tickers)
+                    await client.close()
+                    return [TextContent(type="text", text=json.dumps(results, indent=2))]
+                except ImportError:
+                    return [TextContent(type="text", text=json.dumps({
+                        "error": "graph_intelligence package not on path",
+                        "hint": "Run from repo root or set PYTHONPATH",
+                    }))]
+
+            elif name == "federated_pe_query":
+                # POC stub — full wiring requires db_conn and faiss_retriever
+                # injection; demonstrates the routing architecture.
+                return [TextContent(type="text", text=json.dumps({
+                    "question": arguments.get("analyst_question", ""),
+                    "status": "POC — full wiring in feat/graph-relationship-intelligence",
+                    "sources_that_would_be_queried": ["neo4j", "postgres", "faiss"],
+                    "routing_demo": "run mcp_agent_system/demos/federated_query_demo.py",
+                }, indent=2))]
+
             raise ValueError(f"Unknown tool: {name}")
 
 async def main():
