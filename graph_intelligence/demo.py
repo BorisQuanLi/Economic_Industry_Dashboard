@@ -2,12 +2,13 @@
 graph_intelligence quick-start demo.
 
 Runs entirely within this package — no cross-service imports required.
-Demonstrates all four core capabilities offline:
+Demonstrates five core capabilities offline:
 
   1. Deal proximity scoring  — Neo4j 2-hop traversal (mock fixture)
   2. Proximity feature matrix — SQL join pattern + pandas merge (mock fixture)
   3. RidgeCV deal ranking    — cross-validated regularised regression on features
   4. Federated query routing  — LLM intent routing across Neo4j / PostgreSQL / FAISS
+  5. NLP financial search     — validated intent → governed retrieval → citations
 
 Run via Docker (no credentials required):
     docker compose --profile demo up graph_intelligence
@@ -177,6 +178,47 @@ async def step4_federated_routing() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Step 5 — NLP financial search
+# ---------------------------------------------------------------------------
+
+NLP_SEARCH_QUESTION = (
+    "Which Technology companies have P/E below 25 and revenue above $30B?"
+)
+
+
+def step5_nlp_search() -> None:
+    """Run the LLM API-shaped search flow with a deterministic extractor."""
+    _header("5 / 5  NLP financial search  (validated intent + grounded answer)")
+    from graph_intelligence.nlp_search.answer_service import DeterministicAnswerService
+    from graph_intelligence.nlp_search.intent_extractor import FakeIntentExtractor
+    from graph_intelligence.nlp_search.retrieval import FinancialFixtureRetriever
+    from graph_intelligence.nlp_search.schemas import FinancialSearchIntent
+    from graph_intelligence.nlp_search.service import NlpSearchService
+
+    # An OpenAI/Anthropic adapter will later implement the same extractor
+    # contract. Keeping this fixture makes the demo and CI credential-free.
+    intent = FinancialSearchIntent(
+        query_type="company_screen",
+        sectors=["Information Technology"],
+        tickers=[],
+        max_pe_ratio=25.0,
+        min_revenue_usd_bn=30.0,
+        include_relationship_signal=True,
+        rationale="Screen Technology companies by valuation and revenue.",
+    )
+    service = NlpSearchService(
+        intent_extractor=FakeIntentExtractor({NLP_SEARCH_QUESTION: intent}),
+        retriever=FinancialFixtureRetriever(),
+        answer_service=DeterministicAnswerService(),
+    )
+    answer = service.search(NLP_SEARCH_QUESTION)
+
+    print(f"Question: {answer.question}")
+    print(f"Answer:   {answer.answer}")
+    print(f"Sources:  {', '.join(answer.citations)}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -191,6 +233,7 @@ async def main() -> None:
     df = step2_feature_matrix(proximity_rows)
     step3_ranking(df)
     await step4_federated_routing()
+    step5_nlp_search()
 
     print(f"\n{SEP}")
     print("  Demo complete.")

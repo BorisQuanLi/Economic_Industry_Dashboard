@@ -69,3 +69,53 @@ Extend system capabilities to address text processing and LLM evaluation require
 - `fastapi_backend/services/transcript_sentiment_service.py`: Structured sentiment service with LLM-as-a-Judge evaluation.
 - `graph_intelligence/tests/test_quality_evals.py`: Labeled benchmark dataset for intent routing and LangSmith tracing contracts.
 - `graph_intelligence/tests/test_transcript_sentiment.py`: Transcript sentiment test suite.
+
+---
+
+## Session 3: Codex CLI — Offline NLP Search Vertical Slice (2026-09-12)
+
+### Intent
+Implement the first credential-free vertical slice for the "LLM APIs for
+search and NLP" capability. The slice must accept a natural-language analyst
+question, validate a closed search intent, retrieve only allowlisted source
+records, and return a citation-preserving answer.
+
+### Decision Trace
+
+1. **Feature package boundary**
+   - *Decision*: Added `graph_intelligence/nlp_search/` rather than a new
+     service or a flat set of service-root modules.
+   - *Rationale*: It groups the capability's schemas, injected intent
+     extractor, retrieval policy, answer renderer, and orchestrator without
+     duplicating the existing federated graph/data adapters.
+
+2. **Human-controlled retrieval boundary**
+   - *Decision*: `FinancialSearchIntent` is a closed Pydantic model and has
+     typed fields for sector, ticker, P/E, revenue, and relationship signal.
+   - *Rationale*: The LLM boundary cannot carry raw SQL, Cypher, or tool names.
+     Python applies these fields as allowlisted retrieval predicates. This is
+     the first implementation of the human-defined contract that later OpenAI
+     and Anthropic adapters must obey.
+
+3. **Offline-first provider seam**
+   - *Decision*: Introduced the injected `IntentExtractor` protocol and a
+     `FakeIntentExtractor`; did not instantiate a provider SDK in the feature.
+   - *Rationale*: CI and the demo run without credentials. A live provider is
+     an independently testable adapter that implements the same protocol.
+
+4. **Grounded-answer baseline**
+   - *Decision*: First answers are rendered deterministically from retrieved
+     records and include record IDs as citations.
+   - *Rationale*: This establishes a measurable grounding contract before an
+     optional second LLM synthesis pass is allowed.
+
+### Verification
+
+- `test_nlp_search.py`: **4 passed** — grounded records/citations, no-result
+  behavior, extra-field rejection, and absent fixture rejection.
+- Direct Step 5 demo: printed the hard-coded Technology screen and its three
+  `financial:<ticker>` source IDs without credentials.
+- Full local graph test run: **26 passed, 2 failed**. The failures pre-date
+  this slice and are both `ModuleNotFoundError: sklearn` in existing RidgeCV
+  tests; the local virtual environment does not have the dependency pinned in
+  `graph_intelligence/requirements.txt` installed.

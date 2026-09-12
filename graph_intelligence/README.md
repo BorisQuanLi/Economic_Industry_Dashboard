@@ -20,10 +20,12 @@ graph_intelligence/
 ├── graph_analytics.py        # Proximity feature matrix + RidgeCV deal attractiveness scoring
 ├── federated_query_layer.py  # LLM intent router over Neo4j + PostgreSQL + FAISS
 ├── company_search_tool.py    # LangChain tool-calling (financial screener + graph proximity)
+├── nlp_search/               # Validated NLP search: intent → retrieval → grounded answer
 ├── demo.py                   # Self-contained quick-start demonstration script
 └── tests/
     ├── __init__.py
-    └── test_graph_intelligence.py  # 16 offline-safe unit test contracts
+    ├── test_graph_intelligence.py  # Existing graph and federated-routing contracts
+    └── test_nlp_search.py          # Offline NLP search contracts
 ```
 
 ---
