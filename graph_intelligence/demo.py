@@ -46,7 +46,7 @@ def _header(title: str) -> None:
 
 async def step1_proximity() -> list[dict]:
     _header("1 / 4  Deal proximity scoring  (Neo4j 2-hop traversal)")
-    from graph_intelligence.neo4j_client import Neo4jClient
+    from graph_intelligence.graph.client import Neo4jClient
     client = Neo4jClient.from_env()
     rows = await client.score_deal_proximity(PORTFOLIO)
     await client.close()
@@ -63,7 +63,7 @@ async def step1_proximity() -> list[dict]:
 
 def step2_feature_matrix(proximity_rows: list[dict]) -> Any:
     _header("2 / 4  Proximity feature matrix  (SQL join pattern + pandas merge)")
-    from graph_intelligence.graph_analytics import build_proximity_feature_matrix
+    from graph_intelligence.graph.analytics import build_proximity_feature_matrix
     df = build_proximity_feature_matrix(proximity_rows, db_conn=None)
     print("Columns:", list(df.columns))
     print(
@@ -79,7 +79,7 @@ def step2_feature_matrix(proximity_rows: list[dict]) -> Any:
 
 def step3_ranking(df: Any) -> None:
     _header("3 / 4  RidgeCV deal attractiveness ranking")
-    from graph_intelligence.graph_analytics import rank_deals_by_proximity_and_value
+    from graph_intelligence.graph.analytics import rank_deals_by_proximity_and_value
     ranked = rank_deals_by_proximity_and_value(df)
     print("Ranked candidates  (rank 1 = most attractive):")
     print(
@@ -127,8 +127,8 @@ async def step4_federated_routing() -> None:
     _header("4 / 4  Federated query routing  (LLM intent router, temperature=0)")
     from unittest.mock import AsyncMock, MagicMock
 
-    from graph_intelligence.neo4j_client import Neo4jClient
-    from graph_intelligence.federated_query_layer import FederatedQueryLayer
+    from graph_intelligence.federation.query_layer import FederatedQueryLayer
+    from graph_intelligence.graph.client import Neo4jClient
 
     api_key = os.getenv("OPENAI_API_KEY", "")
     neo4j = Neo4jClient.from_env()

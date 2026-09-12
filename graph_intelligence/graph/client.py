@@ -80,7 +80,7 @@ class Neo4jClient:
     -------
     >>> import os; os.environ["USE_MOCK_GRAPH"] = "true"
     >>> import asyncio
-    >>> from graph_intelligence.neo4j_client import Neo4jClient
+    >>> from graph_intelligence.graph.client import Neo4jClient
     >>> client = Neo4jClient.from_env()
     >>> asyncio.run(client.score_deal_proximity(["AAPL", "MSFT"]))
     [{'ticker': 'CRM', 'proximity_score': 4, 'path_type': 'INSTITUTIONAL_HOLDER'}, ...]

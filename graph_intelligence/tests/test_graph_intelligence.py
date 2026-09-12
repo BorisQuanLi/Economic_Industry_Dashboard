@@ -45,13 +45,13 @@ os.environ.setdefault("USE_FAKE_EMBEDDINGS", "true")
 
 class TestNeo4jClientMock:
     def test_from_env_creates_instance(self):
-        from graph_intelligence.neo4j_client import Neo4jClient
+        from graph_intelligence.graph.client import Neo4jClient
         client = Neo4jClient.from_env()
         assert client is not None
 
     @pytest.mark.asyncio
     async def test_score_deal_proximity_returns_fixture(self):
-        from graph_intelligence.neo4j_client import Neo4jClient
+        from graph_intelligence.graph.client import Neo4jClient
         client = Neo4jClient.from_env()
         rows = await client.score_deal_proximity(["AAPL", "MSFT"])
         assert isinstance(rows, list)
@@ -62,7 +62,7 @@ class TestNeo4jClientMock:
 
     @pytest.mark.asyncio
     async def test_find_conflict_paths_returns_fixture(self):
-        from graph_intelligence.neo4j_client import Neo4jClient
+        from graph_intelligence.graph.client import Neo4jClient
         client = Neo4jClient.from_env()
         paths = await client.find_conflict_paths(
             advisor_ids=["a1"], target_ticker="AAPL"
@@ -74,7 +74,7 @@ class TestNeo4jClientMock:
 
     @pytest.mark.asyncio
     async def test_close_is_safe_without_driver(self):
-        from graph_intelligence.neo4j_client import Neo4jClient
+        from graph_intelligence.graph.client import Neo4jClient
         client = Neo4jClient.from_env()
         # Should not raise even though driver was never initialised
         await client.close()
@@ -87,8 +87,8 @@ class TestNeo4jClientMock:
 class TestNeo4jClientIngestionGate:
     @pytest.mark.asyncio
     async def test_ingest_ma_edges_raises_without_flag(self):
-        from graph_intelligence.graph_builder import ingest_ma_edges
-        from graph_intelligence.neo4j_client import Neo4jClient
+        from graph_intelligence.graph.client import Neo4jClient
+        from graph_intelligence.graph.ingestion import ingest_ma_edges
 
         os.environ.pop("RUN_GRAPH_INGESTION", None)
         client = Neo4jClient.from_env()
@@ -97,8 +97,8 @@ class TestNeo4jClientIngestionGate:
 
     @pytest.mark.asyncio
     async def test_ingest_institutional_edges_raises_without_flag(self):
-        from graph_intelligence.graph_builder import ingest_institutional_edges
-        from graph_intelligence.neo4j_client import Neo4jClient
+        from graph_intelligence.graph.client import Neo4jClient
+        from graph_intelligence.graph.ingestion import ingest_institutional_edges
 
         os.environ.pop("RUN_GRAPH_INGESTION", None)
         client = Neo4jClient.from_env()
@@ -112,7 +112,7 @@ class TestNeo4jClientIngestionGate:
 
 class TestGraphAnalyticsMockPath:
     def test_build_proximity_feature_matrix_returns_dataframe(self):
-        from graph_intelligence.graph_analytics import build_proximity_feature_matrix
+        from graph_intelligence.graph.analytics import build_proximity_feature_matrix
         df = build_proximity_feature_matrix([], db_conn=None)
         assert len(df) == 3  # mock fixture has 3 rows
         assert "ticker" in df.columns
@@ -121,13 +121,13 @@ class TestGraphAnalyticsMockPath:
         assert "latest_revenue_usd_bn" in df.columns
 
     def test_build_proximity_feature_matrix_sorted_descending(self):
-        from graph_intelligence.graph_analytics import build_proximity_feature_matrix
+        from graph_intelligence.graph.analytics import build_proximity_feature_matrix
         df = build_proximity_feature_matrix([], db_conn=None)
         scores = df["proximity_score"].tolist()
         assert scores == sorted(scores, reverse=True)
 
     def test_rank_deals_returns_rank_column(self):
-        from graph_intelligence.graph_analytics import (
+        from graph_intelligence.graph.analytics import (
             build_proximity_feature_matrix,
             rank_deals_by_proximity_and_value,
         )
@@ -138,7 +138,7 @@ class TestGraphAnalyticsMockPath:
         assert ranked["rank"].min() == 1
 
     def test_rank_deals_rank_one_is_highest_score(self):
-        from graph_intelligence.graph_analytics import (
+        from graph_intelligence.graph.analytics import (
             build_proximity_feature_matrix,
             rank_deals_by_proximity_and_value,
         )
@@ -155,8 +155,8 @@ class TestGraphAnalyticsMockPath:
 class TestFederatedQueryLayerRouting:
     def _make_layer(self, llm_content: str):
         from unittest.mock import AsyncMock, MagicMock
-        from graph_intelligence.neo4j_client import Neo4jClient
-        from graph_intelligence.federated_query_layer import FederatedQueryLayer
+        from graph_intelligence.federation.query_layer import FederatedQueryLayer
+        from graph_intelligence.graph.client import Neo4jClient
 
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(
@@ -212,7 +212,7 @@ class TestFederatedQueryLayerRouting:
 
 class TestCompanySearchToolMock:
     def test_financial_screener_tool_returns_json_string(self):
-        from graph_intelligence.company_search_tool import financial_screener_tool
+        from graph_intelligence.workflows.company_screening import financial_screener_tool
         result = financial_screener_tool.invoke({
             "sector": "Technology",
             "max_pe_ratio": 25.0,
@@ -224,7 +224,7 @@ class TestCompanySearchToolMock:
         assert len(parsed) > 0
 
     def test_graph_proximity_tool_returns_json_string(self):
-        from graph_intelligence.company_search_tool import graph_proximity_tool
+        from graph_intelligence.workflows.company_screening import graph_proximity_tool
         result = graph_proximity_tool.invoke({"portfolio_tickers": "AAPL,MSFT"})
         assert isinstance(result, str)
         parsed = json.loads(result)
@@ -232,7 +232,7 @@ class TestCompanySearchToolMock:
 
     def test_run_company_search_returns_expected_keys(self):
         from unittest.mock import MagicMock
-        from graph_intelligence.company_search_tool import run_company_search
+        from graph_intelligence.workflows.company_screening import run_company_search
 
         mock_llm = MagicMock()
         # Simulate LLM returning no tool calls (synthesis only path)

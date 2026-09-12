@@ -17,30 +17,35 @@ Provides graph-based relationship analysis for investment deal workflows:
 
 Sub-modules
 -----------
-neo4j_client
+graph.client
     Async Neo4j driver wrapper.  Offline-safe: USE_MOCK_GRAPH=true returns
     domain-realistic fixture data without a live connection.
 
-graph_builder
+graph.ingestion
     Ingests public M&A transaction records and SEC 13F institutional holder
     disclosures into Neo4j relationship edges.  Gated on
     RUN_GRAPH_INGESTION=true — never runs in CI or the demo path.
 
-graph_analytics
+graph.analytics
     Joins Neo4j proximity scores with PostgreSQL financial ratios into a
     pandas DataFrame, then fits a RidgeCV ranking model predicting deal
     attractiveness.  Reuses generate_alpha_features() from
     gpu_ops_alpha_orchestrator for Z-score feature normalization.
 
-federated_query_layer
+federation.query_layer
     LLM-driven intent router over Neo4j + PostgreSQL + FAISS.  Data stays
     in source systems; the LLM routes analyst questions to the appropriate
     source(s) and merges results — the federated semantic layer pattern
     without RDF/SPARQL overhead.
 
-company_search_tool
+workflows.company_screening
     LangChain tool-calling demo: natural-language financial company search
     via a financial screener cross-referenced with graph proximity scores.
+
+nlp_search
+    LLM API-shaped natural-language financial search. A closed Pydantic intent
+    contract is extracted by an injected provider adapter; application-owned
+    retrieval and deterministic rendering preserve grounding and citations.
 
 Governance
 ----------

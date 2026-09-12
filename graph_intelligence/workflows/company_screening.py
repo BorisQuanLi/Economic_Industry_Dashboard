@@ -116,7 +116,7 @@ def graph_proximity_tool(portfolio_tickers: str) -> str:
     portfolio_tickers : comma-separated ticker symbols, e.g. "AAPL,MSFT"
     """
     import asyncio
-    from graph_intelligence.neo4j_client import Neo4jClient
+    from graph_intelligence.graph.client import Neo4jClient
 
     tickers = [t.strip() for t in portfolio_tickers.split(",") if t.strip()]
     client = Neo4jClient.from_env()

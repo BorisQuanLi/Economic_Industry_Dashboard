@@ -113,7 +113,7 @@ class FederatedQueryLayer:
 
     Parameters
     ----------
-    neo4j_client   : graph_intelligence.neo4j_client.Neo4jClient instance
+    neo4j_client   : graph_intelligence.graph.client.Neo4jClient instance
     db_conn        : psycopg2 connection (same pattern as fastapi_backend/db_session.py)
     faiss_retriever: LangChain retriever from mcp_agent_system/agents/rag_index.py
     llm            : LangChain BaseChatModel — injected, never instantiated here
@@ -122,7 +122,7 @@ class FederatedQueryLayer:
     -----------------
     >>> import os; os.environ["USE_MOCK_GRAPH"] = "true"
     >>> from unittest.mock import MagicMock, AsyncMock
-    >>> from graph_intelligence.neo4j_client import Neo4jClient
+    >>> from graph_intelligence.graph.client import Neo4jClient
     >>> neo4j = Neo4jClient.from_env()
     >>> mock_llm = MagicMock()
     >>> mock_llm.ainvoke = AsyncMock(return_value=MagicMock(

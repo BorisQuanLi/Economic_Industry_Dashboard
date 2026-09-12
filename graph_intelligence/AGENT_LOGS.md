@@ -119,3 +119,38 @@ records, and return a citation-preserving answer.
   this slice and are both `ModuleNotFoundError: sklearn` in existing RidgeCV
   tests; the local virtual environment does not have the dependency pinned in
   `graph_intelligence/requirements.txt` installed.
+
+---
+
+## Session 4: Codex CLI — Package Consolidation and Human Review Gates (2026-09-12)
+
+### Intent
+Consolidate existing graph-intelligence modules into domain-oriented packages
+while retaining their service boundary, and document the developer review gates
+for AI-assisted/LLM-backed changes.
+
+### Decision Trace
+
+1. **Domain-oriented package structure**
+   - *Decision*: Move the Neo4j client, ingestion, and analytics modules under
+     `graph/`; move federated routing under `federation/`; move the composed
+     company-screening workflow under `workflows/`.
+   - *Rationale*: These are stable domain boundaries. `demo.py` remains a
+     top-level executable entry point, and `nlp_search/` remains the focused
+     feature package for structured LLM API search.
+
+2. **Branch scope**
+   - *Decision*: Keep `nlp_search` on `feat/graph-relationship-intelligence`.
+   - *Rationale*: Its initial retrieval and relationship-signal workflow
+     directly composes this service's graph and financial-data contracts. A
+     later independent capability such as a reusable vector index or
+     evaluation platform should start on its own feature branch.
+
+3. **Human-in-the-loop gates**
+   - *Decision*: Record closed intent schemas, application-owned retrieval,
+     grounding/citation requirements, offline verification, and developer
+     approval of prompts/models/evaluation thresholds in
+     `AI_AUGMENTED_SDLC.md`.
+   - *Rationale*: An LLM may assist with extraction or synthesis, but cannot
+     decide data-access policy, execute generated queries, or self-approve a
+     change.

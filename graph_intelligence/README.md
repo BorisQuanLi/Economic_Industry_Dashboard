@@ -15,11 +15,9 @@ graph_intelligence/
 ├── requirements.txt          # Pinned dependencies (neo4j, scikit-learn, langchain-core)
 ├── Dockerfile                # Container definition (Python 3.12-slim)
 ├── __init__.py               # Service initialization & exports
-├── neo4j_client.py           # Async Neo4j client with USE_MOCK_GRAPH offline path
-├── graph_builder.py          # SEC 13F & M&A edge ingestion with RUN_GRAPH_INGESTION guard
-├── graph_analytics.py        # Proximity feature matrix + RidgeCV deal attractiveness scoring
-├── federated_query_layer.py  # LLM intent router over Neo4j + PostgreSQL + FAISS
-├── company_search_tool.py    # LangChain tool-calling (financial screener + graph proximity)
+├── graph/                    # Neo4j client, guarded ingestion, and graph analytics
+├── federation/               # Cross-source query routing
+├── workflows/                # Composed analyst workflows (company screening)
 ├── nlp_search/               # Validated NLP search: intent → retrieval → grounded answer
 ├── demo.py                   # Self-contained quick-start demonstration script
 └── tests/
@@ -57,4 +55,8 @@ USE_MOCK_GRAPH=true USE_MOCK_SCREENER=true USE_FAKE_EMBEDDINGS=true pytest graph
 
 - **Zero Live Connection Requirement**: By default (`USE_MOCK_GRAPH=true`), all graph client methods return mock fixtures, enabling offline execution and zero-dependency CI runs.
 - **Ingestion Safety Gate**: Data ingestion functions require `RUN_GRAPH_INGESTION=true` to prevent unintended graph modifications.
-- **Cross-Service Kernel Reuse**: `graph_analytics.py` reuses `generate_alpha_features` from `gpu_ops_alpha_orchestrator` for Z-score feature normalization.
+- **Cross-Service Kernel Reuse**: `graph/analytics.py` reuses `generate_alpha_features` from `gpu_ops_alpha_orchestrator` for Z-score feature normalization.
+- **Human-controlled LLM boundary**: `nlp_search` accepts only closed Pydantic
+  intents; application code owns source allowlists, parameter binding, and
+  citation-preserving answer rendering. Provider adapters are injected and are
+  not required for offline CI or demos.
