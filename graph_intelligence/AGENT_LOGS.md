@@ -154,3 +154,11 @@ for AI-assisted/LLM-backed changes.
    - *Rationale*: An LLM may assist with extraction or synthesis, but cannot
      decide data-access policy, execute generated queries, or self-approve a
      change.
+
+---
+## Session 3 — Phase 3 Evals & Workflows Layer (2026-09-13)
+Agent: Hermes CLI | Human-in-the-loop: YES
+- Phase 3 evaluation package (`evals/`) initialized with NDCG/MRR reranker metrics.
+- HUMAN INTERVENTION RECORDED: The agent entered a terminal patching loop attempting to fix `vector_store.py` path calculation and JSON serialization list-mapping errors. The human manually corrected both the docs_path ordering and the mock persistence array mapping, then directed an atomic commit (`feat(evals): ...`) to break the loop.
+- Governance: NEXT_PHASE_HANDOVER.md self-destructed (`b21aae1` → final `chore(handoff)`) upon merge-readiness.
+- Verification: 36/36 tests green (USE_MOCK_GRAPH=true, USE_MOCK_SCREENER=true, USE_FAKE_EMBEDDINGS=true).
