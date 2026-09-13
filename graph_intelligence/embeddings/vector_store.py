@@ -68,8 +68,8 @@ class FAISSVectorStore:
         target = path or self.index_path
         if faiss is not None and os.path.exists(target):
             self.index = faiss.read_index(target)
-        # Restore document registry if present.
         docs_path = target + ".docs.json" if ".docs.json" not in target else target
+        # Restore document registry if present.
         if os.path.exists(docs_path):
             with open(docs_path) as f:
                 raw_docs = json.load(f)
