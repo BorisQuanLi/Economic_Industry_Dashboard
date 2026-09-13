@@ -36,3 +36,9 @@ Development on major feature branches (e.g., `feat/graph-relationship-intelligen
 3. **Governance & Verification Commit**: Unit tests, Docker orchestration setup, `SKILL.md`, `AGENT_LOGS.md`, `AI_AUGMENTED_SDLC.md`, and service README.
 
 This ensures every commit in the repository git history is clean, logically scoped, and independently reviewable.
+
+## AI Session Handoff Governance (Context-as-Code)
+- **Phase Boundary Scoping**: Each intermediate session is strictly responsible ONLY for its assigned phase (e.g., Phase 1 = embeddings only).
+- **Handoff Commitment Pattern**: When completing a session phase, the agent must update the checkpoints inside `NEXT_PHASE_HANDOVER.md` and commit it atomically as: `docs(handoff): update NEXT_PHASE_HANDOVER.md for Phase X`.
+- **Relay Continuity**: The updated `NEXT_PHASE_HANDOVER.md` must be left tracked on the feature branch to serve as the structural entry point for the next session.
+- **Self-Destruct Trigger**: Before declaring a feature branch fully complete and ready for final review or merge to `main`, the completing agent must execute `git rm NEXT_PHASE_HANDOVER.md` so transient documentation never leaks into production history.
