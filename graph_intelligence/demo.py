@@ -242,3 +242,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# Step 6: joint retrieval + rerank + graph federation
