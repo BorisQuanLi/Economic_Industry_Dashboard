@@ -31,51 +31,41 @@ class FAISSVectorStore:
         self.index_path = index_path or "/tmp/graph_intelligence_faiss_index.bin"
         self.index = None
         self.documents: dict[str, IndexedDocument] = {}
-        # If an index file exists at init time, restore it.
-        if os.path.exists(self.index_path) and faiss is not None:
-            self.load(self.index_path)
+
+        if self.index_path:
+            docs_path = self.index_path if self.index_path.endswith(".docs.json") else f"{self.index_path}.docs.json"
+            if os.path.exists(self.index_path) or os.path.exists(docs_path):
+                self.load(self.index_path)
 
     # -- Persistence --------------------------------------------------------
 
     def persist(self, path: str | None = None) -> None:
         target = path or self.index_path
-        if self.index is not None:
-            if faiss is not None:
-                faiss.write_index(self.index, target)
-            else:
-                # Fallback: serialize document registry as JSON.
-                with open(target + ".docs.json", "w") as f:
-                    f.write(
-                        json.dumps(
-                            [
-                                d.model_dump() for d in self.documents.values()
-                            ],
-                            default=str,
-                        )
-                    )
-        else:
-            # No index; persist metadata only.
-            with open(target + ".docs.json", "w") as f:
-                f.write(
-                    json.dumps(
-                        [d.model_dump() for d in self.documents.values()],
-                        default=str,
-                    )
-                )
+        docs_path = target if target.endswith(".docs.json") else f"{target}.docs.json"
+        
+        # 1. Always dump documents registry as a valid JSON array
+        with open(docs_path, "w") as f:
+            json.dump([d.model_dump() for d in self.documents.values()], f, default=str)
+            
+        # 2. Dump FAISS binary layer if live
+        if self.index is not None and faiss is not None and not target.endswith(".docs.json"):
+            faiss.write_index(self.index, target)
+            
         self.index_path = target
 
     def load(self, path: str | None = None) -> None:
         target = path or self.index_path
-        if faiss is not None and os.path.exists(target):
-            self.index = faiss.read_index(target)
-        docs_path = target + ".docs.json" if ".docs.json" not in target else target
-        # Restore document registry if present.
+        docs_path = target if target.endswith(".docs.json") else f"{target}.docs.json"
+        
+        # 1. Correctly hydrate list objects into the dictionary mapping
         if os.path.exists(docs_path):
-            with open(docs_path) as f:
+            with open(docs_path, "r") as f:
                 raw_docs = json.load(f)
-            for rd in raw_docs:
-                doc = IndexedDocument(**rd)
-                self.documents[doc.doc_id] = doc
+            self.documents = {rd["doc_id"]: IndexedDocument(**rd) for rd in raw_docs}
+
+        # 2. Load FAISS engine layer if live
+        if faiss is not None and os.path.exists(target) and not target.endswith(".docs.json"):
+            self.index = faiss.read_index(target)
 
     # -- Indexing ------------------------------------------------------------
 
