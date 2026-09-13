@@ -337,7 +337,7 @@ USE_MOCK_GRAPH=true USE_MOCK_SCREENER=true USE_FAKE_EMBEDDINGS=true pytest tests
 
 ---
 
-## 6. Exact Context Commands for Fresh Herme Session
+## 6. Exact Context Commands for Fresh Hermes Session
 
 ```bash
 # --- Environment Setup ---
@@ -380,6 +380,7 @@ read_file graph_intelligence/demo.py
 - **LLM injection contract**: Re-ranker accepts an injected extractor/reranker, never instantiates providers internally.
 - **Human review gate**: Any new prompt, model choice, or evaluation threshold requires an `AGENT_LOGS.md` decision record.
 - **No AI co-authorship**: All git commits, docstrings, comments, and documentation are human-authored.
+- **Relay-Handoff Protocol**: This feature branch spans multiple distinct AI sessions due to context-window ceilings. If you are finishing a phase but more phases remain, you must update this file's checkpoints, document your new atomic commits, and leave this file intact. Only the final agent completing the last phase is authorized to run git rm NEXT_PHASE_HANDOVER.md.
 
 ---
 
