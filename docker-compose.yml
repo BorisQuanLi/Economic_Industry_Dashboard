@@ -177,6 +177,19 @@ services:
     # Override CMD to run tests instead of the demo:
     #   docker compose --profile demo run graph_intelligence python -m pytest tests/ -v
 
+
+  tabular_intelligence:
+    build:
+      context: ./tabular_intelligence
+      dockerfile: Dockerfile
+    profiles:
+      - demo
+    environment:
+      USE_MOCK_ANALYTICS: "true"
+      USE_MOCK_GRAPH: "true"
+      USE_MOCK_SCREENER: "true"
+      USE_FAKE_EMBEDDINGS: "true"
+    command: ["python", "tabular_intelligence/demo.py"]
 volumes:
   postgres_data:
   etl_data:
