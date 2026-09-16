@@ -27,3 +27,15 @@ def test_trace_payload_rejects_extra_fields():
             tool_invocation_latency={},
             unexpected_extra_key="bad",
         )
+
+from observability_service.evals import EvalScorecard
+
+def test_scorecard_rejects_out_of_bounds():
+    with pytest.raises(ValidationError):
+        EvalScorecard(
+            eval_id="e1", target_trace_id="t1", timestamp=datetime.now(),
+            metric_name="m1", score=1.5, evaluator_type="auto")
+    with pytest.raises(ValidationError):
+        EvalScorecard(
+            eval_id="e2", target_trace_id="t2", timestamp=datetime.now(),
+            metric_name="m2", score=-0.1, evaluator_type="auto")
