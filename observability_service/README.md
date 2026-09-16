@@ -22,11 +22,12 @@ cd observability_service
 pip install -r requirements.txt
 ```
 
-### Run Tests
+### Containerized Build & Run (profile: demo)
 
 ```bash
-cd observability_service
-pytest tests/ -v
+docker build -t observability_service:test -f observability_service/Dockerfile .
+docker compose --profile demo build observability_service
+docker compose --profile demo run --rm observability_service
 ```
 
 ### Environment Variables
