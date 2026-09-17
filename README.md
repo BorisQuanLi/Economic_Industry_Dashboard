@@ -120,8 +120,9 @@ The codebase reflects a realistic engineering progression: a working Flask/Postg
 | `etl_service/` | PySpark ETL pipeline — Wikipedia ingestion, JDBC reads from PostgreSQL, window function analytics |
 | `airflow/` | Orchestration — DAGs for rate-limited FMP API extraction (250 calls/day), data quality checks |
 | `mcp_agent_system/` | AI agent layer — MCP server exposing financial tools; LangGraph stateful agent with FAISS RAG |
-| `kotlin-data-agent/` | JVM agent (agent_006) — Kotlin/Ktor GraphQL + REST service; exponential-backoff retry; DDD value objects |
-| `frontend/` | Streamlit dashboard — sector/sub-sector/company-level financial performance visualization |
+||| `kotlin-data-agent/` | JVM agent (agent_006) — Kotlin/Ktor GraphQL + REST service; exponential-backoff retry; DDD value objects |
+||| `frontend/` | Streamlit dashboard — sector/sub-sector/company-level financial performance visualization |
+||| `observability_service/` | Telemetry & trace evaluation — pydantic tracing, eval scorecards, policy-as-code governance |
 
 ---
 

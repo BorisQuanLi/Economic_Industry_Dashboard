@@ -12,7 +12,8 @@ This repository is a multi-service Financial Services Industry (FSI) AI engineer
 || [`mcp_agent_system/`](./mcp_agent_system/) | AML Risk Assessment | LangGraph agent, FAISS RAG, Model Context Protocol (MCP) server | Security Tier 3 |
 || [`gpu_ops_alpha_orchestrator/`](./gpu_ops_alpha_orchestrator/) | HFT Signal Processing | GPU PyTorch feature engineering, Astra DB vector persistence | Security Tier 3 |
 || [`graph_intelligence/`](./graph_intelligence/) | PE Relationship Intelligence | Neo4j GDS, federated LLM query routing, LangChain tool calling | Security Tier 3 |
-|| [`tabular_intelligence/`](./tabular_intelligence/) | Tabular ML & Statistics | XGBoost/Ridge inference, hypothesis testing, strict contracts | Security Tier 3 |
+||| [`tabular_intelligence/`](./tabular_intelligence/) | Tabular ML & Statistics | XGBoost/Ridge inference, hypothesis testing, strict contracts | Security Tier 3 |
+||| [`observability_service/`](./observability_service/) | Telemetry & Trace Evaluation | Telemetry tracing, evaluation scorecards, policy-as-code governance | Security Tier 3 |
 
 ---
 
