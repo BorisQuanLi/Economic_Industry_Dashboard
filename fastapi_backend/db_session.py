@@ -22,8 +22,12 @@ def get_db_session():
     FastAPI dependency that provides a database connection and handles cleanup.
     Usage: conn = Depends(get_db_session)
     """
-    conn = get_db_connection()
+    conn = None
     try:
+        conn = get_db_connection()
         yield conn
+    except Exception:
+        yield None
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()

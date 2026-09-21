@@ -36,13 +36,30 @@ def _get_mock_company_financials(sub_sector_name: str, indicator: str) -> Dict:
     This offset is exactly what the sliding window algorithm corrects for.
     """
     import random
-    mock_companies = {
+    sub_sector_company_map = {
+        "Application Software": {"Apple (AAPL)": 120, "Microsoft (MSFT)": 62, "Salesforce (CRM)": 45, "Adobe (ADBE)": 40, "Intuit (INTU)": 30},
+        "Systems Software": {"Microsoft (MSFT)": 62, "Oracle (ORCL)": 48, "CrowdStrike (CRWD)": 35, "Palo Alto Networks (PANW)": 32, "Snowflake (SNOW)": 28},
+        "Semiconductors": {"NVIDIA (NVDA)": 110, "Broadcom (AVGO)": 85, "AMD (AMD)": 55, "Qualcomm (QCOM)": 50, "Texas Instruments (TXN)": 42},
+        "Biotechnology": {"Vertex (VRTX)": 80, "Amgen (AMGN)": 75, "Gilead (GILD)": 68, "Regeneron (REGN)": 65, "Moderna (MRNA)": 35},
+        "Pharmaceuticals": {"Eli Lilly (LLY)": 130, "Pfizer (PFE)": 90, "Johnson & Johnson (JNJ)": 95, "Merck (MRK)": 85, "AbbVie (ABBV)": 80},
+        "Diversified Banks": {"JPMorgan Chase (JPM)": 125, "Bank of America (BAC)": 85, "Wells Fargo (WFC)": 65, "Citigroup (C)": 55, "U.S. Bancorp (USB)": 40},
+        "Automobile Manufacturers": {"Tesla (TSLA)": 115, "Ford (F)": 70, "General Motors (GM)": 68, "Rivian (RIVN)": 30, "Lucid (LCID)": 20},
+        "Aerospace & Defense": {"Boeing (BA)": 95, "Lockheed Martin (LMT)": 90, "RTX (RTX)": 85, "Northrop Grumman (NOC)": 75, "General Dynamics (GD)": 70},
+        "Regional Banks": {"JPM": 125, "BAC": 85, "WFC": 65, "C": 55},
+        "Asset Management & Custody Banks": {"MS": 115, "BLK": 110, "STT": 65},
+        "Financial Exchanges & Data": {"MSCI": 92, "NDAQ": 78},
+        "Broadline Retail": {"AMZN": 135, "WMT": 95, "TGT": 82},
+        "Hotels, Resorts & Cruise Lines": {"MAR": 72, "HLT": 68, "CCL": 55},
+        "Air Freight & Logistics": {"FDX": 88, "UPS": 82, "CHRW": 45},
+        "Industrial Machinery": {"GE": 78, "CAT": 95, "DE": 72},
+    }
+    mock_companies = sub_sector_company_map.get(sub_sector_name, {
         "Apple (AAPL)":     120,  # fiscal Q4 ends Oct — the misalignment case
         "Microsoft (MSFT)": 62,
         "Alphabet (GOOGL)": 88,
         "Meta (META)":      40,
         "NVIDIA (NVDA)":    35,
-    }
+    })
     quarters = get_recent_8_quarters()
     result = {}
     for company, base in mock_companies.items():
@@ -127,7 +144,16 @@ async def search_sector_names(conn=Depends(get_db_session)):
         cursor.close()
         return {"sector_names": sector_names}
     except Exception as e:
-        return {"sector_names": ["Information Technology", "Health Care"], "error": str(e)}
+        return {
+            "sector_names": [
+                "Information Technology",
+                "Health Care",
+                "Financials",
+                "Consumer Discretionary",
+                "Industrials",
+            ],
+            "error": str(e),
+        }
 
 @router.get("/sub-sectors")
 async def get_sub_sectors(sector_name: Optional[str] = None, conn=Depends(get_db_session)):
@@ -148,7 +174,15 @@ async def get_sub_sectors(sector_name: Optional[str] = None, conn=Depends(get_db
         cursor.close()
         return {"sub_sector_names": sub_sector_names}
     except Exception as e:
-        return {"sub_sector_names": ["Application Software", "Systems Software"], "error": str(e)}
+        sector_sub_map = {
+            "Information Technology": ["Application Software", "Systems Software", "Semiconductors"],
+            "Health Care": ["Biotechnology", "Pharmaceuticals"],
+            "Financials": ["Diversified Banks", "Regional Banks", "Asset Management & Custody Banks", "Financial Exchanges & Data"],
+            "Consumer Discretionary": ["Automobile Manufacturers", "Broadline Retail", "Hotels, Resorts & Cruise Lines"],
+            "Industrials": ["Aerospace & Defense", "Air Freight & Logistics", "Industrial Machinery"],
+        }
+        fallback_subs = sector_sub_map.get(sector_name, ["Application Software", "Systems Software", "Semiconductors"])
+        return {"sub_sector_names": fallback_subs, "error": str(e)}
 
 @router.get("/performance/{sector_name}")
 async def get_sector_performance(
@@ -160,7 +194,10 @@ async def get_sector_performance(
     cached = cache_get(cache_key)
     if cached is not None:
         return cached
-    result = {"sector": sector_name, "status": "mock_data", "data": []}
+    ind = financial_indicator or "revenue"
+    mock = _get_mock_sector_data(ind)
+    data = mock.get(sector_name, mock.get("Information Technology", []))
+    result = {"sector": sector_name, "status": "mock_data", "data": data}
     cache_set(cache_key, result)
     return result
 
