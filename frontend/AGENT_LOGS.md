@@ -46,3 +46,9 @@ The human architect performed a comprehensive audit of the newly provisioned hos
 **Agent:** Copilot CLI | **Human-in-the-Loop:** YES
 
 Updated Tab 1's frontend data handling to preserve every sub-sector and company trace returned by the backend. Financials, Consumer Discretionary, and Industrials now use complete sector-specific fallback mappings, while response payloads containing keyed trace data are iterated dynamically rather than truncated or replaced with Information Technology defaults.
+
+## 2026-09-21 — CI/CD Fix & SKILL.md Governance (feat/sprint-completion-backup)
+- Fixed `SKILL.md` frontmatter line-length errors across 4 microservices (gpu, graph, mcp, observability) — all lines <= 80 chars.
+- Updated `README.md` opening paragraph to include `SKILL.md` in the AI-augmented SDLC policy reference.
+- `main` CI (`be4752e`) passes lint; `feat/sprint-completion-backup` (`39ef183`) locks the fix.
+- Human-in-loop verified: `CLAUDE.md` + `SKILL.md` + `AI_AUGMENTED_SDLC.md` = canonical governance stack.
