@@ -8,3 +8,6 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.0
 redis==5.0.1
+
+# Keep on protobuf 4.x footprint
+protobuf==4.25.3
