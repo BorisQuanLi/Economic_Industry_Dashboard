@@ -10,3 +10,6 @@ py4j==0.10.9.7
 boto3==1.34.0
 botocore==1.34.0
 astrapy>=1.2.0
+
+# Keep the monorepo on the protobuf 4.x footprint used by Streamlit.
+protobuf==4.25.3

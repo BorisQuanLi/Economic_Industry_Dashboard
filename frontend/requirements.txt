@@ -3,7 +3,7 @@
 
 streamlit==1.33.0
 plotly==5.20.0
+protobuf==4.25.3
 
 # Testing Dependencies
 pytest==8.1.1
-
