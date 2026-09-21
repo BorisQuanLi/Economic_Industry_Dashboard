@@ -162,3 +162,10 @@ Agent: Hermes CLI | Human-in-the-loop: YES
 - HUMAN INTERVENTION RECORDED: The agent entered a terminal patching loop attempting to fix `vector_store.py` path calculation and JSON serialization list-mapping errors. The human manually corrected both the docs_path ordering and the mock persistence array mapping, then directed an atomic commit (`feat(evals): ...`) to break the loop.
 - Governance: NEXT_PHASE_HANDOVER.md self-destructed (`b21aae1` → final `chore(handoff)`) upon merge-readiness.
 - Verification: 36/36 tests green (USE_MOCK_GRAPH=true, USE_MOCK_SCREENER=true, USE_FAKE_EMBEDDINGS=true).
+
+---
+
+### Session - Documentation Sync (2026-09-20)
+- **Trigger:** Cross-cutting frontend showcase integration sprint.
+- **Intervention:** Synchronized microservice execution documentation with the repository-level visual entrypoint.
+- **Outcome:** Verified routing links pointing to http://localhost:8501 added to the local README.

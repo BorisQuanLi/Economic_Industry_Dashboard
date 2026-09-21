@@ -1,8 +1,8 @@
 # Economic Industry Dashboard
 
-The platform utilizes a **Heterogeneous Ingestion Engine** to dynamically parse index constituents and extract financial performance indicators—specifically Income Statement and Balance Sheet metrics—for the **S&P 500** across 11 Global Industry Classification Standard (GICS) Sectors and 165 Sub-Industries. Engineered for **temporal and cross-sectional analytical fidelity**, the system leverages a dedicated **PySpark** processing tier and an **Airflow workflow engine** to ensure 100% operational uptime while strictly adhering to a SEC data vendor's daily API quotas.
+The platform demonstrates a modern AI-assisted SDLC: contract-first Pydantic v2 APIs with isolated environments (`USE_MOCK_ANALYTICS`), policy-as-code governance (`CLAUDE.md` + `AI_AUGMENTED_SDLC.md` per service), and defensive fallback pathways for offline review. It integrates a PySpark processing tier, FastAPI async layer, and Streamlit presentation tier — all verified through automated tests and container orchestration.
 
-The backend architecture serves as a **production proof-of-concept for an Enterprise Flask Migration Toolkit**, decoupling legacy data structures from a high-performance, asynchronous **FastAPI** tier utilizing **Pydantic v2** validation. This design mirrors the **Provider/Core** architecture of the [OpenBB Platform](https://github.com/OpenBB-finance/OpenBB/tree/develop/openbb_platform)—an open-source infrastructure maintained by a **FINOS/Linux Foundation corporate member**. Patterns proven here were subsequently abstracted into a specialized toolkit, `flask_to_openbb_converter`, forming a high-impact [open-source contribution](https://github.com/OpenBB-finance/OpenBB/pull/7264) to the **[FINOS/Linux Foundation](https://www.finos.org/press/fintech-open-source-foundation-joins-linux-foundation-to-expand-and-accelerate-development-across-financial-services)** ecosystem.
+The backend architecture serves as a **production proof-of-concept for an Enterprise Flask Migration Toolkit**, decoupling legacy data structures from a high-performance, asynchronous **FastAPI** tier utilizing **Pydantic v2** validation. This design mirrors the **Provider/Core** architecture of the [OpenBB Platform](https://github.com/OpenBB-finance/OpenBB/tree/develop/openbb_platform)—a FINOS/Linux Foundation-affiliated open-source financial data infrastructure. I contributed a toolkit, `flask_to_openbb_converter`, that automatically converts Flask REST APIs into OpenBB extensions without manual rewriting. (Note: OpenBB recently open-sourced its full product suite under a permissive license as the company wound down; the codebase and PR history remain publicly accessible and reviewable.)
 
 GitHub: [github.com/BorisQuanLi/Economic_Industry_Dashboard](https://github.com/BorisQuanLi/Economic_Industry_Dashboard)
 
@@ -21,6 +21,9 @@ make setup
 # 3. Build and launch the containerized stack (Postgres, FastAPI, ETL, Airflow, Streamlit)
 docker compose up --build
 ```
+
+![Macro Fundamentals Dashboard](screenshots/macro_fundamentals.png)
+![AI Multi-Service Showcase](screenshots/multi_service_showcase.png)
 
 > **Note:** The Streamlit container logs will print a `172.x.x.x` Network URL — this is the internal Docker bridge IP and is not accessible from your browser. Always use `http://localhost:8501` instead.
 

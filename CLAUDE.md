@@ -6,28 +6,29 @@ This repository is a multi-service Financial Services Industry (FSI) AI engineer
 
 ## 🏛️ Service Map
 
-|| Service | Domain | Primary Engineering Capability Demonstrated | Governance Level |
-||---|---|---|---|
-|| [`etl_service/`](./etl_service/) | S&P 500 Fundamentals | PySpark ETL, SQL window analytics, Airflow quota management | Standard |
-|| [`mcp_agent_system/`](./mcp_agent_system/) | AML Risk Assessment | LangGraph agent, FAISS RAG, Model Context Protocol (MCP) server | Security Tier 3 |
-|| [`gpu_ops_alpha_orchestrator/`](./gpu_ops_alpha_orchestrator/) | HFT Signal Processing | GPU PyTorch feature engineering, Astra DB vector persistence | Security Tier 3 |
-|| [`graph_intelligence/`](./graph_intelligence/) | PE Relationship Intelligence | Neo4j GDS, federated LLM query routing, LangChain tool calling | Security Tier 3 |
-||| [`tabular_intelligence/`](./tabular_intelligence/) | Tabular ML & Statistics | XGBoost/Ridge inference, hypothesis testing, strict contracts | Security Tier 3 |
-||| [`observability_service/`](./observability_service/) | Telemetry & Trace Evaluation | Telemetry tracing, evaluation scorecards, policy-as-code governance | Security Tier 3 |
+| Service | Domain | Primary Engineering Capability Demonstrated | Governance Level |
+|---|---|---|---|
+| [`etl_service/`](./etl_service/) | S&P 500 Fundamentals | PySpark ETL, SQL window analytics, Airflow quota management | Standard |
+| [`mcp_agent_system/`](./mcp_agent_system/) | AML Risk Assessment | LangGraph agent, FAISS RAG, Model Context Protocol (MCP) server | Security Tier 3 |
+| [`gpu_ops_alpha_orchestrator/`](./gpu_ops_alpha_orchestrator/) | HFT Signal Processing | GPU PyTorch feature engineering, Astra DB vector persistence | Security Tier 3 |
+| [`graph_intelligence/`](./graph_intelligence/) | PE Relationship Intelligence | Neo4j GDS, federated LLM query routing, LangChain tool calling | Security Tier 3 |
+| [`tabular_intelligence/`](./tabular_intelligence/) | Tabular ML & Statistics | XGBoost/Ridge inference, hypothesis testing, strict contracts | Security Tier 3 |
+| [`observability_service/`](./observability_service/) | Telemetry & Trace Evaluation | Telemetry tracing, evaluation scorecards, policy-as-code governance | Security Tier 3 |
 
 ---
 
 ## 🤖 Global AI Agent Session Registry
 
-|| Service | Session Date | Agent Model / Interface | Key Deliverables | Verification Outcome |
-||---|---|---|---|---|
-|| `mcp_agent_system/` | 2026-05-21 | Amazon Q Developer | LangGraph AML Agent, PySpark/MCP data flow, FakeEmbeddings fallback | 6/6 tests passed |
-|| `gpu_ops_alpha_orchestrator/` | 2026-05-02 | Kiro CLI (Anthropic) | Astra vector builder, credential security alignment, namespace patching | 3 passed, 1 skipped |
-|| `gpu_ops_alpha_orchestrator/` | 2026-05-02 | Amazon Q Developer | `VectorizedSignalProcessor` (14-day rolling Z-score, OOM fallback) | 6 passed, 1 skipped |
-|| `gpu_ops_alpha_orchestrator/` | 2026-05-03 | Kiro CLI (Anthropic) | `synthetic_alpha_generator.py` (1M-tick signal, GPU chunking) | 13 passed, 1 skipped |
-|| `gpu_ops_alpha_orchestrator/` | 2026-05-03 | Kiro CLI (Anthropic) | Astra vector persistence & Security Tier 3 credential audit test | 18 passed, 1 skipped |
-|| `graph_intelligence/` | 2026-09-11 | Kiro CLI / Antigravity Agent | Neo4j client, graph analytics, FederatedQueryLayer, tool calling, 16 unit tests | 16/16 tests passed |
-|| `tabular_intelligence/` | 2026-09-14 | Hermes CLI | Tabular contracts, stats engine, XGBoost/Ridge inference, 16 tests + offline demo | 16/16 tests passed |
+| Service | Session Date | Agent Model / Interface | Key Deliverables | Verification Outcome |
+|---|---|---|---|---|
+| `mcp_agent_system/` | 2026-05-21 | Amazon Q Developer | LangGraph AML Agent, PySpark/MCP data flow, FakeEmbeddings fallback | 6/6 tests passed |
+| `gpu_ops_alpha_orchestrator/` | 2026-05-02 | Kiro CLI (Anthropic) | Astra vector builder, credential security alignment, namespace patching | 3 passed, 1 skipped |
+| `gpu_ops_alpha_orchestrator/` | 2026-05-02 | Amazon Q Developer | `VectorizedSignalProcessor` (14-day rolling Z-score, OOM fallback) | 6 passed, 1 skipped |
+| `gpu_ops_alpha_orchestrator/` | 2026-05-03 | Kiro CLI (Anthropic) | `synthetic_alpha_generator.py` (1M-tick signal, GPU chunking) | 13 passed, 1 skipped |
+| `gpu_ops_alpha_orchestrator/` | 2026-05-03 | Kiro CLI (Anthropic) | Astra vector persistence & Security Tier 3 credential audit test | 18 passed, 1 skipped |
+| `graph_intelligence/` | 2026-09-11 | Kiro CLI / Antigravity Agent | Neo4j client, graph analytics, FederatedQueryLayer, tool calling, 16 unit tests | 16/16 tests passed |
+| `tabular_intelligence/` | 2026-09-14 | Hermes CLI | Tabular contracts, stats engine, XGBoost/Ridge inference, 16 tests + offline demo | 16/16 tests passed |
+| `frontend/` & Governance | 2026-09-20 | Hermes CLI | Multi-service showcase tabs (graph, tabular, observability), CLAUDE.md and README.md alignment | Human verified at http://localhost:8501 |
 
 ---
 

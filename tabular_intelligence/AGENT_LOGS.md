@@ -41,3 +41,10 @@ Agent: Hermes CLI | Human-in-the-loop: YES
   `USE_MOCK_ANALYTICS=true`.
 - Verification: demo completed without live dependencies; no git commit was
   requested in this session.
+
+---
+
+### Session - Documentation Sync (2026-09-20)
+- **Trigger:** Cross-cutting frontend showcase integration sprint.
+- **Intervention:** Synchronized microservice execution documentation with the repository-level visual entrypoint.
+- **Outcome:** Verified routing links pointing to http://localhost:8501 added to the local README.

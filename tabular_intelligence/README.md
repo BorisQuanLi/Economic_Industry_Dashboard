@@ -27,6 +27,8 @@ cd tabular_intelligence
 USE_MOCK_ANALYTICS=true pytest tests/ -v
 ```
 
+Note: This microservice's capabilities are fully integrated into the root-level visual dashboard. Run `docker compose up -d` in the repository root and navigate to http://localhost:8501 to evaluate these features interactively.
+
 ---
 
 ## 📦 Service Layers

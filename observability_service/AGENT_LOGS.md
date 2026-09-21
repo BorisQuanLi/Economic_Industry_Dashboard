@@ -37,3 +37,10 @@ Implement strict Pydantic trace contracts in `traces.py`, the evaluation protoco
 - **Trigger:** Human architect flagged missing `pydantic` dependency blocking local pytest; directed pivot to containerized verification.
 - **Intervention:** Containerized build (`Dockerfile`, `python:3.12-slim`) with `RUN pytest...` embedded; package isolation via `__init__.py` + `main.py`; `SKILL.md` created.
 - **Outcome:** `git status` clean; commit `104f599` followed by `feat(observability): containerize...`. Target A architecture aligned with `graph_intelligence/` maturity.
+
+---
+
+### Session - Documentation Sync (2026-09-20)
+- **Trigger:** Cross-cutting frontend showcase integration sprint.
+- **Intervention:** Synchronized microservice execution documentation with the repository-level visual entrypoint.
+- **Outcome:** Verified routing links pointing to http://localhost:8501 added to the local README.

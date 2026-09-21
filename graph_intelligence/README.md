@@ -49,6 +49,8 @@ docker compose --profile demo run --rm graph_intelligence python -m pytest graph
 USE_MOCK_GRAPH=true USE_MOCK_SCREENER=true USE_FAKE_EMBEDDINGS=true pytest graph_intelligence/tests/ -v
 ```
 
+Note: This microservice's capabilities are fully integrated into the root-level visual dashboard. Run `docker compose up -d` in the repository root and navigate to http://localhost:8501 to evaluate these features interactively.
+
 ---
 
 ## 🛡️ Governance & Safety Guarantees

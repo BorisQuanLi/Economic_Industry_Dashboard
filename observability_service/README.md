@@ -37,6 +37,8 @@ docker compose --profile demo run --rm observability_service
 | `USE_MOCK_ANALYTICS` | `true` | Gate live telemetry off; use fixture data |
 | `OBSERVABILITY_LOG_LEVEL` | `INFO` | Logging verbosity for trace ingestion |
 
+Note: This microservice's capabilities are fully integrated into the root-level visual dashboard. Run `docker compose up -d` in the repository root and navigate to http://localhost:8501 to evaluate these features interactively.
+
 ## Structure
 
 ```
