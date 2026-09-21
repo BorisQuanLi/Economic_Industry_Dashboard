@@ -75,7 +75,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Linting Tools
-        run: pip install ruff yamllint
+        run: pip install ruff==0.15.7 yamllint
       - name: Lint Python with ruff
         run: ruff check .
       - name: Validate Agent Skills (Frontmatter)
