@@ -53,7 +53,7 @@ def find_sector_avg_financials(financial_indicator):
         # Fallback to mock data when backend is not available
         st.warning("Backend not available, using mock data")
         import random
-        sectors = ['Information Technology', 'Health Care', 'Financials', 'Consumer Discretionary', 'Communication Services']
+        sectors = ['Information Technology', 'Health Care', 'Financials', 'Consumer Discretionary', 'Industrials']
         result = {}
         for i, sector in enumerate(sectors):
             base_value = (50 + i*10) * 1000000  # Different base values per sector
@@ -115,4 +115,3 @@ def update_layout(fig, financial_indicator, financial_performance_indicators):
         legend_title="Economic sectors",
         font_size=14,
     )
-

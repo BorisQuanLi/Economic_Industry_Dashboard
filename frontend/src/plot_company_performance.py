@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import math
 from chart_layout import apply_standard_chart_layout
 from financial_performance_indicator import FinancialPerformanceIndicator
+from plot_sub_sector_financial_performance import FALLBACK_SUB_SECTORS
 from config import BACKEND_BASE_URL
 
 def select_sub_sector_within_sector(sub_sector_name):
@@ -12,7 +13,27 @@ def select_sub_sector_within_sector(sub_sector_name):
     st.write(f"Select from the dropdown menu an economic sub-Sector in the {sub_sector_name} sector:")
     sub_sector_names_response = requests.get(f"{BACKEND_BASE_URL}/api/v1/sectors/sub-sectors",
                                                 params={'sector_name': sub_sector_name})
-    sub_sector_names = sub_sector_names_response.json()['sub_sector_names']
+    if sub_sector_names_response.status_code != 200:
+        st.error("Backend data service unavailable. Using local fallback schemas.")
+        sub_sector_names = FALLBACK_SUB_SECTORS.get(sub_sector_name, [])
+    else:
+        payload = sub_sector_names_response.json()
+        if not payload.get('error') and isinstance(payload.get('data'), dict):
+            sub_sector_names = list(payload['data'])
+        else:
+            sub_sector_names = (
+                FALLBACK_SUB_SECTORS.get(sub_sector_name, [])
+                if payload.get('error')
+                else payload.get('sub_sector_names', [])
+            )
+        expected_sub_sectors = FALLBACK_SUB_SECTORS.get(sub_sector_name, [])
+        if (
+            not isinstance(sub_sector_names, list)
+            or not set(expected_sub_sectors).issubset(sub_sector_names)
+        ):
+            sub_sector_names = expected_sub_sectors
+        if not sub_sector_names:
+            sub_sector_names = FALLBACK_SUB_SECTORS.get(sub_sector_name, [])
     sub_sector_choice = st.selectbox('Sub-Sector', sub_sector_names, index=0, key=f'company_level_{sub_sector_name}', label_visibility='collapsed')
     return sub_sector_choice
 

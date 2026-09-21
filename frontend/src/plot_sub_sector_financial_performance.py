@@ -8,6 +8,33 @@ from financial_performance_indicator import FinancialPerformanceIndicator, get_r
 from config import BACKEND_BASE_URL
 
 SEARCH_SECTOR_URL = f"{BACKEND_BASE_URL}/api/v1/sectors/search"
+FALLBACK_SECTORS = [
+    'Information Technology',
+    'Health Care',
+    'Financials',
+    'Consumer Discretionary',
+    'Industrials',
+]
+FALLBACK_SUB_SECTORS = {
+    'Information Technology': ['Application Software', 'Systems Software', 'Semiconductors'],
+    'Health Care': ['Biotechnology', 'Pharmaceuticals'],
+    'Financials': [
+        'Diversified Banks',
+        'Regional Banks',
+        'Asset Management & Custody Banks',
+        'Financial Exchanges & Data',
+    ],
+    'Consumer Discretionary': [
+        'Automobile Manufacturers',
+        'Broadline Retail',
+        'Hotels, Resorts & Cruise Lines',
+    ],
+    'Industrials': [
+        'Aerospace & Defense',
+        'Air Freight & Logistics',
+        'Industrial Machinery',
+    ],
+}
 
 def plot_sub_sectors_performance(sector_financial_indicator): 
     sector_name_selected = select_from_sectors_menu()
@@ -33,7 +60,7 @@ def get_all_sector_names():
     except Exception as e:
         # Fallback to mock data when backend is not available
         st.warning("Backend not available, using mock data")
-        return ['Information Technology', 'Health Care', 'Financials', 'Consumer Discretionary', 'Communication Services']
+        return FALLBACK_SECTORS
 
 def plot_all_sub_sectors_within_sector(sector_name, financial_indicator, financial_performance_indicators):
     avg_financials = find_sub_industries_avg_financials_by_sector(sector_name, financial_indicator)
@@ -55,13 +82,23 @@ def find_sub_industries_avg_financials_by_sector(sector_name, financial_indicato
     try:
         sub_sectors_url = f"{BACKEND_BASE_URL}/api/v1/sectors/sub-sectors"
         response = requests.get(sub_sectors_url, params={'sector_name': sector_name})
-        selected_sub_sectors = response.json().get('sub_sector_names', [])[:5]
+        payload = response.json()
+        expected_sub_sectors = FALLBACK_SUB_SECTORS.get(sector_name, [])
+        selected_sub_sectors = payload.get('sub_sector_names', [])
+        if (
+            payload.get('error')
+            or not isinstance(selected_sub_sectors, list)
+            or not set(expected_sub_sectors).issubset(selected_sub_sectors)
+        ):
+            selected_sub_sectors = expected_sub_sectors
 
         import random
         is_per_share = financial_indicator in ("closing_price", "earnings_per_share", "price_earnings_ratio", "profit_margin")
         base = _BASE.get(financial_indicator, 50)
         result = {}
         for i, sub_sector in enumerate(selected_sub_sectors):
+            if not isinstance(sub_sector, str) or not sub_sector:
+                continue
             base_value = base * (1 + i * (0.005 if is_per_share else 0.05))
             quarters_data = []
             for j, (year, quarter) in enumerate(get_recent_8_quarters()):
