@@ -1,3 +1,15 @@
+---
+name: observability_service
+version: 1.0.0
+description: >-
+  Telemetry and evaluation contracts for cross-service workflow observability.
+metadata:
+  project_id: eid-observability-service
+  service_context: telemetry_evaluation
+  security_tier: 3
+  owner: boris-dev-ops
+---
+
 # SKILL.md — Observability Service Telemetry Engine
 
 ## Purpose
