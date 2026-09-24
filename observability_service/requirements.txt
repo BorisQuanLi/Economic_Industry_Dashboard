@@ -1,0 +1,10 @@
+pydantic>=2.0
+pytest
+python-json-logger
+structlog
+
+# Keep telemetry compatible with Streamlit's protobuf<5 constraint when
+# services are installed into a shared environment.
+opentelemetry-api==1.25.0
+opentelemetry-proto==1.25.0
+protobuf==4.25.3

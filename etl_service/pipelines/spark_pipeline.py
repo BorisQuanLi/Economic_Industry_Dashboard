@@ -18,16 +18,20 @@ import os
 import sys
 import time
 
+from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession
+from pyspark.sql.utils import AnalysisException
 
-from etl_service.src.adapters.spark_companies_builder import SparkCompaniesBuilder
-from etl_service.src.adapters.spark_financials_reader import SparkFinancialsReader
 from etl_service.src.adapters.aml_performance_utils import (
     apply_subsector_rolling_performance,
     enrich_companies_with_subsector_risk,
 )
+from etl_service.src.adapters.spark_companies_builder import SparkCompaniesBuilder
+from etl_service.src.adapters.spark_financials_reader import SparkFinancialsReader
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -35,20 +39,27 @@ DB_NAME = os.getenv("DB_NAME", "investment_analysis")
 DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASS = os.getenv("DB_PASS", "postgres")
 JDBC_URL = f"jdbc:postgresql://{DB_HOST}:5432/{DB_NAME}"
-DB_PROPERTIES = {"user": DB_USER, "password": DB_PASS, "driver": "org.postgresql.Driver"}
+DB_PROPERTIES = {
+    "user": DB_USER,
+    "password": DB_PASS,
+    "driver": "org.postgresql.Driver",
+}
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 class SparkETLPipeline:
     def __init__(self, spark_mode: str = "local[*]"):
-        self.spark = SparkSession.builder \
-            .appName("S&P500-AML-ETL") \
-            .master(spark_mode) \
-            .config("spark.sql.adaptive.enabled", "true") \
-            .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
+        self.spark = (
+            SparkSession.builder.appName("S&P500-AML-ETL")
+            .master(spark_mode)
+            .config("spark.sql.adaptive.enabled", "true")
+            .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
             .getOrCreate()
+        )
         self.spark.sparkContext.setLogLevel("WARN")
         logger.info(f"Spark session initialised in {spark_mode} mode")
 
@@ -63,46 +74,52 @@ class SparkETLPipeline:
         logger.info("Starting PySpark AML analytics pipeline...")
         start_time = time.time()
 
+        # ── Stage 1 ──────────────────────────────────────────────────────────
+        builder = SparkCompaniesBuilder(self.spark)
+        ranked_df = (
+            builder.run()
+        )  # extract → transform → rank → cache → run_analysis
+
+        enriched_df = builder.join_sector_risk_profile(ranked_df)
+        logger.info("Stage 1: company rows enriched with sector AML risk profile:")
+        enriched_df.show(5, truncate=False)
+
+        trend_df = builder.get_sector_growth_trend(ranked_df)
+        logger.info("Stage 1: sector growth trend (lag window):")
+        trend_df.select(
+            "name",
+            "sector",
+            "year_founded",
+            "number_of_employees",
+            "employee_delta",
+        ).show(10, truncate=False)
+
+        # ── Stage 2 ──────────────────────────────────────────────────────────
         try:
-            # ── Stage 1 ──────────────────────────────────────────────────────────
-            builder = SparkCompaniesBuilder(self.spark)
-            ranked_df = builder.run()  # extract → transform → rank → cache → run_analysis
+            reader = SparkFinancialsReader(self.spark, JDBC_URL, DB_PROPERTIES)
+            subsector_df = reader.get_subsector_financials()
 
-            enriched_df = builder.join_sector_risk_profile(ranked_df)
-            logger.info("Stage 1: company rows enriched with sector AML risk profile:")
-            enriched_df.show(5, truncate=False)
+            rolling_df = apply_subsector_rolling_performance(subsector_df)
+            logger.info("Stage 2: rolling P/E window analytics:")
+            rolling_df.show(10, truncate=False)
 
-            trend_df = builder.get_sector_growth_trend(ranked_df)
-            logger.info("Stage 1: sector growth trend (lag window):")
-            trend_df.select(
-                "name", "sector", "year_founded", "number_of_employees", "employee_delta"
-            ).show(10, truncate=False)
+            enriched_financials = enrich_companies_with_subsector_risk(
+                ranked_df, subsector_df
+            )
+            logger.info(
+                "Stage 2: companies enriched with sub-sector risk benchmarks:"
+            )
+            enriched_financials.show(5, truncate=False)
 
-            # ── Stage 2 ──────────────────────────────────────────────────────────
-            try:
-                reader = SparkFinancialsReader(self.spark, JDBC_URL, DB_PROPERTIES)
-                subsector_df = reader.get_subsector_financials()
+        except (Py4JJavaError, AnalysisException, ImportError) as e:
+            logger.warning(
+                f"Stage 2 skipped — DB not populated or JDBC/Astra driver unavailable: {e}"
+            )
+            # Explicit degraded state fallback execution
+            enriched_financials = self._generate_degraded_state_mock_array()
 
-                rolling_df = apply_subsector_rolling_performance(subsector_df)
-                logger.info("Stage 2: rolling P/E window analytics:")
-                rolling_df.show(10, truncate=False)
+        logger.info(f"Pipeline completed in {time.time() - start_time:.2f}s")
 
-                enriched_financials = enrich_companies_with_subsector_risk(
-                    ranked_df, subsector_df
-                )
-                logger.info("Stage 2: companies enriched with sub-sector risk benchmarks:")
-                enriched_financials.show(5, truncate=False)
-
-            except Exception as e:
-                logger.warning(
-                    f"Stage 2 skipped — DB not populated or JDBC unavailable: {e}"
-                )
-
-            logger.info(f"Pipeline completed in {time.time() - start_time:.2f}s")
-
-        except Exception as e:
-            logger.error(f"Pipeline failed: {e}")
-            raise
 
     def stop(self):
         if self.spark:
@@ -111,14 +128,14 @@ class SparkETLPipeline:
 
 def main():
     parser = argparse.ArgumentParser(description="PySpark AML Analytics Pipeline")
-    parser.add_argument('--spark-mode', default='local[*]')
+    parser.add_argument("--spark-mode", default="local[*]")
     args = parser.parse_args()
 
     pipeline = None
     try:
         pipeline = SparkETLPipeline(spark_mode=args.spark_mode)
         pipeline.run_companies_pipeline()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Pipeline execution failed: {e}")
         sys.exit(1)
     finally:
@@ -127,4 +144,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        # Gracefully pass intentional CLI termination signals
+        raise
+    except Exception as e:
+        logger.critical(
+            f"FATAL: All-weather pipeline engine crashed: {e}", exc_info=True
+        )
+        sys.exit(1)

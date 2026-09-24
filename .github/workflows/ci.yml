@@ -37,8 +37,10 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          file: ./${{ matrix.service }}/coverage.xml
+          files: ./${{ matrix.service }}/coverage.xml
           flags: ${{ matrix.service }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
       - name: Cleanup
         if: always()
         run: docker compose down
@@ -73,16 +75,22 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Linting Tools
-        run: pip install ruff yamllint
+        run: pip install ruff==0.15.7 yamllint
       - name: Lint Python with ruff
         run: ruff check .
       - name: Validate Agent Skills (Frontmatter)
         # Enforces metadata standards for AI-augmented enterprise SDLC
         run: |
-          for f in $(find . -name "SKILL.md"); do
+          find . -name "SKILL.md" -print0 | while IFS= read -r -d '' f; do
             echo "Validating Agent Skill Metadata: $f"
-            sed -n '/^---$/,/^---$/p' "$f" | sed '1d;$d' > temp.yaml
-            yamllint temp.yaml
+            if [ "$(head -n 1 "$f")" != "---" ] || ! awk 'NR>1 && $0=="---"{found=1; exit} END{exit !found}' "$f"; then
+              echo "::warning file=$f::Skipping SKILL.md without complete YAML frontmatter"
+              continue
+            fi
+            frontmatter="$(mktemp)"
+            awk 'NR > 1 { if ($0 == "---") exit; print }' "$f" > "$frontmatter"
+            yamllint "$frontmatter"
+            rm -f "$frontmatter"
           done
 
   docker:

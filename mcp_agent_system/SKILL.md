@@ -2,14 +2,16 @@
 name: mcp_agent_system
 version: 1.0.0
 description: >-
-  LangGraph-based AML risk assessment agent exposed over the Model Context Protocol.
-  Consumes S&P 500 sector data from SparkCompaniesBuilder and serves the agent graph
-  as a callable MCP tool to any MCP-compatible client.
+  LangGraph-based AML risk assessment agent exposed over the
+  Model Context Protocol.  Consumes S&P 500 sector data from
+  SparkCompaniesBuilder and serves the agent graph as a callable
+  MCP tool to any MCP-compatible client.
 metadata:
   project_id: eid-mcp-agent
   service_context: agentic_platform
   security_tier: 3
-  data_source: etl_service.src.adapters.spark_companies_builder.SparkCompaniesBuilder
+  data_source: "etl_service.src.adapters.spark_companies_builder\
+    .SparkCompaniesBuilder"
   vector_store: faiss-cpu (local, no cloud dependency)
   owner: boris-dev-ops
 ---
