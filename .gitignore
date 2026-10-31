@@ -56,3 +56,7 @@ pytest_output.txt
 # !example.tfvars
 
 
+
+# Runtime-generated S&P 500 ingestion data — quarter-stamped at runtime, not version-controlled
+flask_backend/api/data/
+etl_service/data/
