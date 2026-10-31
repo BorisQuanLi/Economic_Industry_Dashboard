@@ -4,7 +4,6 @@
 import os
 import glob
 import logging
-from datetime import datetime
 from io import StringIO
 
 import pandas as pd
@@ -12,18 +11,30 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from etl_service.src.utils.quarter import current_calendar_quarter
+
 logger = logging.getLogger(__name__)
 
-def get_wiki_data_filepath():
-    """Calculates the dynamic quarterly filepath for the S&P 500 data."""
-    now = datetime.now()
-    current_q = (now.month - 1) // 3 + 1
-    quarter_suffix = f"{now.year}_{current_q}q"
-    
-    base_dir = os.getenv("DATA_DIR", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    return os.path.join(base_dir, "data", f"sp500_stocks_wiki_info_{quarter_suffix}.csv")
 
-# Initialize the constant at module level by calling the function
+def get_wiki_data_filepath() -> str:
+    """
+    Return the quarter-stamped filepath for the S&P 500 CSV, e.g.:
+        <DATA_DIR>/data/sp500_stocks_wiki_info_2026_Q4.csv
+
+    The stamp format ``YYYY_QN`` is shared with the FastAPI
+    ``SlidingWindowAnalytics.aligned_quarter`` field so all temporal
+    labels in the system are consistent.
+    """
+    quarter = current_calendar_quarter()
+    base_dir = os.getenv(
+        "DATA_DIR",
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    )
+    return os.path.join(base_dir, "data", f"sp500_stocks_wiki_info_{quarter}.csv")
+
+
+# Evaluated once at import time; callers that need a fresh value (e.g. after
+# a quarter boundary) should call get_wiki_data_filepath() directly.
 WIKI_DATA_FILEPATH = get_wiki_data_filepath()
 
 # Mimic a standard browser session to prevent 403 (Forbidden) responses.
