@@ -44,3 +44,15 @@ Implement strict Pydantic trace contracts in `traces.py`, the evaluation protoco
 - **Context:** Rescued feature development branch (`feat/graph-relationship-intelligence`) after a disconnected session environment caused branch collision markers.
 - **Intervention:** Re-anchored configuration architecture away from brittle `# noqa` exclusions. Replaced global try/except blocks in `spark_pipeline.py` with explicit `Py4JJavaError` and `AnalysisException` fallback routes to establish an all-weather degraded state execution engine.
 - **Branch Strategy Note:** Code additions staged explicitly on the microservice feature branch to prevent un-squashed deployment history from polluting `main`.
+
+---
+
+### Session 20, 2026-10-31 — Cross-Repo Infrastructure Standardisation & Testing Modernisation
+- **Context:** Executed cross-repo infrastructure port from sandbox (`Money-Talks-2-AI-x-FinTech`) to upstream repository under `infra/uv-test-infra`.
+- **Architectural Direction & Interventions:**
+  - **Model Re-export vs Duplication Trade-offs:** Directed thin re-exports in `flask_backend/api/src/models/` referencing canonical implementations in `etl_service.src.models`. Enforced domain model inheritance without duplicating database schema mappings and query abstractions across services.
+  - **Runtime Delegation Wrapper:** Collapsed `flask_backend/api/src/adapters/wiki_page_client.py` into a five-line delegation wrapper routing directly to `etl_service.src.adapters.wiki_page_client.get_sp500_wiki_data`, consolidating calendar quarter temporal normalization (`current_calendar_quarter()`) and file cache management.
+  - **Absolute PYTHONPATH Runtime Overrides:** Re-engineered Makefile test runner to inject dynamic absolute pythonpaths (`pythonpath=$(CURDIR)/$$clean_dir $(CURDIR)`), resolving cross-service import hierarchies cleanly without brittle sys.path manipulation.
+  - **PySpark Workspace Isolation:** Formalized `uv` workspace isolation requiring `uv run --group simulations pytest ...` for PySpark dependencies, avoiding dependency contamination in standard test matrices.
+  - **Test Suite Modernization:** Ported `ingest_result` fixtures validating absolute file paths, calendar quarter regex formatting (`YYYY_QN`), and CSV layout metrics across `flask_backend` test suites.
+- **Outcome:** Global integration validation via `make test` executed cleanly; all 9 Python services passed with exit code 0.

@@ -28,6 +28,7 @@ This repository is a multi-service Financial Services Industry (FSI) AI engineer
 || `gpu_ops_alpha_orchestrator/` | 2026-05-03 | Kiro CLI (Anthropic) | Astra vector persistence & Security Tier 3 credential audit test | 18 passed, 1 skipped |
 || `graph_intelligence/` | 2026-09-11 | Kiro CLI / Antigravity Agent | Neo4j client, graph analytics, FederatedQueryLayer, tool calling, 16 unit tests | 16/16 tests passed |
 || `tabular_intelligence/` | 2026-09-14 | Hermes CLI | Tabular contracts, stats engine, XGBoost/Ridge inference, 16 tests + offline demo | 16/16 tests passed |
+|| `observability_service/` | 2026-10-31 | Antigravity Agent | Session 20 cross-repo infrastructure port, model re-exports, PySpark uv workspace isolation | All 9 services passed (make test) |
 
 ---
 
@@ -51,5 +52,7 @@ This ensures every commit in the repository git history is clean, logically scop
 Before pushing any code to tracking or feature branches, developers must execute local validation sweeps to align with enterprise SDLC parameters:
 - **Linting & Formatting:** Ensure complete adherence by running:
   `ruff check --fix <file_path>` and `ruff format <file_path>`
+- **PySpark Test Execution:** `uv` workspace isolation requires invoking `--group simulations` when executing tests targeting PySpark components:
+  `uv run --group simulations pytest <path_to_test>`
 - **Skill Compliance:** Validate that all agent metadata templates are contained within workspace boundaries and omit hidden environments:
   `find . -name "SKILL.md" -not -path "*/.*"`
