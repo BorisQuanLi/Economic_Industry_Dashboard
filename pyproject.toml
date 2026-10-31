@@ -1,10 +1,46 @@
+[project]
+name = "uv-integrated-multi-service-infrastructure"
+version = "1.0.0"
+description = "Enterprise-grade multi-service orchestration stack demonstrating automated virtual environment provisioning, hermetic dependency management, and unified quality assurance guardrails via uv."
+readme = "README.md"
+requires-python = "==3.12.*"
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Systems :: System Administration",
+]
+dependencies = [
+    "python-dotenv>=1.0.1",
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.1.1",
+    "pytest-asyncio>=0.23.8",
+    "pytest-cov>=7.1.0",
+    "requests-mock>=1.12.1",
+    "ruff>=0.3.0",
+]
+simulations = [
+    "pyspark>=3.5.0",
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+]
+analytics = [
+    "scikit-learn>=1.4.0",
+    "tiktoken>=0.6.0",
+]
+
+[tool.uv]
+managed = true
+package = false
+
 [tool.ruff]
-# Enforce lint on the PySpark adapter layer and its tests.
-# Legacy src/ modules (Pandas/DB pipeline) and aws/ stubs carry pre-existing
-# lint debt intentionally deferred — they are not part of this sprint.
-include = [
-    "etl_service/src/adapters/spark_companies_builder.py",
-    "etl_service/src/adapters/wiki_page_client.py",
-    "etl_service/pipelines/spark_pipeline.py",
-    "etl_service/tests/*.py",
+target-version = "py312"
+line-length = 88
+extend-exclude = [
+    "etl_service/src/legacy_pandas_pipeline/",
+    "etl_service/aws/",
 ]
